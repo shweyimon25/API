@@ -1,0 +1,25 @@
+services:
+
+  db:
+    image: mysql:8.0
+    container_name: share_friend_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: share_friend
+      MYSQL_USER: share_friend_user
+      MYSQL_PASSWORD: share_friend_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: share_friend_phpmyadmin
+    environment:
+      PMA_HOST: share_friend_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8081:80"
+    depends_on:
+      - db

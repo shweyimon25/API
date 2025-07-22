@@ -1,0 +1,85 @@
+import { Request, Response } from "express";
+import { successResponse } from "../../../helpers/response";
+import RoleService from "../../../services/admin/v1/role.service";
+import { validater } from "../../../helpers/validator";
+import {
+  createRoleSchema,
+  updateRoleSchema,
+} from "../../../schemas/admin/v1/role.schema";
+import { ValidationException } from "../../../helpers/exceptions";
+import prisma from "../../../../prisma/client";
+
+class RoleController {
+  private roleService: RoleService;
+
+  constructor() {
+    this.roleService = new RoleService();
+  }
+
+  async findAll(req: Request, res: Response) {
+    const { page = 1, perPage = 10 } = req.query;
+
+    if (page && perPage) {
+      const roles = await this.roleService.findByPaginate(+page, +perPage);
+      return successResponse(res, "Role list successfully", roles);
+    }
+
+    const roles = await this.roleService.findAll();
+    return successResponse(res, "Role list successfully", roles);
+  }
+
+  async findOne(req: Request, res: Response) {
+    const { id } = req.params;
+    const role = await this.roleService.findOne(+id);
+    return successResponse(res, "Role detail successfully", role);
+  }
+
+  async create(req: Request, res: Response) {
+    const { data, error, success } = await validater(
+      createRoleSchema,
+      req.body
+    );
+
+    if (!success) {
+      throw new ValidationException("Role created failed", error);
+    }
+
+    const role = await this.roleService.create(data);
+    return successResponse(res, "Role created successfully", role);
+  }
+
+  async update(req: Request, res: Response) {
+    const { id } = req.params;
+
+    updateRoleSchema.refine(
+      async (args) => {
+        if (!req.body.name) return true;
+        const result = await prisma.role.findFirst({
+          where: { name: args.name, NOT: { id: +id } },
+        });
+        return !result;
+      },
+      { message: "Name is already exist", path: ["name"] }
+    );
+
+    const { data, error, success } = await validater(
+      updateRoleSchema,
+      req.body
+    );
+
+    if (!success) {
+      throw new ValidationException("Role updated failed", error);
+    }
+
+    const role = await this.roleService.update(+id, data);
+    return successResponse(res, "Role updated successfully", role);
+  }
+
+  async destroy(req: Request, res: Response) {
+    const { id } = req.params;
+    await this.roleService.destroy(+id);
+    return successResponse(res, "Role deleted successfully");
+  }
+}
+
+export default RoleController;
