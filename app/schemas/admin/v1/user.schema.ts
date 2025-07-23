@@ -9,7 +9,9 @@ export const createUserSchema = z
       .refine(
         async (arg) => {
           const result = await prisma.user.findFirst({
-            where: { name: arg },
+            where: {
+              name: arg,
+            },
           });
           return !result;
         },
@@ -34,19 +36,24 @@ export const createUserSchema = z
           message: "Email is already exist",
         }
       ),
-    roleId: z.number({
-      required_error: "Role is required",
-      invalid_type_error: "Role must be a number"
-    }).refine(async (arg) => {
-      const result = await prisma.role.findUnique({
-        where: {
-          id: arg,
+    roleId: z
+      .number({
+        required_error: "Role is required",
+        invalid_type_error: "Role must be a number",
+      })
+      .refine(
+        async (arg) => {
+          const result = await prisma.role.findUnique({
+            where: {
+              id: arg,
+            },
+          });
+          return result;
         },
-      });
-      return result;
-    }, {
-      message: "Role is not exist",
-    }),
+        {
+          message: "Role is not exist",
+        }
+      ),
     status: z.boolean().optional(),
     password: z
       .string()
@@ -62,16 +69,22 @@ export const updateUserSchema = z
   .object({
     name: z.string().optional(),
     email: z.string().email().optional(),
-    roleId: z.number().refine(async (arg) => {
-      const result = await prisma.role.findUnique({
-        where: {
-          id: arg,
+    roleId: z
+      .number()
+      .refine(
+        async (arg) => {
+          const result = await prisma.role.findUnique({
+            where: {
+              id: arg,
+            },
+          });
+          return result;
         },
-      });
-      return result;
-    }, {
-      message: "Role is not exist",
-    }).optional(),
+        {
+          message: "Role is not exist",
+        }
+      )
+      .optional(),
     status: z.boolean().optional(),
     password: z.string().optional(),
     passwordConfirm: z.string().optional(),

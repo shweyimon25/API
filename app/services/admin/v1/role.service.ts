@@ -133,12 +133,15 @@ class RoleService {
           roleId: id,
         },
       });
-      await prisma.rolePermission.create({
-        data: {
-          roleId: id,
-          permissionId: permissionIds,
-        },
-      });
+
+      for (const permissionId of permissionIds) {
+        await prisma.rolePermission.create({
+          data: {
+            roleId: id,
+            permissionId,
+          },
+        });
+      }
     }
 
     return this.findOne(id);

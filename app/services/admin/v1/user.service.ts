@@ -75,7 +75,7 @@ class UserService {
         nextPage: page < Math.ceil(totalUsers / perPage) ? page + 1 : null,
         hasPrevPage: page > 1,
         hasNextPage: page < Math.ceil(totalUsers / perPage),
-      }
+      },
     };
   }
 
@@ -145,10 +145,10 @@ class UserService {
       include: {
         roles: {
           select: {
-            role: true
-          }
-        }
-      }
+            role: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -182,11 +182,6 @@ class UserService {
     }
 
     return this.findOne(id);
-  }
-
-  async destroy(id: number) {
-    await this.findOne(id);
-    await prisma.user.delete({ where: { id } });
   }
 }
 

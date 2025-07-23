@@ -28,6 +28,11 @@ export const statusCodes = {
   GATEWAY_TIMEOUT: 504,
 };
 
+export interface ErrorDetail {
+  field: string;
+  issue: string;
+}
+
 export class Exception extends Error {
   public statusCode: number;
   public error: string;
@@ -75,9 +80,9 @@ export class BadRequestException extends Error {
 export class ValidationException extends Error {
   public statusCode: number;
   public error: string;
-  public details: any;
+  public details: ErrorDetail[];
 
-  constructor(message = exceptionMessages.validationError, details: any) {
+  constructor(message = exceptionMessages.validationError, details: ErrorDetail[]) {
     super(message);
     this.statusCode = statusCodes.BAD_REQUEST;
     this.error = exceptionMessages.validationError;

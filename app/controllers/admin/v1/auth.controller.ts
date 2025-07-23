@@ -9,6 +9,7 @@ import {
 } from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
 import UserService from "../../../services/admin/v1/user.service";
+import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 
 class AuthController {
   private userService: UserService;
@@ -44,7 +45,7 @@ class AuthController {
     const token: string = generateToken(user, "30d");
 
     return successResponse(res, "User sign in successfully", {
-      user: await this.userService.findOne(user.id),
+      user: UserResource.toResource(await this.userService.findOne(user.id)),
       token,
     });
   }

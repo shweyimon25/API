@@ -6,10 +6,14 @@ import {
   createUserSchema,
   updateUserSchema,
 } from "../../../schemas/admin/v1/user.schema";
-import { ValidationException } from "../../../helpers/exceptions";
+import {
+  BadRequestException,
+  ValidationException,
+} from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
+import { z } from "zod";
 
 class UserController {
   private userService: UserService;
@@ -23,17 +27,29 @@ class UserController {
 
     if (page && perPage) {
       const users = await this.userService.findByPaginate(+page, +perPage);
-      return successResponse(res, "User list successfully", UserCollection.withPagination(users));
+      return successResponse(
+        res,
+        "User list successfully",
+        UserCollection.withPagination(users)
+      );
     }
 
     const users = await this.userService.findAll();
-    return successResponse(res, "User list successfully", UserCollection.toCollection(users));
+    return successResponse(
+      res,
+      "User list successfully",
+      UserCollection.toCollection(users)
+    );
   }
 
   async findOne(req: Request, res: Response) {
     const { id } = req.params;
     const user = await this.userService.findOne(+id);
-    return successResponse(res, "User detail successfully", UserResource.toResource(user));
+    return successResponse(
+      res,
+      "User detail successfully",
+      UserResource.toResource(user)
+    );
   }
 
   async create(req: Request, res: Response) {
@@ -47,33 +63,52 @@ class UserController {
     }
 
     const user = await this.userService.create(data);
-    return successResponse(res, "User created successfully", UserResource.toResource(user));
+    return successResponse(
+      res,
+      "User created successfully",
+      UserResource.toResource(user)
+    );
   }
 
   async update(req: Request, res: Response) {
     const { id } = req.params;
+    const { email, name } = req.body;
 
-    updateUserSchema
-      .refine(
-        async (args) => {
-          if (!req.body.name) return true;
-          const result = await prisma.user.findFirst({
-            where: { email: args.email, NOT: { id: +id } },
-          });
-          return !result;
+    if (email) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email,
+          NOT: { id: +id },
         },
-        { message: "Email is already exist", path: ["email"] }
-      )
-      .refine(
-        async (args) => {
-          if (!req.body.email) return true;
-          const result = await prisma.user.findFirst({
-            where: { name: args.name, NOT: { id: +id } },
-          });
-          return !result;
+      });
+
+      if (existingUser) {
+        throw new ValidationException("User updated failed", [
+          {
+            field: "email",
+            issue: "Email is already exist",
+          },
+        ]);
+      }
+    }
+
+    if (name) {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          name,
+          NOT: { id: +id },
         },
-        { message: "Name is already exist", path: ["name"] }
-      );
+      });
+
+      if (existingUser) {
+        throw new ValidationException("User updated failed", [
+          {
+            field: "name",
+            issue: "Name is already exist",
+          },
+        ]);
+      }
+    }
 
     const { data, error, success } = await validater(
       updateUserSchema,
@@ -85,13 +120,12 @@ class UserController {
     }
 
     const user = await this.userService.update(+id, data);
-    return successResponse(res, "User updated successfully", UserResource.toResource(user));
-  }
 
-  async destroy(req: Request, res: Response) {
-    const { id } = req.params;
-    await this.userService.destroy(+id);
-    return successResponse(res, "User deleted successfully");
+    return successResponse(
+      res,
+      "User updated successfully",
+      UserResource.toResource(user)
+    );
   }
 }
 

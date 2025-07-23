@@ -23,17 +23,29 @@ class RoleController {
 
     if (page && perPage) {
       const roles = await this.roleService.findByPaginate(+page, +perPage);
-      return successResponse(res, "Role list successfully", RoleCollection.withPagination(roles));
+      return successResponse(
+        res,
+        "Role list successfully",
+        RoleCollection.withPagination(roles)
+      );
     }
 
     const roles = await this.roleService.findAll();
-    return successResponse(res, "Role list successfully", RoleCollection.toCollection(roles));
+    return successResponse(
+      res,
+      "Role list successfully",
+      RoleCollection.toCollection(roles)
+    );
   }
 
   async findOne(req: Request, res: Response) {
     const { id } = req.params;
     const role = await this.roleService.findOne(+id);
-    return successResponse(res, "Role detail successfully", RoleResource.toResource(role));
+    return successResponse(
+      res,
+      "Role detail successfully",
+      RoleResource.toResource(role)
+    );
   }
 
   async create(req: Request, res: Response) {
@@ -47,22 +59,34 @@ class RoleController {
     }
 
     const role = await this.roleService.create(data);
-    return successResponse(res, "Role created successfully", RoleResource.toResource(role));
+    return successResponse(
+      res,
+      "Role created successfully",
+      RoleResource.toResource(role)
+    );
   }
 
   async update(req: Request, res: Response) {
     const { id } = req.params;
+    const { name } = req.body;
 
-    updateRoleSchema.refine(
-      async (args) => {
-        if (!req.body.name) return true;
-        const result = await prisma.role.findFirst({
-          where: { name: args.name, NOT: { id: +id } },
-        });
-        return !result;
-      },
-      { message: "Name is already exist", path: ["name"] }
-    );
+    if (name) {
+      const existingRole = await prisma.role.findFirst({
+        where: {
+          name,
+          NOT: { id: +id },
+        },
+      });
+
+      if (existingRole) {
+        throw new ValidationException("Role updated failed", [
+          {
+            field: "name",
+            issue: "Name is already exist",
+          },
+        ]);
+      }
+    }
 
     const { data, error, success } = await validater(
       updateRoleSchema,
@@ -74,7 +98,11 @@ class RoleController {
     }
 
     const role = await this.roleService.update(+id, data);
-    return successResponse(res, "Role updated successfully", RoleResource.toResource(role));
+    return successResponse(
+      res,
+      "Role updated successfully",
+      RoleResource.toResource(role)
+    );
   }
 
   async destroy(req: Request, res: Response) {

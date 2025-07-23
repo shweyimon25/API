@@ -1,25 +1,16 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE `User` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL,
 
-  - You are about to drop the column `profileId` on the `User` table. All the data in the column will be lost.
-  - You are about to drop the column `provider` on the `User` table. All the data in the column will be lost.
-  - You are about to drop the column `role` on the `User` table. All the data in the column will be lost.
-  - You are about to drop the `Profile` table. If the table is not empty, all the data it contains will be lost.
-
-*/
--- DropForeignKey
-ALTER TABLE `User` DROP FOREIGN KEY `User_profileId_fkey`;
-
--- DropIndex
-DROP INDEX `User_profileId_fkey` ON `User`;
-
--- AlterTable
-ALTER TABLE `User` DROP COLUMN `profileId`,
-    DROP COLUMN `provider`,
-    DROP COLUMN `role`;
-
--- DropTable
-DROP TABLE `Profile`;
+    UNIQUE INDEX `User_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Role` (
