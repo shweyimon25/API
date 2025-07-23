@@ -112,7 +112,7 @@ class UserService {
   }
 
   async create(createUserInput: CreateUserInput) {
-    const { name, email, password, status } = createUserInput;
+    const { name, email, password, status, roleId } = createUserInput;
 
     const user = await prisma.user.create({
       data: {
@@ -120,6 +120,15 @@ class UserService {
         email,
         password: hashPassword(password),
         status,
+        roles: {
+          create: {
+            role: {
+              connect: {
+                id: roleId,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -127,12 +136,19 @@ class UserService {
   }
 
   async update(id: number, updateUserInput: UpdateUserInput) {
-    const { name, email, password, status } = updateUserInput;
+    const { name, email, password, status, roleId } = updateUserInput;
 
     const user = await prisma.user.findUnique({
       where: {
         id,
       },
+      include: {
+        roles: {
+          select: {
+            role: true
+          }
+        }
+      }
     });
 
     if (!user) {
@@ -150,6 +166,20 @@ class UserService {
         status,
       },
     });
+
+    if (roleId) {
+      await prisma.userRole.deleteMany({
+        where: {
+          userId: id,
+        },
+      });
+      await prisma.userRole.create({
+        data: {
+          userId: id,
+          roleId,
+        },
+      });
+    }
 
     return this.findOne(id);
   }

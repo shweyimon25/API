@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { upload } from "../helpers/media-upload";
 import { successResponse } from "../helpers/response";
 import { BadRequestException } from "../helpers/exceptions";
