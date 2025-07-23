@@ -7,26 +7,34 @@ const adminSeeder = async () => {
   const admins = [
     {
       name: "Admin",
-      email: "admin@admin.com",
+      email: "admin@mail.com",
       password: hashPassword("@dminP@55"),
+      roleId: 1
     },
     {
       name: "RestaurantAdmin",
-      email: "restaurantadmin@restaurantadmin.com",
+      email: "restaurantadmin@mail.com",
       password: hashPassword("@dminP@55"),
+      roleId: 2
     },
   ];
 
-  for (const admin of admins) {
+  for (let admin of admins) {
     await prisma.user.create({
       data: {
         name: admin.name,
         email: admin.email,
         password: admin.password,
         roles: {
-          connect: {
-            id: admin.name === "Admin" ? 0 : 1,
-          },
+          create: [
+            {
+              role: {
+                connect: {
+                  id: admin.roleId
+                },
+              },
+            },
+          ],
         },
       },
     });

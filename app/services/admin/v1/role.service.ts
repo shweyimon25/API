@@ -41,14 +41,16 @@ class RoleService {
 
     return {
       data: roles,
-      totalCount: totalRoles,
-      totalPages: Math.ceil(totalRoles / perPage),
-      currentPage: page,
-      perPage,
-      prevPage: page > 1 ? page - 1 : null,
-      nextPage: page < Math.ceil(totalRoles / perPage) ? page + 1 : null,
-      hasPrevPage: page > 1,
-      hasNextPage: page < Math.ceil(totalRoles / perPage),
+      meta: {
+        totalCount: totalRoles,
+        totalPages: Math.ceil(totalRoles / perPage),
+        currentPage: page,
+        perPage,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < Math.ceil(totalRoles / perPage) ? page + 1 : null,
+        hasPrevPage: page > 1,
+        hasNextPage: page < Math.ceil(totalRoles / perPage),
+      },
     };
   }
 

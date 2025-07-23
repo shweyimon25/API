@@ -8,6 +8,8 @@ import {
 } from "../../../schemas/admin/v1/user.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
+import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
+import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 
 class UserController {
   private userService: UserService;
@@ -21,17 +23,17 @@ class UserController {
 
     if (page && perPage) {
       const users = await this.userService.findByPaginate(+page, +perPage);
-      return successResponse(res, "User list successfully", users);
+      return successResponse(res, "User list successfully", UserCollection.withPagination(users));
     }
 
     const users = await this.userService.findAll();
-    return successResponse(res, "User list successfully", users);
+    return successResponse(res, "User list successfully", UserCollection.toCollection(users));
   }
 
   async findOne(req: Request, res: Response) {
     const { id } = req.params;
     const user = await this.userService.findOne(+id);
-    return successResponse(res, "User detail successfully", user);
+    return successResponse(res, "User detail successfully", UserResource.toResource(user));
   }
 
   async create(req: Request, res: Response) {
@@ -45,7 +47,7 @@ class UserController {
     }
 
     const user = await this.userService.create(data);
-    return successResponse(res, "User created successfully", user);
+    return successResponse(res, "User created successfully", UserResource.toResource(user));
   }
 
   async update(req: Request, res: Response) {
@@ -83,7 +85,7 @@ class UserController {
     }
 
     const user = await this.userService.update(+id, data);
-    return successResponse(res, "User updated successfully", user);
+    return successResponse(res, "User updated successfully", UserResource.toResource(user));
   }
 
   async destroy(req: Request, res: Response) {

@@ -17,7 +17,16 @@ class UserService {
         name: true,
         email: true,
         status: true,
-        roles: true,
+        roles: {
+          select: {
+            role: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -38,7 +47,16 @@ class UserService {
         name: true,
         email: true,
         status: true,
-        roles: true,
+        roles: {
+          select: {
+            role: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -48,14 +66,16 @@ class UserService {
 
     return {
       data: users,
-      totalCount: totalUsers,
-      totalPages: Math.ceil(totalUsers / perPage),
-      currentPage: page,
-      perPage,
-      prevPage: page > 1 ? page - 1 : null,
-      nextPage: page < Math.ceil(totalUsers / perPage) ? page + 1 : null,
-      hasPrevPage: page > 1,
-      hasNextPage: page < Math.ceil(totalUsers / perPage),
+      meta: {
+        totalCount: totalUsers,
+        totalPages: Math.ceil(totalUsers / perPage),
+        currentPage: page,
+        perPage,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < Math.ceil(totalUsers / perPage) ? page + 1 : null,
+        hasPrevPage: page > 1,
+        hasNextPage: page < Math.ceil(totalUsers / perPage),
+      }
     };
   }
 
@@ -69,7 +89,16 @@ class UserService {
         name: true,
         email: true,
         status: true,
-        roles: true,
+        roles: {
+          select: {
+            role: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },

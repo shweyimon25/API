@@ -15,13 +15,6 @@ router
         await permissionController.findAll(req, res)
     ),
   ])
-  .post([
-    passport.authenticate("jwt", { session: false }),
-    asyncHandler(
-      async (req: Request, res: Response) =>
-        await permissionController.create(req, res)
-    ),
-  ]);
 
 router
   .route("/:id")
@@ -30,13 +23,6 @@ router
     asyncHandler(
       async (req: Request, res: Response) =>
         await permissionController.findOne(req, res)
-    ),
-  ])
-  .put([
-    passport.authenticate("jwt", { session: false }),
-    asyncHandler(
-      async (req: Request, res: Response) =>
-        await permissionController.update(req, res)
     ),
   ]);
 
