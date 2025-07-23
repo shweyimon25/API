@@ -62,6 +62,16 @@ class RoleService {
       select: {
         id: true,
         name: true,
+        permissions: {
+          select: {
+            permission: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -75,11 +85,20 @@ class RoleService {
   }
 
   async create(createRoleInput: CreateRoleInput) {
-    const { name } = createRoleInput;
+    const { name, permissionIds } = createRoleInput;
 
     const role = await prisma.role.create({
       data: {
         name,
+        permissions: {
+          create: permissionIds?.map((permissionId: number) => ({
+            permission: {
+              connect: {
+                id: permissionId,
+              },
+            },
+          })),
+        },
       },
     });
 
@@ -87,7 +106,7 @@ class RoleService {
   }
 
   async update(id: number, updateRoleInput: UpdateRoleInput) {
-    const { name } = updateRoleInput;
+    const { name, permissionIds } = updateRoleInput;
 
     const role = await prisma.role.findUnique({
       where: {
@@ -107,6 +126,20 @@ class RoleService {
         name: name || role.name,
       },
     });
+
+    if (permissionIds) {
+      await prisma.rolePermission.deleteMany({
+        where: {
+          roleId: id,
+        },
+      });
+      await prisma.rolePermission.create({
+        data: {
+          roleId: id,
+          permissionId: permissionIds,
+        },
+      });
+    }
 
     return this.findOne(id);
   }
