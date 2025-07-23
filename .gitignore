@@ -1,4 +1,8 @@
-dist
 node_modules
+# Keep environment variables out of version control
 .env
+public/uploads
+dist
+
 mysql_data
+phpmyadmin
