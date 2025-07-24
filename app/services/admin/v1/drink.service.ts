@@ -1,13 +1,10 @@
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
-import {
-  CreateRoleInput,
-  UpdateRoleInput,
-} from "../../../schemas/admin/v1/role.schema";
+import { CreateDrinkInput, UpdateDrinkInput } from "../../../schemas/admin/v1/drink.schema";
 
-class RoleService {
+class DrinkService {
   async findAll() {
-    const roles = await prisma.role.findMany({
+    const drinks = await prisma.drink.findMany({
       orderBy: {
         id: "desc",
       },
@@ -19,11 +16,11 @@ class RoleService {
       },
     });
 
-    return roles;
+    return drinks;
   }
 
   async findByPaginate(page: number, perPage: number) {
-    const roles = await prisma.role.findMany({
+    const drinks = await prisma.drink.findMany({
       orderBy: {
         id: "desc",
       },
@@ -37,120 +34,84 @@ class RoleService {
       },
     });
 
-    const totalRoles = await prisma.role.count();
+    const totalDrinks = await prisma.drink.count();
 
     return {
-      data: roles,
+      data: drinks,
       meta: {
-        totalCount: totalRoles,
-        totalPages: Math.ceil(totalRoles / perPage),
+        totalCount: totalDrinks,
+        totalPages: Math.ceil(totalDrinks / perPage),
         currentPage: page,
         perPage,
         prevPage: page > 1 ? page - 1 : null,
-        nextPage: page < Math.ceil(totalRoles / perPage) ? page + 1 : null,
+        nextPage: page < Math.ceil(totalDrinks / perPage) ? page + 1 : null,
         hasPrevPage: page > 1,
-        hasNextPage: page < Math.ceil(totalRoles / perPage),
+        hasNextPage: page < Math.ceil(totalDrinks / perPage),
       },
     };
   }
 
   async findOne(id: number) {
-    const role = await prisma.role.findUnique({
+    const drink = await prisma.drink.findUnique({
       where: {
         id,
       },
       select: {
         id: true,
         name: true,
-        permissions: {
-          select: {
-            permission: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    if (!role) {
-      throw new BadRequestException("Role not found");
+    if (!drink) {
+      throw new BadRequestException("Drink not found");
     }
 
-    return role;
+    return drink;
   }
 
-  async create(createRoleInput: CreateRoleInput) {
-    const { name, permissionIds } = createRoleInput;
+  async create(createDrinkInput: CreateDrinkInput) {
+    const { name } = createDrinkInput;
 
-    const role = await prisma.role.create({
+    const drink = await prisma.drink.create({
       data: {
         name,
-        permissions: {
-          create: permissionIds?.map((permissionId: number) => ({
-            permission: {
-              connect: {
-                id: permissionId,
-              },
-            },
-          })),
-        },
       },
     });
 
-    return this.findOne(role.id);
+    return this.findOne(drink.id);
   }
 
-  async update(id: number, updateRoleInput: UpdateRoleInput) {
-    const { name, permissionIds } = updateRoleInput;
+  async update(id: number, updateDrinkInput: UpdateDrinkInput) {
+    const { name } = updateDrinkInput;
 
-    const role = await prisma.role.findUnique({
+    const drink = await prisma.drink.findUnique({
       where: {
         id,
       },
     });
 
-    if (!role) {
-      throw new BadRequestException("Role not found");
+    if (!drink) {
+      throw new BadRequestException("Drink not found");
     }
 
-    await prisma.role.update({
+    await prisma.drink.update({
       where: {
         id,
       },
       data: {
-        name: name || role.name,
+        name: name || drink.name,
       },
     });
-
-    if (permissionIds) {
-      await prisma.rolePermission.deleteMany({
-        where: {
-          roleId: id,
-        },
-      });
-
-      for (const permissionId of permissionIds) {
-        await prisma.rolePermission.create({
-          data: {
-            roleId: id,
-            permissionId,
-          },
-        });
-      }
-    }
 
     return this.findOne(id);
   }
 
   async destroy(id: number) {
     await this.findOne(id);
-    await prisma.role.delete({ where: { id } });
+    await prisma.drink.delete({ where: { id } });
   }
 }
 
-export default RoleService;
+export default DrinkService;

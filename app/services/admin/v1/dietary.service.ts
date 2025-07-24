@@ -1,13 +1,10 @@
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
-import {
-  CreateRoleInput,
-  UpdateRoleInput,
-} from "../../../schemas/admin/v1/role.schema";
+import { CreateDietaryInput, UpdateDietaryInput } from "../../../schemas/admin/v1/dietary.schema";
 
-class RoleService {
+class DietaryService {
   async findAll() {
-    const roles = await prisma.role.findMany({
+    const dietaries = await prisma.dietary.findMany({
       orderBy: {
         id: "desc",
       },
@@ -19,11 +16,11 @@ class RoleService {
       },
     });
 
-    return roles;
+    return dietaries;
   }
 
   async findByPaginate(page: number, perPage: number) {
-    const roles = await prisma.role.findMany({
+    const dietaries = await prisma.dietary.findMany({
       orderBy: {
         id: "desc",
       },
@@ -37,120 +34,84 @@ class RoleService {
       },
     });
 
-    const totalRoles = await prisma.role.count();
+    const totalDietaries = await prisma.dietary.count();
 
     return {
-      data: roles,
+      data: dietaries,
       meta: {
-        totalCount: totalRoles,
-        totalPages: Math.ceil(totalRoles / perPage),
+        totalCount: totalDietaries,
+        totalPages: Math.ceil(totalDietaries / perPage),
         currentPage: page,
         perPage,
         prevPage: page > 1 ? page - 1 : null,
-        nextPage: page < Math.ceil(totalRoles / perPage) ? page + 1 : null,
+        nextPage: page < Math.ceil(totalDietaries / perPage) ? page + 1 : null,
         hasPrevPage: page > 1,
-        hasNextPage: page < Math.ceil(totalRoles / perPage),
+        hasNextPage: page < Math.ceil(totalDietaries / perPage),
       },
     };
   }
 
   async findOne(id: number) {
-    const role = await prisma.role.findUnique({
+    const dietary = await prisma.dietary.findUnique({
       where: {
         id,
       },
       select: {
         id: true,
         name: true,
-        permissions: {
-          select: {
-            permission: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    if (!role) {
-      throw new BadRequestException("Role not found");
+    if (!dietary) {
+      throw new BadRequestException("Dietary not found");
     }
 
-    return role;
+    return dietary;
   }
 
-  async create(createRoleInput: CreateRoleInput) {
-    const { name, permissionIds } = createRoleInput;
+  async create(createDietaryInput: CreateDietaryInput) {
+    const { name } = createDietaryInput;
 
-    const role = await prisma.role.create({
+    const dietary = await prisma.dietary.create({
       data: {
         name,
-        permissions: {
-          create: permissionIds?.map((permissionId: number) => ({
-            permission: {
-              connect: {
-                id: permissionId,
-              },
-            },
-          })),
-        },
       },
     });
 
-    return this.findOne(role.id);
+    return this.findOne(dietary.id);
   }
 
-  async update(id: number, updateRoleInput: UpdateRoleInput) {
-    const { name, permissionIds } = updateRoleInput;
+  async update(id: number, updateDietaryInput: UpdateDietaryInput) {
+    const { name } = updateDietaryInput;
 
-    const role = await prisma.role.findUnique({
+    const dietary = await prisma.dietary.findUnique({
       where: {
         id,
       },
     });
 
-    if (!role) {
-      throw new BadRequestException("Role not found");
+    if (!dietary) {
+      throw new BadRequestException("Dietary not found");
     }
 
-    await prisma.role.update({
+    await prisma.dietary.update({
       where: {
         id,
       },
       data: {
-        name: name || role.name,
+        name: name || dietary.name,
       },
     });
-
-    if (permissionIds) {
-      await prisma.rolePermission.deleteMany({
-        where: {
-          roleId: id,
-        },
-      });
-
-      for (const permissionId of permissionIds) {
-        await prisma.rolePermission.create({
-          data: {
-            roleId: id,
-            permissionId,
-          },
-        });
-      }
-    }
 
     return this.findOne(id);
   }
 
   async destroy(id: number) {
     await this.findOne(id);
-    await prisma.role.delete({ where: { id } });
+    await prisma.dietary.delete({ where: { id } });
   }
 }
 
-export default RoleService;
+export default DietaryService;

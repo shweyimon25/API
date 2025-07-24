@@ -1,13 +1,13 @@
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
 import {
-  CreateRoleInput,
-  UpdateRoleInput,
-} from "../../../schemas/admin/v1/role.schema";
+  CreateCuisineInput,
+  UpdateCuisineInput,
+} from "../../../schemas/admin/v1/cuisine.schema";
 
-class RoleService {
+class CuisineService {
   async findAll() {
-    const roles = await prisma.role.findMany({
+    const cuisines = await prisma.cuisine.findMany({
       orderBy: {
         id: "desc",
       },
@@ -19,11 +19,11 @@ class RoleService {
       },
     });
 
-    return roles;
+    return cuisines;
   }
 
   async findByPaginate(page: number, perPage: number) {
-    const roles = await prisma.role.findMany({
+    const cuisines = await prisma.cuisine.findMany({
       orderBy: {
         id: "desc",
       },
@@ -37,120 +37,84 @@ class RoleService {
       },
     });
 
-    const totalRoles = await prisma.role.count();
+    const totalCuisines = await prisma.cuisine.count();
 
     return {
-      data: roles,
+      data: cuisines,
       meta: {
-        totalCount: totalRoles,
-        totalPages: Math.ceil(totalRoles / perPage),
+        totalCount: totalCuisines,
+        totalPages: Math.ceil(totalCuisines / perPage),
         currentPage: page,
         perPage,
         prevPage: page > 1 ? page - 1 : null,
-        nextPage: page < Math.ceil(totalRoles / perPage) ? page + 1 : null,
+        nextPage: page < Math.ceil(totalCuisines / perPage) ? page + 1 : null,
         hasPrevPage: page > 1,
-        hasNextPage: page < Math.ceil(totalRoles / perPage),
+        hasNextPage: page < Math.ceil(totalCuisines / perPage),
       },
     };
   }
 
   async findOne(id: number) {
-    const role = await prisma.role.findUnique({
+    const cuisine = await prisma.cuisine.findUnique({
       where: {
         id,
       },
       select: {
         id: true,
         name: true,
-        permissions: {
-          select: {
-            permission: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    if (!role) {
-      throw new BadRequestException("Role not found");
+    if (!cuisine) {
+      throw new BadRequestException("Cuisine not found");
     }
 
-    return role;
+    return cuisine;
   }
 
-  async create(createRoleInput: CreateRoleInput) {
-    const { name, permissionIds } = createRoleInput;
+  async create(createCuisineInput: CreateCuisineInput) {
+    const { name } = createCuisineInput;
 
-    const role = await prisma.role.create({
+    const cuisine = await prisma.cuisine.create({
       data: {
         name,
-        permissions: {
-          create: permissionIds?.map((permissionId: number) => ({
-            permission: {
-              connect: {
-                id: permissionId,
-              },
-            },
-          })),
-        },
       },
     });
 
-    return this.findOne(role.id);
+    return this.findOne(cuisine.id);
   }
 
-  async update(id: number, updateRoleInput: UpdateRoleInput) {
-    const { name, permissionIds } = updateRoleInput;
+  async update(id: number, updateCuisineInput: UpdateCuisineInput) {
+    const { name } = updateCuisineInput;
 
-    const role = await prisma.role.findUnique({
+    const cuisine = await prisma.cuisine.findUnique({
       where: {
         id,
       },
     });
 
-    if (!role) {
-      throw new BadRequestException("Role not found");
+    if (!cuisine) {
+      throw new BadRequestException("Cuisine not found");
     }
 
-    await prisma.role.update({
+    await prisma.cuisine.update({
       where: {
         id,
       },
       data: {
-        name: name || role.name,
+        name: name || cuisine.name,
       },
     });
-
-    if (permissionIds) {
-      await prisma.rolePermission.deleteMany({
-        where: {
-          roleId: id,
-        },
-      });
-
-      for (const permissionId of permissionIds) {
-        await prisma.rolePermission.create({
-          data: {
-            roleId: id,
-            permissionId,
-          },
-        });
-      }
-    }
 
     return this.findOne(id);
   }
 
   async destroy(id: number) {
     await this.findOne(id);
-    await prisma.role.delete({ where: { id } });
+    await prisma.cuisine.delete({ where: { id } });
   }
 }
 
-export default RoleService;
+export default CuisineService;

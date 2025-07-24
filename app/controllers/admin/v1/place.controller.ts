@@ -1,68 +1,65 @@
 import { Request, Response } from "express";
 import { successResponse } from "../../../helpers/response";
-import RoleService from "../../../services/admin/v1/role.service";
+import PlaceService from "../../../services/admin/v1/place.service";
 import { validater } from "../../../helpers/validator";
-import {
-  createRoleSchema,
-  updateRoleSchema,
-} from "../../../schemas/admin/v1/role.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
-import { RoleCollection } from "../../../resources/admin/v1/role/role.collection";
-import { RoleResource } from "../../../resources/admin/v1/role/role.resource";
+import { PlaceCollection } from "../../../resources/admin/v1/place/place.collection";
+import { PlaceResource } from "../../../resources/admin/v1/place/place.resource";
+import { createPlaceSchema, updatePlaceSchema } from "../../../schemas/admin/v1/place.schema";
 
-class RoleController {
-  private roleService: RoleService;
+class PlaceController {
+  private placeService: PlaceService;
 
   constructor() {
-    this.roleService = new RoleService();
+    this.placeService = new PlaceService();
   }
 
   async findAll(req: Request, res: Response) {
     const { page = 1, perPage = 10 } = req.query;
 
     if (page && perPage) {
-      const roles = await this.roleService.findByPaginate(+page, +perPage);
+      const places = await this.placeService.findByPaginate(+page, +perPage);
       return successResponse(
         res,
-        "Role list successfully",
-        RoleCollection.withPagination(roles)
+        "Place list successfully",
+        PlaceCollection.withPagination(places)
       );
     }
 
-    const roles = await this.roleService.findAll();
+    const places = await this.placeService.findAll();
     return successResponse(
       res,
-      "Role list successfully",
-      RoleCollection.toCollection(roles)
+      "Place list successfully",
+      PlaceCollection.toCollection(places)
     );
   }
 
   async findOne(req: Request, res: Response) {
     const { id } = req.params;
-    const role = await this.roleService.findOne(+id);
+    const place = await this.placeService.findOne(+id);
     return successResponse(
       res,
-      "Role detail successfully",
-      RoleResource.toResource(role)
+      "Place detail successfully",
+      PlaceResource.toResource(place)
     );
   }
 
   async create(req: Request, res: Response) {
     const { data, error, success } = await validater(
-      createRoleSchema,
+      createPlaceSchema,
       req.body
     );
 
     if (!success) {
-      throw new ValidationException("Role created failed", error);
+      throw new ValidationException("Place created failed", error);
     }
 
-    const role = await this.roleService.create(data);
+    const place = await this.placeService.create(data);
     return successResponse(
       res,
-      "Role created successfully",
-      RoleResource.toResource(role)
+      "Place created successfully",
+      PlaceResource.toResource(place)
     );
   }
 
@@ -71,15 +68,15 @@ class RoleController {
     const { name } = req.body;
 
     if (name) {
-      const existingRole = await prisma.role.findFirst({
+      const existingPlace = await prisma.place.findFirst({
         where: {
           name,
           NOT: { id: +id },
         },
       });
 
-      if (existingRole) {
-        throw new ValidationException("Role updated failed", [
+      if (existingPlace) {
+        throw new ValidationException("Place updated failed", [
           {
             field: "name",
             issue: "Name is already exist",
@@ -89,27 +86,27 @@ class RoleController {
     }
 
     const { data, error, success } = await validater(
-      updateRoleSchema,
+      updatePlaceSchema,
       req.body
     );
 
     if (!success) {
-      throw new ValidationException("Role updated failed", error);
+      throw new ValidationException("Place updated failed", error);
     }
 
-    const role = await this.roleService.update(+id, data);
+    const place = await this.placeService.update(+id, data);
     return successResponse(
       res,
-      "Role updated successfully",
-      RoleResource.toResource(role)
+      "Place updated successfully",
+      PlaceResource.toResource(place)
     );
   }
 
   async destroy(req: Request, res: Response) {
     const { id } = req.params;
-    await this.roleService.destroy(+id);
-    return successResponse(res, "Role deleted successfully");
+    await this.placeService.destroy(+id);
+    return successResponse(res, "Place deleted successfully");
   }
 }
 
-export default RoleController;
+export default PlaceController;

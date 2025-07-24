@@ -1,68 +1,65 @@
 import { Request, Response } from "express";
 import { successResponse } from "../../../helpers/response";
-import RoleService from "../../../services/admin/v1/role.service";
+import DrinkService from "../../../services/admin/v1/drink.service";
 import { validater } from "../../../helpers/validator";
-import {
-  createRoleSchema,
-  updateRoleSchema,
-} from "../../../schemas/admin/v1/role.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
-import { RoleCollection } from "../../../resources/admin/v1/role/role.collection";
-import { RoleResource } from "../../../resources/admin/v1/role/role.resource";
+import { DrinkResource } from "../../../resources/admin/v1/drink/drink.resource";
+import { DrinkCollection } from "../../../resources/admin/v1/drink/drink.collection";
+import { createDrinkSchema, updateDrinkSchema } from "../../../schemas/admin/v1/drink.schema";
 
-class RoleController {
-  private roleService: RoleService;
+class DrinkController {
+  private drinkService: DrinkService;
 
   constructor() {
-    this.roleService = new RoleService();
+    this.drinkService = new DrinkService();
   }
 
   async findAll(req: Request, res: Response) {
     const { page = 1, perPage = 10 } = req.query;
 
     if (page && perPage) {
-      const roles = await this.roleService.findByPaginate(+page, +perPage);
+      const drinks = await this.drinkService.findByPaginate(+page, +perPage);
       return successResponse(
         res,
-        "Role list successfully",
-        RoleCollection.withPagination(roles)
+        "Drink list successfully",
+        DrinkCollection.withPagination(drinks)
       );
     }
 
-    const roles = await this.roleService.findAll();
+    const drinks = await this.drinkService.findAll();
     return successResponse(
       res,
-      "Role list successfully",
-      RoleCollection.toCollection(roles)
+      "Drink list successfully",
+      DrinkCollection.toCollection(drinks)
     );
   }
 
   async findOne(req: Request, res: Response) {
     const { id } = req.params;
-    const role = await this.roleService.findOne(+id);
+    const drink = await this.drinkService.findOne(+id);
     return successResponse(
       res,
-      "Role detail successfully",
-      RoleResource.toResource(role)
+      "Drink detail successfully",
+      DrinkResource.toResource(drink)
     );
   }
 
   async create(req: Request, res: Response) {
     const { data, error, success } = await validater(
-      createRoleSchema,
+      createDrinkSchema,
       req.body
     );
 
     if (!success) {
-      throw new ValidationException("Role created failed", error);
+      throw new ValidationException("Drink created failed", error);
     }
 
-    const role = await this.roleService.create(data);
+    const drink = await this.drinkService.create(data);
     return successResponse(
       res,
-      "Role created successfully",
-      RoleResource.toResource(role)
+      "Drink created successfully",
+      DrinkResource.toResource(drink)
     );
   }
 
@@ -89,27 +86,27 @@ class RoleController {
     }
 
     const { data, error, success } = await validater(
-      updateRoleSchema,
+      updateDrinkSchema,
       req.body
     );
 
     if (!success) {
-      throw new ValidationException("Role updated failed", error);
+      throw new ValidationException("Drink updated failed", error);
     }
 
-    const role = await this.roleService.update(+id, data);
+    const drink = await this.drinkService.update(+id, data);
     return successResponse(
       res,
-      "Role updated successfully",
-      RoleResource.toResource(role)
+      "Drink updated successfully",
+      DrinkResource.toResource(drink)
     );
   }
 
   async destroy(req: Request, res: Response) {
     const { id } = req.params;
-    await this.roleService.destroy(+id);
-    return successResponse(res, "Role deleted successfully");
+    await this.drinkService.destroy(+id);
+    return successResponse(res, "Drink deleted successfully");
   }
 }
 
-export default RoleController;
+export default DrinkController;

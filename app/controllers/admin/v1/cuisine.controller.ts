@@ -8,8 +8,8 @@ import {
 } from "../../../schemas/admin/v1/cuisine.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
-import { RoleCollection } from "../../../resources/admin/v1/role/role.collection";
-import { RoleResource } from "../../../resources/admin/v1/role/role.resource";
+import { CuisineCollection } from "../../../resources/admin/v1/cuisine/cuisine.collection";
+import { CuisineResource } from "../../../resources/admin/v1/cuisine/cuisine.resource";
 
 class CuisineController {
   private cuisineService: CuisineService;
