@@ -15,7 +15,7 @@ datasource db {
 
 model User {
   id        Int      @id @default(autoincrement())
-  name      String
+  name      String   @unique
   email     String   @unique
   password  String
   status    Boolean  @default(true)
@@ -31,16 +31,16 @@ model Role {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  permissions RolePermission[]
-  users       UserRole[]
+  rolePermissions RolePermission[]
+  users           UserRole[]
 }
 
 model Permission {
-  id             Int              @id @default(autoincrement())
-  name           String           @unique
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  RolePermission RolePermission[]
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rolePermissions RolePermission[]
 }
 
 model UserRole {
@@ -63,4 +63,81 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
+}
+
+model Cuisine {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Drink {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Dietary {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Place {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  email         String   @unique
+  phone         String
+  walletBalance Float    @default(0)
+  status        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customerProfile CustomerProfile?
+}
+
+model CustomerProfile {
+  id         Int      @id @default(autoincrement())
+  customerId Int      @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  language   Language @default(English)
+  avatar     String?
+  bio        String?  @db.LongText
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  diningPreferences DiningPreference[]
+}
+
+enum Language {
+  Thai
+  English
+}
+
+model DiningPreference {
+  id                Int            @id @default(autoincrement())
+  customerProfileId Int
+  type              PreferenceType
+  value             String
+
+  customerProfile CustomerProfile @relation(fields: [customerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([customerProfileId])
+}
+
+enum PreferenceType {
+  cuisines
+  drinks
+  dietary
+  places
 }
