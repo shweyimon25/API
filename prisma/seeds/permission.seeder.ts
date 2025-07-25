@@ -18,8 +18,14 @@ const permissionSeeder = async () => {
   ];
 
   for (const permission of permissions) {
-    await prisma.permission.create({
-      data: {
+    await prisma.permission.upsert({
+      where: {
+        name: permission.name,
+      },
+      update: {
+        name: permission.name,
+      },
+      create: {
         name: permission.name,
       },
     });
