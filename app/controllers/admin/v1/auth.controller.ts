@@ -29,6 +29,13 @@ class AuthController {
       where: {
         email: data.email,
         status: true,
+        roles: {
+          some: {
+            role: {
+              name: "SuperAdmin",
+            },
+          },
+        },
       },
     });
 

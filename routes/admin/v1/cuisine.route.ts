@@ -1,10 +1,10 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
-import RoleController from "../../../app/controllers/admin/v1/role.controller";
+import CuisineController from "../../../app/controllers/admin/v1/cuisine.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
 const router = Router();
-const roleController = new RoleController();
+const cuisineController = new CuisineController();
 
 router
   .route("/")
@@ -12,14 +12,14 @@ router
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await roleController.findAll(req, res)
+        await cuisineController.findAll(req, res)
     ),
   ])
   .post([
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await roleController.create(req, res)
+        await cuisineController.create(req, res)
     ),
   ]);
 
@@ -29,20 +29,21 @@ router
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await roleController.findOne(req, res)
+        await cuisineController.findOne(req, res)
     ),
   ])
   .put([
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await roleController.update(req, res)
+        await cuisineController.update(req, res)
     ),
-  ]).delete([
+  ])
+  .delete([
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await roleController.destroy(req, res)
+        await cuisineController.destroy(req, res)
     ),
   ]);
 

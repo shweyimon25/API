@@ -7,13 +7,11 @@ import {
   updateUserSchema,
 } from "../../../schemas/admin/v1/user.schema";
 import {
-  BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
-import { z } from "zod";
 
 class UserController {
   private userService: UserService;
