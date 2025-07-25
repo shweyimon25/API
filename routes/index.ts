@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 // Admin Routes
+import adminGreetRoute from "./admin/v1/greet.route";
 import adminAuthRoute from "./admin/v1/auth.route";
 import adminUserRoute from "./admin/v1/user.route";
 import adminRoleRoute from "./admin/v1/role.route";
@@ -24,7 +25,7 @@ router.use("/admin/v1/cuisines", adminCuisineRoute);
 router.use("/admin/v1/places", adminPlaceRoute);
 router.use("/admin/v1/dietaries", adminDietaryRoute);
 router.use("/admin/v1/drinks", adminDrinkRoute);
-
+router.use("/admin/v1/greet", adminGreetRoute);
 router.use("/admin/v1/media", mediaRoute);
 
 export default router;
