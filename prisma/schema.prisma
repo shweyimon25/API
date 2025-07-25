@@ -101,23 +101,24 @@ model Floor {
 }
 
 model Customer {
-  id            Int      @id @default(autoincrement())
-  name          String   @unique
-  email         String   @unique
-  phone         String
-  walletBalance Float    @default(0)
-  status        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  email     String   @unique
+  password  String
+  phone     String   @unique
+  balance   Float    @default(0)
+  status    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  customerProfile CustomerProfile?
+  profile CustomerProfile?
 }
 
 model CustomerProfile {
   id         Int      @id @default(autoincrement())
   customerId Int      @unique
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  language   Language @default(English)
+  language   Language @default(en)
   avatar     String?
   bio        String?  @db.LongText
   createdAt  DateTime @default(now())
@@ -127,8 +128,8 @@ model CustomerProfile {
 }
 
 enum Language {
-  Thai
-  English
+  thai
+  en
 }
 
 model DiningPreference {
