@@ -125,11 +125,6 @@ class RestaurantService {
 
     return this.findOne(id);
   }
-
-  async destroy(id: number) {
-    await this.findOne(id);
-    await prisma.restaurant.delete({ where: { id } });
-  }
 }
 
 export default RestaurantService;

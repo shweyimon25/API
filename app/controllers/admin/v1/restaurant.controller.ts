@@ -116,12 +116,6 @@ class RestaurantController {
       RestaurantResource.toResource(restaurant)
     );
   }
-
-  async destroy(req: Request, res: Response) {
-    const { id } = req.params;
-    await this.restaurantService.destroy(+id);
-    return successResponse(res, "Restaurant deleted successfully");
-  }
 }
 
 export default RestaurantController;
