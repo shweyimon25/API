@@ -8,6 +8,8 @@ import dietarySeeder from "./dietary.seeder";
 import drinkSeeder from "./drink.seeder";
 import placeSeeder from "./place.seeder";
 import floorSeeder from "./floor.seeder";
+import typeSeeder from "./type.seeder";
+import tableTypeSeeder from "./table-type.seeder";
 
 dotenv.config();
 
@@ -21,6 +23,8 @@ const main = async () => {
     await drinkSeeder();
     await placeSeeder();
     await floorSeeder();
+    await typeSeeder();
+    await tableTypeSeeder();
   } catch (error) {
     console.error(error);
     process.exit(1);
