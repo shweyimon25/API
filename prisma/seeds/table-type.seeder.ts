@@ -1,11 +1,11 @@
 import { faker } from "@faker-js/faker";
 import prisma from "../client";
 
-const placeSeeder = async () => {
-  console.log("Places seeding ...");
+const tableTypeSeeder = async () => {
+  console.log("Table types seeding ...");
 
   for (let i = 0; i < 10; i++) {
-    await prisma.place.upsert({
+    await prisma.tableType.upsert({
       where: {
         id: i,
       },
@@ -18,7 +18,7 @@ const placeSeeder = async () => {
     });
   }
 
-  console.log("Places seeding successfully");
+  console.log("Table types seeding successfully");
 };
 
-export default placeSeeder;
+export default tableTypeSeeder;

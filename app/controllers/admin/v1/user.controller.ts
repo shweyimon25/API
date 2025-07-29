@@ -6,9 +6,7 @@ import {
   createUserSchema,
   updateUserSchema,
 } from "../../../schemas/admin/v1/user.schema";
-import {
-  ValidationException,
-} from "../../../helpers/exceptions";
+import { ValidationException } from "../../../helpers/exceptions";
 import prisma from "../../../../prisma/client";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
@@ -61,6 +59,7 @@ class UserController {
     }
 
     const user = await this.userService.create(data);
+
     return successResponse(
       res,
       "User created successfully",
