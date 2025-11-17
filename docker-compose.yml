@@ -1,25 +1,44 @@
-services:
+# Environment variables are loaded from .env file in the same directory
 
+services:
   db:
     image: mysql:8.0
-    container_name: share_friend_db
+    container_name: mysql_db
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: share_friend
-      MYSQL_USER: share_friend_user
-      MYSQL_PASSWORD: share_friend_password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-yc_fitness}
+      MYSQL_USER: ${DB_USER:-user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
     ports:
-      - "3307:3306"
+      - "${DB_PORT:-3306}:3306"
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+    env_file:
+      - .env
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: share_friend_phpmyadmin
-    environment:
-      PMA_HOST: share_friend_db
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "8081:80"
+    container_name: phpmyadmin
+    restart: always
     depends_on:
       - db
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      PMA_PORT: 3306
+    ports:
+      - "${PMA_PORT:-8080}:80"
+    networks:
+      - app-network
+    env_file:
+      - .env
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
