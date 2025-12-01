@@ -1,59 +1,16 @@
 import z from "zod";
-import prisma from "../../../../prisma/client";
 
 export const createUserSchema = z
   .object({
-    name: z
-      .string()
-      .min(1, { message: "Name is required" })
-      .refine(
-        async (arg) => {
-          const result = await prisma.user.findFirst({
-            where: {
-              name: arg,
-            },
-          });
-          return !result;
-        },
-        {
-          message: "Name is already exist",
-        }
-      ),
+    name: z.string().min(1, { message: "Name is required" }),
     email: z
       .string()
       .email({ message: "Invalid email address" })
-      .min(1, { message: "Email is required" })
-      .refine(
-        async (arg) => {
-          const result = await prisma.user.findFirst({
-            where: {
-              email: arg,
-            },
-          });
-          return !result;
-        },
-        {
-          message: "Email is already exist",
-        }
-      ),
-    roleId: z
-      .number({
-        required_error: "Role is required",
-        invalid_type_error: "Role must be a number",
-      })
-      .refine(
-        async (arg) => {
-          const result = await prisma.role.findUnique({
-            where: {
-              id: arg,
-            },
-          });
-          return result;
-        },
-        {
-          message: "Role is not exist",
-        }
-      ),
+      .min(1, { message: "Email is required" }),
+    roleId: z.number({
+      required_error: "Role is required",
+      invalid_type_error: "Role must be a number",
+    }),
     status: z.boolean().optional(),
     password: z
       .string()
@@ -69,22 +26,7 @@ export const updateUserSchema = z
   .object({
     name: z.string().optional(),
     email: z.string().email().optional(),
-    roleId: z
-      .number()
-      .refine(
-        async (arg) => {
-          const result = await prisma.role.findUnique({
-            where: {
-              id: arg,
-            },
-          });
-          return result;
-        },
-        {
-          message: "Role is not exist",
-        }
-      )
-      .optional(),
+    roleId: z.number().optional(),
     status: z.boolean().optional(),
     password: z.string().optional(),
     passwordConfirm: z.string().optional(),

@@ -27,7 +27,14 @@ class AuthController {
 
     const user = await prisma.user.findFirst({
       where: {
-        email: data.email,
+        OR: [
+          {
+            email: data.email,
+          },
+          {
+            username: data.username,
+          },
+        ],
         status: true,
         roles: {
           some: {

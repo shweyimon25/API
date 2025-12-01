@@ -17,6 +17,7 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
+  username  String   @unique
   password  String
   status    Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -63,4 +64,55 @@ model RolePermission {
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
+}
+
+model MemberType {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberPlans MemberPlan[]
+}
+
+model MemberPlan {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  memberType   MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
+  memberTypeId Int
+  price        Int        @default(0)
+  pros         Pros[]
+  cons         Cons[]
+  isVideoGroup Boolean    @default(false)
+  status       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Pros {
+  id           Int         @id @default(autoincrement())
+  name         String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  memberPlan   MemberPlan? @relation(fields: [memberPlanId], references: [id])
+  memberPlanId Int?
+}
+
+model Cons {
+  id           Int         @id @default(autoincrement())
+  name         String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  memberPlan   MemberPlan? @relation(fields: [memberPlanId], references: [id])
+  memberPlanId Int?
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  username  String   @unique
+  password  String
+  status    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
