@@ -1,3 +1,4 @@
+import { hashPassword } from './../../app/helpers/helper';
 import prisma from "../client";
 
 const adminUserSeeder = async () => {
@@ -8,7 +9,7 @@ const adminUserSeeder = async () => {
       name: "Admin",
       email: "admin@admin.com",
       username: "admin",
-      password: "admin",
+      password: hashPassword("admin"),
       roles: {
         create: {
           role: {

@@ -112,12 +112,13 @@ class UserService {
   }
 
   async create(createUserInput: CreateUserInput) {
-    const { name, email, password, status, roleId } = createUserInput;
+    const { name, username, email, password, status, roleId } = createUserInput;
 
     const user = await prisma.user.create({
       data: {
         name,
         email,
+        username,
         password: hashPassword(password),
         status,
         roles: {
@@ -136,7 +137,7 @@ class UserService {
   }
 
   async update(id: number, updateUserInput: UpdateUserInput) {
-    const { name, email, password, status, roleId } = updateUserInput;
+    const { name, username, email, password, status, roleId } = updateUserInput;
 
     const user = await prisma.user.findUnique({
       where: {
@@ -162,6 +163,7 @@ class UserService {
       data: {
         name: name || user.name,
         email: email || user.email,
+        username: username || user.username,
         password: password ? hashPassword(password) : user.password,
         status,
       },
