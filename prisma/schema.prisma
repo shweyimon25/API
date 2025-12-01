@@ -105,13 +105,39 @@ model Cons {
   memberPlanId Int?
 }
 
-model Customer {
+model Member {
   id        Int      @id @default(autoincrement())
   name      String
   email     String   @unique
   username  String   @unique
   password  String
+  memberType MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
+  memberTypeId Int
+  providerType ProviderType
   status    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ProviderType {
+  GOOGLE
+  FACEBOOK
+  APPLE
+  OTP
+}
+
+model GymMemberProfile {
+  id Int @id @default(autoincrement())
+  memberId Int
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TrainerMemberProfile {
+  id Int @id @default(autoincrement())
+  memberId Int
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
