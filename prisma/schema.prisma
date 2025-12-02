@@ -22,7 +22,9 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  roles UserRole[]
+  roles       UserRole[]
+  tagsCreated Tag[]      @relation("TagCreatedBy")
+  tagsUpdated Tag[]      @relation("TagUpdatedBy")
 }
 
 model Role {
@@ -68,6 +70,7 @@ model RolePermission {
 model MemberType {
   id          Int          @id @default(autoincrement())
   name        String       @unique
+  members     Member[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   memberPlans MemberPlan[]
@@ -85,6 +88,7 @@ model MemberPlan {
   status       Boolean    @default(true)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  payments     Payment[]
 }
 
 model Pros {
@@ -106,17 +110,22 @@ model Cons {
 }
 
 model Member {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  username  String   @unique
-  password  String
-  memberType MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
-  memberTypeId Int
-  providerType ProviderType
-  status    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   Int                   @id @default(autoincrement())
+  name                 String
+  email                String                @unique
+  username             String                @unique
+  password             String
+  memberType           MemberType            @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
+  memberTypeId         Int
+  providerType         ProviderType
+  status               Boolean               @default(true)
+  gymMemberProfile     GymMemberProfile?
+  trainerMemberProfile TrainerMemberProfile?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  postComments PostComment[]
+  payments     Payment[]
 }
 
 enum ProviderType {
@@ -127,17 +136,82 @@ enum ProviderType {
 }
 
 model GymMemberProfile {
-  id Int @id @default(autoincrement())
-  memberId Int
-  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  memberId  Int      @unique
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model TrainerMemberProfile {
-  id Int @id @default(autoincrement())
-  memberId Int
-  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id        Int      @id @default(autoincrement())
+  memberId  Int      @unique
+  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Tag {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
+  createdById Int?
+  updatedById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts Post[]
+}
+
+model Post {
+  id           Int          @id @default(autoincrement())
+  contact      Json?
+  tag          Tag          @relation(fields: [tagId], references: [id])
+  tagId        Int
+  privencyType PrivencyType
+  media        Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  postComments PostComment[]
+}
+
+enum PrivencyType {
+  PUBLIC
+  PRIVATE
+  FRIEND
+}
+
+model PostComment {
+  id        Int           @id @default(autoincrement())
+  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  memberId  Int
+  member    Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  comment   Json
+  parentId  Int?
+  parent    PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   PostComment[] @relation("CommentReplies")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Payment {
+  id           Int           @id @default(autoincrement())
+  memberId     Int
+  member       Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberPlan   MemberPlan    @relation(fields: [memberPlanId], references: [id])
+  memberPlanId Int
+  amount       Int           @default(0)
+  attachment   String
+  status       PaymentStatus @default(OPEN)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+enum PaymentStatus {
+  OPEN
+  PAID
+  CANCELLED
 }
