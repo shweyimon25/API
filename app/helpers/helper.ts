@@ -1,10 +1,11 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import dotenv from "dotenv";
-import prisma from "../../prisma/client";
+import { PrismaClient } from "@prisma/client";
 import slugify from "slugify";
 import { BadRequestException } from "./exceptions";
-import { Prisma } from "@prisma/client";
+
+const prisma = new PrismaClient();
 dotenv.config();
 
 export const hashPassword = (password: string) => bcrypt.hashSync(password, 10);
@@ -12,16 +13,23 @@ export const hashPassword = (password: string) => bcrypt.hashSync(password, 10);
 export const comparePassword = (password: string, hashPassword: string) =>
   bcrypt.compareSync(password, hashPassword);
 
-export const generateToken = (user: any, expiresIn: string) => {
-  return jwt.sign(user, process.env.JWT_SECRET as string, {
-    expiresIn: expiresIn || "30d",
-  });
+export const generateToken = (
+  user: string | Buffer | object,
+  expiresIn?: SignOptions["expiresIn"]
+) => {
+  const secret = process.env.JWT_SECRET as Secret;
+
+  const options: SignOptions = {
+    expiresIn: expiresIn ?? "30d",
+  };
+
+  return jwt.sign(user, secret, options);
 };
 
 export const decodeToken = (token: any) =>
   jwt.verify(token, process.env.JWT_SECRET as string);
 
-export const generateSlug = async (columnName: string, modelName: Prisma.ModelName) => {
+export const generateSlug = async (columnName: string, modelName: any) => {
   const baseSlug = slugify(columnName, { lower: true, strict: true });
 
   const model = (prisma as Record<string, any>)[modelName];

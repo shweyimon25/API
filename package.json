@@ -17,18 +17,17 @@
   "description": "",
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",
-    "@prisma/extension-optimize": "^2.0.0",
     "@types/bcrypt": "^5.0.2",
     "@types/multer": "^1.4.12",
     "@types/nodemailer": "^6.4.16",
     "@types/passport-jwt": "^4.0.1",
     "nodemon": "^3.1.7",
-    "prisma": "^7.0.1",
+    "prisma": "^6.5.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   },
   "dependencies": {
-    "@prisma/client": "^6.0.0",
+    "@prisma/client": "^6.5.0",
     "@tanstack/react-query": "^5.80.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",

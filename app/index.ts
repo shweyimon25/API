@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+dotenv.config(); // Load environment variables first
 import cors from "cors";
 import { join } from "node:path";
 import routes from "../routes";
@@ -8,7 +9,6 @@ import { createServer } from "node:http";
 import "./middlewares/passport/jwt-strategy";
 import multer from "multer";
 import loggerMiddleware from "./middlewares/logger.middleware";
-dotenv.config();
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });

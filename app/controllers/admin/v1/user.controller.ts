@@ -7,10 +7,11 @@ import {
   updateUserSchema,
 } from "../../../schemas/admin/v1/user.schema";
 import { ValidationException } from "../../../helpers/exceptions";
-import prisma from "../../../../prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 
+const prisma = new PrismaClient();
 class UserController {
   private userService: UserService;
 
