@@ -40,6 +40,34 @@ class RoleController {
       RoleResource.toResource(role)
     );
   }
+
+  async create(req: Request, res: Response) {
+    const role = await this.roleService.create(req.body);
+    return successResponse(
+      res,
+      "Role details retrieved successfully",
+      RoleResource.toResource(role)
+    );
+  }
+
+  async update(req: Request, res: Response) {
+    const role = await this.roleService.update(req.body);
+    return successResponse(
+      res,
+      "Role details retrieved successfully",
+      RoleResource.toResource(role)
+    );
+  }
+
+  async destroy(req: Request, res: Response) {
+    const { id } = req.params;
+    const role = await this.roleService.destory(+id);
+    return successResponse(
+      res,
+      "Role details retrieved successfully",
+      RoleResource.toResource(role)
+    );
+  }
 }
 
 export default RoleController;

@@ -8,8 +8,8 @@ dotenv.config();
 
 const main = async () => {
   try {
-    await permissionSeeder();
     await roleSeeder();
+    await permissionSeeder();
     await adminUserSeeder();
   } catch (error) {
     console.error(error);

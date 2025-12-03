@@ -1,5 +1,9 @@
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
+import {
+  CreateRoleInput,
+  UpdateRoleInput,
+} from "../../../schemas/admin/v1/role.schema";
 
 class RoleService {
   async findAll() {
@@ -90,6 +94,24 @@ class RoleService {
 
     return role;
   }
+
+  async create(createRoleInput: CreateRoleInput) {
+    const role = await prisma.role.create({
+      data: createRoleInput,
+    });
+
+    return role;
+  }
+
+  async update(updateRoleInput: UpdateRoleInput) {
+    const role = await prisma.role.update({
+      data: updateRoleInput,
+    });
+
+    return role;
+  }
+
+  async destory(id: number) {}
 }
 
 export default RoleService;
