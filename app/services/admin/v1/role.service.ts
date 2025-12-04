@@ -104,11 +104,11 @@ class RoleService {
   }
 
   async update(updateRoleInput: UpdateRoleInput) {
-    const role = await prisma.role.update({
-      data: updateRoleInput,
-    });
+    // const role = await prisma.role.update({
+    //   data: 
+    // });
 
-    return role;
+    // return role;
   }
 
   async destory(id: number) {}
