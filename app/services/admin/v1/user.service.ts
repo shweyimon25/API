@@ -1,5 +1,8 @@
 import prisma from "../../../../prisma/client";
-import { BadRequestException } from "../../../helpers/exceptions";
+import {
+  BadRequestException,
+  ValidationException,
+} from "../../../helpers/exceptions";
 import { hashPassword } from "../../../helpers/helper";
 import {
   CreateUserInput,
@@ -114,6 +117,55 @@ class UserService {
   async create(createUserInput: CreateUserInput) {
     const { name, username, email, password, status, roleId } = createUserInput;
 
+    // Check user username is existed
+    const existingUsername = await prisma.user.findFirst({
+      where: {
+        username,
+      },
+    });
+
+    if (existingUsername) {
+      throw new ValidationException("Failed to created user", [
+        {
+          field: "username",
+          issue: "Username is already existed",
+        },
+      ]);
+    }
+
+    // Check user email is existed
+    const existingEmail = await prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+
+    if (existingEmail) {
+      throw new ValidationException("Failed to created user", [
+        {
+          field: "email",
+          issue: "Email is already existed",
+        },
+      ]);
+    }
+
+    // Check role is existed
+    const role = await prisma.role.findFirst({
+      where: {
+        id: roleId,
+      },
+    });
+
+    if (!role) {
+      throw new ValidationException("Failed to created user", [
+        {
+          field: "roleId",
+          issue: "Role is not existed",
+        },
+      ]);
+    }
+
+    // Create user
     const user = await prisma.user.create({
       data: {
         name,
@@ -136,12 +188,13 @@ class UserService {
     return this.findOne(user.id);
   }
 
-  async update(id: number, updateUserInput: UpdateUserInput) {
+  async update(userId: number, updateUserInput: UpdateUserInput) {
     const { name, username, email, password, status, roleId } = updateUserInput;
 
+    // Check user is existing
     const user = await prisma.user.findUnique({
       where: {
-        id,
+        id: userId,
       },
       include: {
         roles: {
@@ -156,9 +209,63 @@ class UserService {
       throw new BadRequestException("User not found");
     }
 
+    // Check user username is existed
+    const existingUsername = await prisma.user.findFirst({
+      where: {
+        username,
+        NOT: {
+          id: userId,
+        },
+      },
+    });
+
+    if (existingUsername) {
+      throw new ValidationException("Failed to created user", [
+        {
+          field: "username",
+          issue: "Username is already existed",
+        },
+      ]);
+    }
+
+    // Check user email is existed
+    const existingEmail = await prisma.user.findFirst({
+      where: {
+        email,
+        NOT: {
+          id: userId,
+        },
+      },
+    });
+
+    if (existingEmail) {
+      throw new ValidationException("Failed to created user", [
+        {
+          field: "email",
+          issue: "Email is already existed",
+        },
+      ]);
+    }
+
+    // check role is existed
+    const role = await prisma.role.findFirst({
+      where: {
+        id: roleId,
+      },
+    });
+
+    if (!role) {
+      throw new ValidationException("Failed to created user", [
+        {
+          field: "roleId",
+          issue: "Role is not existed",
+        },
+      ]);
+    }
+
     await prisma.user.update({
       where: {
-        id,
+        id: userId,
       },
       data: {
         name: name || user.name,
@@ -172,18 +279,30 @@ class UserService {
     if (roleId) {
       await prisma.userRole.deleteMany({
         where: {
-          userId: id,
+          userId,
         },
       });
       await prisma.userRole.create({
         data: {
-          userId: id,
+          userId,
           roleId,
         },
       });
     }
 
-    return this.findOne(id);
+    return this.findOne(userId);
+  }
+
+  async destory(id: number) {
+    const user = await this.findOne(id);
+
+    await prisma.user.delete({
+      where: {
+        id,
+      },
+    });
+
+    return user;
   }
 }
 

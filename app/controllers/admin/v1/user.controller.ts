@@ -125,6 +125,13 @@ class UserController {
       UserResource.toResource(user)
     );
   }
+
+  async destroy(req: Request, res: Response) {
+    const { id } = req.params;
+    await this.userService.destory(+id);
+    
+    return successResponse(res, "User deleted successfully");
+  }
 }
 
 export default UserController;
