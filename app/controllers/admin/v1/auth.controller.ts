@@ -30,10 +30,10 @@ class AuthController {
       where: {
         OR: [
           {
-            email: data.email,
+            email: data.emailOrUsername,
           },
           {
-            username: data.username,
+            username: data.emailOrUsername,
           },
         ],
         status: true,

@@ -22,10 +22,12 @@ export const createMemberSchema = z
       required_error: "Member type id is required",
       invalid_type_error: "Member type id must be number",
     }),
-    providerType: z.nativeEnum(ProviderType, {
-      required_error: "Provider type is required",
-      invalid_type_error: "Provider type must be a valid provider type",
-    }),
+    providerTypes: z
+      .array(z.nativeEnum(ProviderType), {
+        required_error: "Provider types are required",
+        invalid_type_error: "Provider types must be an array",
+      })
+      .min(1, { message: "At least one provider type is required" }),
     status: z.boolean().optional(),
     password: z
       .string({
@@ -61,10 +63,11 @@ export const updateMemberSchema = z
         invalid_type_error: "Member type must be number",
       })
       .optional(),
-    providerType: z
-      .nativeEnum(ProviderType, {
-        invalid_type_error: "Provider type must be a valid provider type",
+    providerTypes: z
+      .array(z.nativeEnum(ProviderType), {
+        invalid_type_error: "Provider types must be an array of valid provider types",
       })
+      .min(1, { message: "At least one provider type is required" })
       .optional(),
     status: z.boolean().optional(),
     password: z
@@ -79,10 +82,32 @@ export const updateMemberSchema = z
       })
       .optional(),
   })
-  .refine((data) => data.password === data.passwordConfirm, {
-    message: "Passwords don't match",
-    path: ["passwordConfirm"],
-  });
+  .refine(
+    (data) => {
+      // Only validate if password is provided
+      if (data.password) {
+        return data.password === data.passwordConfirm;
+      }
+      return true;
+    },
+    {
+      message: "Passwords don't match",
+      path: ["passwordConfirm"],
+    }
+  )
+  .refine(
+    (data) => {
+      // If passwordConfirm is provided, password must also be provided
+      if (data.passwordConfirm && !data.password) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Password is required when password confirm is provided",
+      path: ["password"],
+    }
+  );
 
 export type CreateMemberInput = z.infer<typeof createMemberSchema>;
 export type UpdateMemberInput = z.infer<typeof updateMemberSchema>;

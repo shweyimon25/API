@@ -160,17 +160,15 @@ model Cons {
 }
 
 model Member {
-  id                   Int                   @id @default(autoincrement())
-  name                 String
-  email                String                @unique
-  username             String                @unique
-  password             String
-  memberType           MemberType            @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
-  memberTypeId         Int
-  providerType         ProviderType
-  status               Boolean               @default(true)
-  gymMemberProfile     GymMemberProfile?
-  trainerMemberProfile TrainerMemberProfile?
+  id           Int            @id @default(autoincrement())
+  name         String
+  email        String         @unique
+  username     String         @unique
+  password     String
+  memberType   MemberType     @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
+  memberTypeId Int
+  status       Boolean        @default(true)
+  profile      MemberProfile?
 
   createdById Int?
   updatedById Int?
@@ -179,8 +177,9 @@ model Member {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  postComments PostComment[]
-  payments     Payment[]
+  providerTypes MemberProviderType[]
+  postComments  PostComment[]
+  payments      Payment[]
 }
 
 enum ProviderType {
@@ -190,18 +189,27 @@ enum ProviderType {
   OTP
 }
 
-model GymMemberProfile {
-  id        Int      @id @default(autoincrement())
-  memberId  Int      @unique
-  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model MemberProviderType {
+  id           Int          @id @default(autoincrement())
+  memberId     Int
+  member       Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  providerType ProviderType
+  createdAt    DateTime     @default(now())
+
+  @@unique([memberId, providerType])
 }
 
-model TrainerMemberProfile {
-  id        Int      @id @default(autoincrement())
-  memberId  Int      @unique
-  member    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+model MemberProfile {
+  id       Int    @id @default(autoincrement())
+  memberId Int    @unique
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // Add gym-specific fields here (nullable, used when profileType is GYM)
+  // Example: gymMembershipNumber String?
+
+  // Add trainer-specific fields here (nullable, used when profileType is TRAINER)
+  // Example: trainerCertification String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

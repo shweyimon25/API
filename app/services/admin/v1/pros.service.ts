@@ -93,24 +93,24 @@ class ProsService {
     // Check pros name unique
     const prosName = await prisma.pros.findFirst({
       where: {
-        name
-      }
+        name,
+      },
     });
 
     if (prosName) {
       throw new ValidationException("Failed to created pros", [
         {
           field: "name",
-          issue: "Name is already existed"
-        }
-      ])
+          issue: "Name is already existed",
+        },
+      ]);
     }
 
     // Create pros
     const pros = await prisma.pros.create({
       data: {
         name,
-        guard: toKebabCase(name)
+        guard: toKebabCase(name),
       },
     });
 
@@ -136,16 +136,18 @@ class ProsService {
       where: {
         name,
         NOT: {
-          id: prosId
-        }
-      }
+          id: prosId,
+        },
+      },
     });
 
     if (prosName) {
-      throw new ValidationException("Failed to updated pros", [{
-        field: "name",
-        issue: "Name is already existed"
-      }])
+      throw new ValidationException("Failed to updated pros", [
+        {
+          field: "name",
+          issue: "Name is already existed",
+        },
+      ]);
     }
 
     // Update pros
@@ -155,7 +157,7 @@ class ProsService {
       },
       data: {
         name: name ?? existingPros.name,
-        guard: name ? toKebabCase(name) : existingPros.guard
+        guard: name ? toKebabCase(name) : existingPros.guard,
       },
     });
 

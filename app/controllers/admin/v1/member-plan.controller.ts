@@ -18,6 +18,20 @@ class MemberPlanController {
   }
 
   async findAll(req: Request, res: Response) {
+    const { page, perPage } = req.query;
+
+    if (page && perPage) {
+      const memberPlans = await this.memberPlanService.findByPaginate(
+        +page,
+        +perPage
+      );
+      return successResponse(
+        res,
+        "Member plan list successfully",
+        MemberPlanCollection.withPagination(memberPlans)
+      );
+    }
+
     const memberPlans = await this.memberPlanService.findAll();
     return successResponse(
       res,

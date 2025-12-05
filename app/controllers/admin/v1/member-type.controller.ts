@@ -12,7 +12,7 @@ class MemberTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10 } = req.query;
+    const { page, perPage } = req.query;
 
     if (page && perPage) {
       const memberTypes = await this.memberTypeService.findByPaginate(
