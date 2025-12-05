@@ -110,7 +110,7 @@ model MemberType {
 model MemberPlan {
   id           Int        @id @default(autoincrement())
   name         String     @unique
-  imageUrl     String?
+  image        String?
   memberType   MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int
   price        Int        @default(0)
@@ -180,6 +180,8 @@ model Member {
   providerTypes MemberProviderType[]
   postComments  PostComment[]
   payments      Payment[]
+  shops         Shop[]
+  shopRatings   ShopRating[]
 }
 
 enum ProviderType {
@@ -277,4 +279,46 @@ enum PaymentStatus {
   OPEN
   PAID
   CANCELLED
+}
+
+model ShopLevel {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  price       Int      @default(0)
+  duration    Int      @default(0)
+  description String?  @db.Text()
+  postLimit   Int      @default(10)
+  status      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Shop {
+  id    Int     @id @default(autoincrement())
+  name  String
+  image String?
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
+  status      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  shopRatings ShopRating[]
+}
+
+model ShopRating {
+  id     Int     @id @default(autoincrement())
+  rate   Int     @default(0)
+  review String? @db.Text()
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
+  shopId Int
+  shop   Shop @relation(fields: [shopId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -10,6 +10,7 @@ import adminMemberPlanRoute from "./admin/v1/member-plan.route";
 import adminMemberRoute from "./admin/v1/member.route";
 import adminProsRoute from "./admin/v1/pros.route";
 import adminConsRoute from "./admin/v1/cons.route";
+import adminShopLevelRoute from "./admin/v1/shop-level.route";
 
 // Other Routes
 import mediaRoute from "./media.route";
@@ -26,6 +27,7 @@ router.use("/admin/v1/member-plans", adminMemberPlanRoute);
 router.use("/admin/v1/members", adminMemberRoute);
 router.use("/admin/v1/pros", adminProsRoute);
 router.use("/admin/v1/cons", adminConsRoute);
+router.use("/admin/v1/shop-levels", adminShopLevelRoute);
 
 // Other Routes
 router.use("/admin/v1/media", mediaRoute);
