@@ -1,10 +1,10 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
-import UserController from "../../../app/controllers/admin/v1/user.controller";
+import ConsController from "../../../app/controllers/admin/v1/cons.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
 const router = Router();
-const userController = new UserController();
+const consController = new ConsController();
 
 router
   .route("/")
@@ -12,14 +12,14 @@ router
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await userController.findAll(req, res)
+        await consController.findAll(req, res)
     ),
   ])
   .post([
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await userController.create(req, res)
+        await consController.create(req, res)
     ),
   ]);
 
@@ -29,22 +29,23 @@ router
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await userController.findOne(req, res)
+        await consController.findOne(req, res)
     ),
   ])
   .put([
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await userController.update(req, res)
+        await consController.update(req, res)
     ),
   ])
   .delete([
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await userController.destroy(req, res)
+        await consController.destroy(req, res)
     ),
   ]);
 
 export default router;
+

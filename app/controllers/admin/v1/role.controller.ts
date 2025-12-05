@@ -12,13 +12,13 @@ class RoleController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10 } = req.query;
+    const { page, perPage } = req.query;
 
     if (page && perPage) {
       const roles = await this.roleService.findByPaginate(+page, +perPage);
       return successResponse(
         res,
-        "Role list retrieved successfully",
+        "Role list successfully",
         RoleCollection.withPagination(roles)
       );
     }
@@ -26,7 +26,7 @@ class RoleController {
     const roles = await this.roleService.findAll();
     return successResponse(
       res,
-      "Role list retrieved successfully",
+      "Role list successfully",
       RoleCollection.toCollection(roles)
     );
   }
@@ -36,7 +36,7 @@ class RoleController {
     const role = await this.roleService.findOne(+id);
     return successResponse(
       res,
-      "Role details retrieved successfully",
+      "Role details successfully",
       RoleResource.toResource(role)
     );
   }
@@ -45,27 +45,27 @@ class RoleController {
     const role = await this.roleService.create(req.body);
     return successResponse(
       res,
-      "Role details retrieved successfully",
+      "Role created successfully",
       RoleResource.toResource(role)
     );
   }
 
   async update(req: Request, res: Response) {
-    const role = await this.roleService.update(req.body);
+    const { id } = req.params;
+    const role = await this.roleService.update(+id, req.body);
     return successResponse(
       res,
-      "Role details retrieved successfully",
+      "Role updated successfully",
       RoleResource.toResource(role)
     );
   }
 
   async destroy(req: Request, res: Response) {
     const { id } = req.params;
-    const role = await this.roleService.destory(+id);
+    await this.roleService.destory(+id);
     return successResponse(
       res,
-      "Role details retrieved successfully",
-      RoleResource.toResource(role)
+      "Role deleted successfully",
     );
   }
 }

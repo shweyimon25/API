@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-dotenv.config(); // Load environment variables first
+dotenv.config(); 
 import cors from "cors";
 import { join } from "node:path";
 import routes from "../routes";

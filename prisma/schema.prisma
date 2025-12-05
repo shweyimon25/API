@@ -14,25 +14,49 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  username  String   @unique
-  password  String
-  status    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id       Int     @id @default(autoincrement())
+  name     String
+  email    String  @unique
+  username String  @unique
+  password String
+  status   Boolean @default(true)
 
-  roles       UserRole[]
-  tagsCreated Tag[]      @relation("TagCreatedBy")
-  tagsUpdated Tag[]      @relation("TagUpdatedBy")
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("UserCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  roles              UserRole[]
+  tagsCreated        Tag[]        @relation("TagCreatedBy")
+  tagsUpdated        Tag[]        @relation("TagUpdatedBy")
+  usersCreated       User[]       @relation("UserCreatedBy")
+  usersUpdated       User[]       @relation("UserUpdatedBy")
+  rolesCreated       Role[]       @relation("RoleCreatedBy")
+  rolesUpdated       Role[]       @relation("RoleUpdatedBy")
+  memberTypesCreated MemberType[] @relation("MemberTypeCreatedBy")
+  memberTypesUpdated MemberType[] @relation("MemberTypeUpdatedBy")
+  memberPlansCreated MemberPlan[] @relation("MemberPlanCreatedBy")
+  memberPlansUpdated MemberPlan[] @relation("MemberPlanUpdatedBy")
+  prosCreated        Pros[]       @relation("ProsCreatedBy")
+  prosUpdated        Pros[]       @relation("ProsUpdatedBy")
+  consCreated        Cons[]       @relation("ConsCreatedBy")
+  consUpdated        Cons[]       @relation("ConsUpdatedBy")
+  memberCreaded      Member[]     @relation("MemberCreatedBy")
+  memberUpdated      Member[]     @relation("MemberUpdatedBy")
 }
 
 model Role {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("RoleCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   permissions RolePermission[]
   users       UserRole[]
@@ -70,9 +94,14 @@ model RolePermission {
 }
 
 model MemberType {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  members     Member[]
+  id      Int      @id @default(autoincrement())
+  name    String   @unique
+  members Member[]
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?        @relation("MemberTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?        @relation("MemberTypeUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   memberPlans MemberPlan[]
@@ -81,34 +110,53 @@ model MemberType {
 model MemberPlan {
   id           Int        @id @default(autoincrement())
   name         String     @unique
+  imageUrl     String?
   memberType   MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int
   price        Int        @default(0)
   pros         Pros[]
   cons         Cons[]
+  duration     Int        @default(1)
   isVideoGroup Boolean    @default(false)
   status       Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  payments     Payment[]
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?     @relation("MemberPlanCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("MemberPlanUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  payments    Payment[]
 }
 
 model Pros {
-  id           Int         @id @default(autoincrement())
-  name         String
+  id   Int    @id @default(autoincrement())
+  name String
+  guard String @unique
+
+  memberPlans MemberPlan[]
+
+  createdById  Int?
+  updatedById  Int?
+  createdBy    User?       @relation("ProsCreatedBy", fields: [createdById], references: [id])
+  updatedBy    User?       @relation("ProsUpdatedBy", fields: [updatedById], references: [id])
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  memberPlan   MemberPlan? @relation(fields: [memberPlanId], references: [id])
-  memberPlanId Int?
 }
 
 model Cons {
-  id           Int         @id @default(autoincrement())
-  name         String
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  memberPlan   MemberPlan? @relation(fields: [memberPlanId], references: [id])
-  memberPlanId Int?
+  id   Int    @id @default(autoincrement())
+  name String
+  guard String @unique
+
+  memberPlans MemberPlan[]
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("ConsCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("ConsUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Member {
@@ -123,8 +171,13 @@ model Member {
   status               Boolean               @default(true)
   gymMemberProfile     GymMemberProfile?
   trainerMemberProfile TrainerMemberProfile?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("MemberUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   postComments PostComment[]
   payments     Payment[]

@@ -3,6 +3,9 @@ import prisma from "../client";
 import roleSeeder from "./role.seeder";
 import permissionSeeder from "./permission.seeder";
 import adminUserSeeder from "./admin-user.seeder";
+import memberTypeSeeder from "./member-type";
+import proSeeder from "./pros.seeder";
+import conSeeder from "./cons.seeder";
 
 dotenv.config();
 
@@ -11,6 +14,9 @@ const main = async () => {
     await roleSeeder();
     await permissionSeeder();
     await adminUserSeeder();
+    await memberTypeSeeder();
+    await proSeeder();
+    await conSeeder();
   } catch (error) {
     console.error(error);
     process.exit(1);

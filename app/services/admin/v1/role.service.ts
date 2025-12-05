@@ -1,5 +1,5 @@
 import prisma from "../../../../prisma/client";
-import { BadRequestException } from "../../../helpers/exceptions";
+import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import {
   CreateRoleInput,
   UpdateRoleInput,
@@ -89,13 +89,32 @@ class RoleService {
     });
 
     if (!role) {
-      throw new BadRequestException("Role not found");
+      throw new NotFoundException("Role not found");
     }
 
     return role;
   }
 
   async create(createRoleInput: CreateRoleInput) {
+    const { name } = createRoleInput;
+
+    // Check role name unique 
+    const roleName = await prisma.role.findFirst({
+      where: {
+        name
+      }
+    });
+
+    if (roleName) {
+      throw new ValidationException("Failed to created role", [
+        {
+          field: "name",
+          issue: "Name is already existed"
+        }
+      ]);
+    }
+
+    // Create new role
     const role = await prisma.role.create({
       data: createRoleInput,
     });
@@ -103,15 +122,54 @@ class RoleService {
     return role;
   }
 
-  async update(updateRoleInput: UpdateRoleInput) {
+  async update(roleId: number, updateRoleInput: UpdateRoleInput) {
+    const { name } = updateRoleInput;
+
+    // Check role is existed 
+    const existingRole = await prisma.role.findUnique({
+      where: { id: roleId }
+    })
+
+    if (!existingRole) {
+      throw new NotFoundException("Role not found");
+    }
+
+    // Check role name is unique
+    const roleName = await prisma.role.findFirst({
+      where: {
+        name,
+        NOT: {
+          id: roleId
+        }
+      }
+    });
+
+    if (roleName) {
+      throw new ValidationException("Failed to updated role", [
+        {
+          issue: "Name is already existed",
+          field: "name"
+        }
+      ])
+    }
+
+    // Update role
     const role = await prisma.role.update({
-      data: updateRoleInput,
+      where: { id: roleId },
+      data: {
+        name: name ?? existingRole.name
+      }
     });
 
     return role;
   }
 
-  async destory(id: number) {}
+  async destory(roleId: number) {
+    // Delete role
+    await prisma.role.delete({
+      where: { id: roleId }
+    })
+  }
 }
 
 export default RoleService;

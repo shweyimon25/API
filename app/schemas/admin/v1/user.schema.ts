@@ -26,7 +26,7 @@ export const createUserSchema = z
         required_error: "Password is required",
         invalid_type_error: "Password must be a string",
       })
-      .min(8, { message: "Password is minimum 8 characters" }),
+      .min(6, { message: "Password is minimum 6 characters" }),
     passwordConfirm: z.string(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
@@ -38,10 +38,17 @@ export const updateUserSchema = z
   .object({
     name: z.string().optional(),
     username: z.string().optional(),
-    email: z.string().email().optional(),
+    email: z
+      .string()
+      .email()
+      .email({ message: "Invalid email address" })
+      .optional(),
     roleId: z.number().optional(),
     status: z.boolean().optional(),
-    password: z.string().optional(),
+    password: z
+      .string()
+      .min(6, { message: "Password is minimum 6 characters" })
+      .optional(),
     passwordConfirm: z.string().optional(),
   })
   .refine(
