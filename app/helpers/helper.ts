@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import slugify from "slugify";
 import { BadRequestException } from "./exceptions";
 
@@ -29,7 +29,7 @@ export const generateToken = (
 export const decodeToken = (token: any) =>
   jwt.verify(token, process.env.JWT_SECRET as string);
 
-export const generateSlug = async (columnName: string, modelName: any) => {
+export const generateSlug = async (columnName: string, modelName: Prisma.ModelName) => {
   const baseSlug = slugify(columnName, { lower: true, strict: true });
 
   const model = (prisma as Record<string, any>)[modelName];

@@ -7,6 +7,8 @@ import adminPermissionRoute from "./admin/v1/permission.route";
 import adminRoleRoute from "./admin/v1/role.route";
 import adminMemberTypeRoute from "./admin/v1/member-type.route";
 import adminMemberPlanRoute from "./admin/v1/member-plan.route";
+import adminProsRoute from "./admin/v1/pros.route";
+import adminConsRoute from "./admin/v1/cons.route";
 
 // Other Routes
 import mediaRoute from "./media.route";
@@ -20,6 +22,8 @@ router.use("/admin/v1/roles", adminRoleRoute);
 router.use("/admin/v1/permissions", adminPermissionRoute);
 router.use("/admin/v1/member-types", adminMemberTypeRoute);
 router.use("/admin/v1/member-plans", adminMemberPlanRoute);
+router.use("/admin/v1/pros", adminProsRoute);
+router.use("/admin/v1/cons", adminConsRoute);
 
 // Other Routes
 router.use("/admin/v1/media", mediaRoute);
