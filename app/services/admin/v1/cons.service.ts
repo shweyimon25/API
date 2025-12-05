@@ -1,8 +1,8 @@
 import prisma from "../../../../prisma/client";
 import {
   BadRequestException,
-  ValidationException,
 } from "../../../helpers/exceptions";
+import { toKebabCase } from "../../../helpers/helper";
 import {
   CreateConsInput,
   UpdateConsInput,
@@ -93,7 +93,7 @@ class ConsService {
     const cons = await prisma.cons.create({
       data: {
         name,
-        guard: ""
+        guard: toKebabCase(name)
       },
     });
 

@@ -55,3 +55,7 @@ export const generateSlug = async (columnName: string, modelName: Prisma.ModelNa
 
   return slug;
 };
+
+export const toKebabCase = (text: string) => {
+  return text.toLowerCase().trim().replace(/\s+/g, "-");
+}

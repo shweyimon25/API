@@ -3,7 +3,7 @@ import {
   BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { generateSlug } from "../../../helpers/helper";
+import { generateSlug, toKebabCase } from "../../../helpers/helper";
 import {
   CreateProsInput,
   UpdateProsInput,
@@ -61,7 +61,7 @@ class ProsService {
   }
 
   async findOne(id: number) {
-    const pros = await prisma.pros.findUnique({
+    const pros = await prisma.pros.findFirst({
       where: {
         id,
       },
@@ -89,42 +89,41 @@ class ProsService {
 
   async create(createProsInput: CreateProsInput) {
     const { name } = createProsInput;
-    const guard = await generateSlug(name, "Pros");
 
-    // Check guard is unique
-    const existingGuard = await prisma.pros.findFirst({
+    // Check pros name unique
+    const prosName = await prisma.pros.findFirst({
       where: {
-        guard,
-      },
+        name
+      }
     });
 
-    if (existingGuard) {
-      throw new ValidationException("Failed to create pros", [
+    if (prosName) {
+      throw new ValidationException("Failed to created pros", [
         {
-          field: "guard",
-          issue: "Guard is already existed",
-        },
-      ]);
+          field: "name",
+          issue: "Name is already existed"
+        }
+      ])
     }
 
     // Create pros
     const pros = await prisma.pros.create({
       data: {
         name,
-        guard,
+        guard: toKebabCase(name)
       },
     });
 
     return this.findOne(pros.id);
   }
 
-  async update(id: number, updateProsInput: UpdateProsInput) {
+  async update(prosId: number, updateProsInput: UpdateProsInput) {
     const { name } = updateProsInput;
 
-    // Check pros exists
+    // Check pros existed
     const existingPros = await prisma.pros.findUnique({
       where: {
-        id,
+        id: prosId,
       },
     });
 
@@ -132,17 +131,35 @@ class ProsService {
       throw new BadRequestException("Pros not found");
     }
 
+    // Check pros name is unique
+    const prosName = await prisma.pros.findFirst({
+      where: {
+        name,
+        NOT: {
+          id: prosId
+        }
+      }
+    });
+
+    if (prosName) {
+      throw new ValidationException("Failed to updated pros", [{
+        field: "name",
+        issue: "Name is already existed"
+      }])
+    }
+
     // Update pros
     await prisma.pros.update({
       where: {
-        id,
+        id: prosId,
       },
       data: {
-        name: name || existingPros.name
+        name: name ?? existingPros.name,
+        guard: name ? toKebabCase(name) : existingPros.guard
       },
     });
 
-    return this.findOne(id);
+    return this.findOne(prosId);
   }
 
   async destroy(id: number) {
