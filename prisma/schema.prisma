@@ -177,11 +177,12 @@ model Member {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  providerTypes MemberProviderType[]
-  postComments  PostComment[]
-  payments      Payment[]
-  shops         Shop[]
-  shopRatings   ShopRating[]
+  providerTypes    MemberProviderType[]
+  postComments     PostComment[]
+  payments         Payment[]
+  shops            Shop[]
+  shopRatings      ShopRating[]
+  shopPostComments ShopPostComment[]
 }
 
 enum ProviderType {
@@ -214,52 +215,6 @@ model MemberProfile {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Tag {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
-  createdById Int?
-  updatedById Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  posts Post[]
-}
-
-model Post {
-  id           Int          @id @default(autoincrement())
-  contact      Json?
-  tag          Tag          @relation(fields: [tagId], references: [id])
-  tagId        Int
-  privencyType PrivencyType
-  media        Json?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  postComments PostComment[]
-}
-
-enum PrivencyType {
-  PUBLIC
-  PRIVATE
-  FRIEND
-}
-
-model PostComment {
-  id        Int           @id @default(autoincrement())
-  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
-  memberId  Int
-  member    Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  comment   Json
-  parentId  Int?
-  parent    PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   PostComment[] @relation("CommentReplies")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
 }
 
 model Payment {
@@ -311,6 +266,7 @@ model Shop {
   updatedAt DateTime @updatedAt
 
   shopRatings ShopRating[]
+  shopPosts   ShopPost[]
 }
 
 model ShopRating {
@@ -326,4 +282,79 @@ model ShopRating {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ShopPost {
+  id           Int          @id @default(autoincrement())
+  caption      String
+  privencyType PrivencyType @default(PUBLIC)
+  images       Json
+
+  shop   Shop @relation(fields: [shopId], references: [id])
+  shopId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shopPostComments ShopPostComment[]
+}
+
+model ShopPostComment {
+  id         Int               @id @default(autoincrement())
+  shopPost   ShopPost          @relation(fields: [shopPostId], references: [id], onDelete: Cascade)
+  shopPostId Int
+  memberId   Int
+  member     Member            @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  comment    Json
+  parentId   Int?
+  parent     ShopPostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    ShopPostComment[] @relation("CommentReplies")
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+}
+
+model Tag {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
+  createdById Int?
+  updatedById Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts Post[]
+}
+
+model Post {
+  id           Int          @id @default(autoincrement())
+  contact      Json?
+  tag          Tag          @relation(fields: [tagId], references: [id])
+  tagId        Int
+  privencyType PrivencyType @default(PUBLIC)
+  media        Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  postComments PostComment[]
+}
+
+enum PrivencyType {
+  PUBLIC
+  PRIVATE
+  FRIEND
+}
+
+model PostComment {
+  id        Int           @id @default(autoincrement())
+  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    Int
+  memberId  Int
+  member    Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  comment   Json
+  parentId  Int?
+  parent    PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   PostComment[] @relation("CommentReplies")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
