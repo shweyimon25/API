@@ -15,6 +15,9 @@ import adminShopRoute from "./admin/v1/shop.route";
 import adminTagRoute from "./admin/v1/tag.route";
 import adminPostRoute from "./admin/v1/post.route";
 
+// Member Routes
+import memberAuthRoute from "./member/v1/auth.route";
+
 // Other Routes
 import mediaRoute from "./media.route";
 
@@ -34,6 +37,9 @@ router.use("/admin/v1/shop-levels", adminShopLevelRoute);
 router.use("/admin/v1/shops", adminShopRoute);
 router.use("/admin/v1/tags", adminTagRoute);
 router.use("/admin/v1/posts", adminPostRoute);
+
+// Member Routes
+router.use("/member/v1/auth", memberAuthRoute);
 
 // Other Routes
 router.use("/admin/v1/media", mediaRoute);
