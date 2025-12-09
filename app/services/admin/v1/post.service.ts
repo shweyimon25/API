@@ -89,8 +89,7 @@ class PostService {
               select: {
                 id: true,
                 name: true,
-                email: true,
-                username: true,
+                email: true
               },
             },
           },

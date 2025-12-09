@@ -19,8 +19,7 @@ class ShopService {
           select: {
             id: true,
             name: true,
-            email: true,
-            username: true,
+            email: true
           },
         },
         shopLevel: {
@@ -49,8 +48,7 @@ class ShopService {
           select: {
             id: true,
             name: true,
-            email: true,
-            username: true,
+            email: true
           },
         },
         shopLevel: {
@@ -91,8 +89,7 @@ class ShopService {
           select: {
             id: true,
             name: true,
-            email: true,
-            username: true,
+            email: true
           },
         },
         shopLevel: {

@@ -7,6 +7,9 @@ export const signUpSchema = z.object({
         required_error: "Name is required",
         invalid_type_error: "Name must be string"
     }),
+    address: z.string({
+        invalid_type_error: "Address must be string"
+    }).optional(),
     password: z.string({
         required_error: "Password is required",
         invalid_type_error: "Password must be string"
@@ -48,7 +51,23 @@ export const sigInSchema = z.object({
         required_error: "Password is required",
         invalid_type_error: "Password must be string"
     })
-});
+}).refine((data) => {
+    if (data.loginProviderType === "EMAIL") {
+        return z.string({
+            required_error: "Email is required",
+            invalid_type_error: "Email must be string"
+        }).email({
+            message: "Invalid email address"
+        });
+    } else {
+        return z.string({
+            required_error: "Phone is required",
+            invalid_type_error: "Phone must be string"
+        }).email({
+            message: "Invalid email address"
+        });
+    }
+})
 
 export type SignInInput = z.infer<typeof sigInSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;

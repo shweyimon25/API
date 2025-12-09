@@ -27,7 +27,6 @@ class MemberService {
         id: true,
         name: true,
         email: true,
-        username: true,
         status: true,
         providerTypes: {
           select: {
@@ -59,7 +58,6 @@ class MemberService {
         id: true,
         name: true,
         email: true,
-        username: true,
         status: true,
         providerTypes: {
           select: {
@@ -103,7 +101,6 @@ class MemberService {
         id: true,
         name: true,
         email: true,
-        username: true,
         status: true,
         providerTypes: {
           select: {
@@ -132,28 +129,11 @@ class MemberService {
     const {
       name,
       email,
-      username,
       password,
       memberTypeId,
       providerTypes,
       status,
     } = createMemberInput;
-
-    // Check member username is existed
-    const existingUsername = await prisma.member.findFirst({
-      where: {
-        username,
-      },
-    });
-
-    if (existingUsername) {
-      throw new ValidationException("Failed to create member", [
-        {
-          field: "username",
-          issue: "Username is already existed",
-        },
-      ]);
-    }
 
     // Check member email is existed
     const existingEmail = await prisma.member.findFirst({
@@ -189,8 +169,8 @@ class MemberService {
     const member = await prisma.member.create({
       data: {
         name,
+        code: "M-" + Date.now(),
         email,
-        username,
         password: hashPassword(password),
         memberTypeId,
         status: status ?? true,
@@ -209,7 +189,6 @@ class MemberService {
     const {
       name,
       email,
-      username,
       password,
       memberTypeId,
       providerTypes,
@@ -225,27 +204,6 @@ class MemberService {
 
     if (!existingMember) {
       throw new NotFoundException("Member not found");
-    }
-
-    // Check member username is existed
-    if (username) {
-      const existingUsername = await prisma.member.findFirst({
-        where: {
-          username,
-          NOT: {
-            id: memberId,
-          },
-        },
-      });
-
-      if (existingUsername) {
-        throw new ValidationException("Failed to update member", [
-          {
-            field: "username",
-            issue: "Username is already existed",
-          },
-        ]);
-      }
     }
 
     // Check member email is existed
@@ -289,7 +247,6 @@ class MemberService {
     const updateData: any = {
       name: name ?? existingMember.name,
       email: email ?? existingMember.email,
-      username: username ?? existingMember.username,
       password: password ? hashPassword(password) : existingMember.password,
       memberTypeId: memberTypeId ?? existingMember.memberTypeId,
       status: status !== undefined ? status : existingMember.status,
