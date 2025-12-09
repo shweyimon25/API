@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import prisma from "../../../prisma/client";
-import { validater } from "../../helpers/validator";
-import { UnauthorizedException, ValidationException } from "../../helpers/exceptions";
-import { comparePassword, generateToken } from "../../helpers/helper";
-import { successResponse } from "../../helpers/response";
-import { sigInSchema, signUpSchema } from "../../schemas/member/v1/auth.route";
+import prisma from "../../../../prisma/client";
+import { validater } from "../../../helpers/validator";
+import { BadRequestException, UnauthorizedException, ValidationException } from "../../../helpers/exceptions";
+import { comparePassword, generateToken } from "../../../helpers/helper";
+import { successResponse } from "../../../helpers/response";
+import { sigInSchema, signUpSchema } from "../../../schemas/member/v1/auth.route";
 
 class AuthController {
     async signIn(req: Request, res: Response) {
@@ -49,9 +49,7 @@ class AuthController {
             throw new ValidationException("Failed to sign up", error);
         }
 
-        if(data){
 
-        }
     }
 }
 

@@ -162,14 +162,16 @@ model Cons {
 model Member {
   id           Int            @id @default(autoincrement())
   name         String
+  code         String         @unique // YC0244
   email        String?        @unique
-  username     String         @unique
   phone        String?        @unique
   password     String
   memberType   MemberType     @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int
   status       Boolean        @default(true)
   profile      MemberProfile?
+  language     Language       @default(ENG)
+  theme        Theme          @default(LIGHT)
 
   createdById Int?
   updatedById Int?
@@ -208,14 +210,24 @@ model MemberProfile {
   memberId Int    @unique
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  // Add gym-specific fields here (nullable, used when profileType is GYM)
-  // Example: gymMembershipNumber String?
-
-  // Add trainer-specific fields here (nullable, used when profileType is TRAINER)
-  // Example: trainerCertification String?
+  address      String?
+  profilePhoto String?
+  coverPhoto   String?
+  bio          String? @db.Text()
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum Language {
+  ENG
+  MM
+}
+
+enum Theme {
+  DARK
+  PINK
+  LIGHT
 }
 
 model Payment {
