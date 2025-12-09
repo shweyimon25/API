@@ -28,23 +28,33 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  roles              UserRole[]
-  tagsCreated        Tag[]        @relation("TagCreatedBy")
-  tagsUpdated        Tag[]        @relation("TagUpdatedBy")
-  usersCreated       User[]       @relation("UserCreatedBy")
-  usersUpdated       User[]       @relation("UserUpdatedBy")
-  rolesCreated       Role[]       @relation("RoleCreatedBy")
-  rolesUpdated       Role[]       @relation("RoleUpdatedBy")
-  memberTypesCreated MemberType[] @relation("MemberTypeCreatedBy")
-  memberTypesUpdated MemberType[] @relation("MemberTypeUpdatedBy")
-  memberPlansCreated MemberPlan[] @relation("MemberPlanCreatedBy")
-  memberPlansUpdated MemberPlan[] @relation("MemberPlanUpdatedBy")
-  prosCreated        Pros[]       @relation("ProsCreatedBy")
-  prosUpdated        Pros[]       @relation("ProsUpdatedBy")
-  consCreated        Cons[]       @relation("ConsCreatedBy")
-  consUpdated        Cons[]       @relation("ConsUpdatedBy")
-  memberCreaded      Member[]     @relation("MemberCreatedBy")
-  memberUpdated      Member[]     @relation("MemberUpdatedBy")
+  roles                   UserRole[]
+  tagsCreated             Tag[]             @relation("TagCreatedBy")
+  tagsUpdated             Tag[]             @relation("TagUpdatedBy")
+  usersCreated            User[]            @relation("UserCreatedBy")
+  usersUpdated            User[]            @relation("UserUpdatedBy")
+  rolesCreated            Role[]            @relation("RoleCreatedBy")
+  rolesUpdated            Role[]            @relation("RoleUpdatedBy")
+  memberTypesCreated      MemberType[]      @relation("MemberTypeCreatedBy")
+  memberTypesUpdated      MemberType[]      @relation("MemberTypeUpdatedBy")
+  memberPlansCreated      MemberPlan[]      @relation("MemberPlanCreatedBy")
+  memberPlansUpdated      MemberPlan[]      @relation("MemberPlanUpdatedBy")
+  prosCreated             Pros[]            @relation("ProsCreatedBy")
+  prosUpdated             Pros[]            @relation("ProsUpdatedBy")
+  consCreated             Cons[]            @relation("ConsCreatedBy")
+  consUpdated             Cons[]            @relation("ConsUpdatedBy")
+  memberCreaded           Member[]          @relation("MemberCreatedBy")
+  memberUpdated           Member[]          @relation("MemberUpdatedBy")
+  bodyGoalsCreated        BodyGoal[]        @relation("BodyGoalCreatedBy")
+  bodyGoalsUpdated        BodyGoal[]        @relation("BodyGoalUpdatedBy")
+  proficientLevelsCreated ProficientLevel[] @relation("ProficientLevelCreatedBy")
+  proficientLevelsUpdated ProficientLevel[] @relation("ProficientLevelUpdatedBy")
+  categoriesCreated       Category[]        @relation("CategoryCreatedBy")
+  categoriesUpdated       Category[]        @relation("CategoryUpdatedBy")
+  placesCreated           Place[]           @relation("PlaceCreatedBy")
+  placesUpdated           Place[]           @relation("PlaceUpdatedBy")
+  workoutsCreated         Workout[]         @relation("WorkoutCreatedBy")
+  workoutsUpdated         Workout[]         @relation("WorkoutUpdatedBy")
 }
 
 model Role {
@@ -127,6 +137,7 @@ model MemberPlan {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   payments    Payment[]
+  workouts    Workout[]
 }
 
 model Pros {
@@ -192,7 +203,7 @@ enum ProviderType {
   GOOGLE
   FACEBOOK
   APPLE
-  EMAIL 
+  EMAIL
   PHONE
 }
 
@@ -371,4 +382,111 @@ model PostComment {
   replies   PostComment[] @relation("CommentReplies")
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+}
+
+model BodyGoal {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("BodyGoalCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("BodyGoalUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workouts Workout[]
+}
+
+model ProficientLevel {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?     @relation("ProficientLevelCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("ProficientLevelUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workouts    Workout[]
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("CategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workouts Workout[]
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  BOTH
+}
+
+model Place {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?     @relation("PlaceCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("PlaceUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workouts    Workout[]
+}
+
+enum Day {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+model Workout {
+  id        Int     @id @default(autoincrement())
+  video     String
+  thumbnail String?
+  name      String
+  gender    Gender
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  bodyGoal   BodyGoal @relation(fields: [bodyGoalId], references: [id])
+  bodyGoalId Int
+
+  proficientLevel   ProficientLevel @relation(fields: [proficientLevelId], references: [id])
+  proficientLevelId Int
+
+  place   Place @relation(fields: [placeId], references: [id])
+  placeId Int
+
+  memberPlan   MemberPlan @relation(fields: [memberPlanId], references: [id])
+  memberPlanId Int
+
+  workoutDay Day?
+
+  videoDuration Int @default(0) // in seconds
+
+  sets Int?
+  reps Int?
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
