@@ -113,7 +113,7 @@ class PostService {
   }
 
   async create(createPostInput: CreatePostInput) {
-    const { contact, tagId, privencyType, media } = createPostInput;
+    const { contact, tagId, privencyType } = createPostInput;
 
     // Check tag exists
     const tag = await prisma.tag.findUnique({
@@ -134,10 +134,9 @@ class PostService {
     // Create new post
     const post = await prisma.post.create({
       data: {
-        contact: contact || null,
+        contact: contact,
         tagId,
-        privencyType: privencyType || "PUBLIC",
-        media: media || null,
+        privencyType: privencyType || "PUBLIC"
       },
     });
 
@@ -145,7 +144,7 @@ class PostService {
   }
 
   async update(id: number, updatePostInput: UpdatePostInput) {
-    const { contact, tagId, privencyType, media } = updatePostInput;
+    const { contact, tagId, privencyType } = updatePostInput;
 
     // Check post exists
     const existingPost = await prisma.post.findUnique({
@@ -182,10 +181,9 @@ class PostService {
         id,
       },
       data: {
-        contact: contact !== undefined ? contact : existingPost.contact,
+        contact: contact ? contact : existingPost.contact,
         tagId: tagId ?? existingPost.tagId,
-        privencyType: privencyType ?? existingPost.privencyType,
-        media: media !== undefined ? media : existingPost.media,
+        privencyType: privencyType ?? existingPost.privencyType
       },
     });
 

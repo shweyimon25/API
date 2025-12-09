@@ -1,22 +1,25 @@
+import { PrivencyType } from "@prisma/client";
 import z from "zod";
 
-const privencyTypeEnum = z.enum(["PUBLIC", "PRIVATE", "FRIEND"]);
-
 export const createPostSchema = z.object({
-  contact: z.any().optional(),
+  contact: z.string({
+    message: "Contact must be string",
+  }).optional(),
   tagId: z.coerce.number({
     required_error: "Tag id is required",
     invalid_type_error: "Tag id must be number",
   }),
-  privencyType: privencyTypeEnum.optional(),
-  media: z.any().optional(),
+  privencyType: z.nativeEnum(PrivencyType, {
+    invalid_type_error: "Privency type must be either PUBLIC or PRIVATE",
+  }).optional()
 });
 
 export const updatePostSchema = z.object({
   contact: z.any().optional(),
   tagId: z.coerce.number().optional(),
-  privencyType: privencyTypeEnum.optional(),
-  media: z.any().optional(),
+  privencyType: z.nativeEnum(PrivencyType, {
+    invalid_type_error: "Privency type must be either PUBLIC or PRIVATE",
+  }).optional()
 });
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;

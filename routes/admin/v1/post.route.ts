@@ -32,7 +32,7 @@ router
         await postController.findOne(req, res)
     ),
   ])
-  .put([
+  .post([
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
