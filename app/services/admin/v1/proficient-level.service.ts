@@ -1,0 +1,111 @@
+import prisma from "../../../../prisma/client";
+import {
+  BadRequestException,
+  NotFoundException,
+} from "../../../helpers/exceptions";
+import {
+  CreateProficientLevelInput,
+  UpdateProficientLevelInput,
+} from "../../../schemas/admin/v1/proficient-level.schema";
+
+class ProficientLevelService {
+  async findAll() {
+    const proficientLevels = await prisma.proficientLevel.findMany({
+      orderBy: {
+        id: "desc",
+      },
+    });
+
+    return proficientLevels;
+  }
+
+  async findByPaginate(page: number, perPage: number) {
+    const proficientLevel = await prisma.proficientLevel.findMany({
+      orderBy: {
+        id: "desc",
+      },
+      skip: (page - 1) * perPage,
+      take: perPage,
+    });
+
+    const totalProficientLevel = await prisma.proficientLevel.count();
+
+    return {
+      data: proficientLevel,
+      meta: {
+        totalCount: totalProficientLevel,
+        totalPages: Math.ceil(totalProficientLevel / perPage),
+        currentPage: page,
+        perPage,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage:
+          page < Math.ceil(totalProficientLevel / perPage) ? page + 1 : null,
+        hasPrevPage: page > 1,
+        hasNextPage: page < Math.ceil(totalProficientLevel / perPage),
+      },
+    };
+  }
+
+  async findOne(id: number) {
+    const proficientLevel = await prisma.proficientLevel.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!proficientLevel) {
+      throw new BadRequestException("Proficient level not found");
+    }
+
+    return proficientLevel;
+  }
+
+  async create(createProficientLevelInput: CreateProficientLevelInput) {
+    const proficientLevel = await prisma.proficientLevel.create({
+      data: {
+        ...createProficientLevelInput,
+      },
+    });
+
+    return this.findOne(proficientLevel.id);
+  }
+
+  async update(id: number, updateProficientInput: UpdateProficientLevelInput) {
+    const { name } = updateProficientInput;
+
+    const existingProficientLevel = await prisma.proficientLevel.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!existingProficientLevel) {
+      throw new NotFoundException("Proficient level not found");
+    }
+
+    await prisma.proficientLevel.update({
+      where: {
+        id,
+      },
+      data: {
+        name: name || existingProficientLevel.name,
+      },
+    });
+
+    return this.findOne(id);
+  }
+
+  async destroy(id: number) {
+    const proficientLevel = await this.findOne(id);
+
+    await prisma.proficientLevel.delete({
+      where: {
+        id,
+      },
+    });
+
+    return proficientLevel;
+  }
+}
+
+export default ProficientLevelService;
