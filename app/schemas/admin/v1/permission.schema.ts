@@ -1,5 +1,6 @@
 import z from "zod";
 import prisma from "../../../../prisma/client";
+import { Status } from "@prisma/client";
 
 export const createPermissionSchema = z.object({
   name: z
@@ -16,10 +17,12 @@ export const createPermissionSchema = z.object({
         message: "Name is already exist",
       }
     ),
+  status: z.nativeEnum(Status).optional(),
 });
 
 export const updatePermissionSchema = z.object({
   name: z.string().optional(),
+  status: z.nativeEnum(Status).optional(),
 });
 
 export type CreatePermissionInput = z.infer<typeof createPermissionSchema>;

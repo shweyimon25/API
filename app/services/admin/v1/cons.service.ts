@@ -7,6 +7,7 @@ import {
   CreateConsInput,
   UpdateConsInput,
 } from "../../../schemas/admin/v1/cons.schema";
+import { Status } from "@prisma/client";
 
 class ConsService {
   async findAll() {
@@ -87,13 +88,14 @@ class ConsService {
   }
 
   async create(createConsInput: CreateConsInput) {
-    const { name } = createConsInput;
+    const { name, status } = createConsInput;
 
     // Create cons
     const cons = await prisma.cons.create({
       data: {
         name,
-        guard: toKebabCase(name)
+        guard: toKebabCase(name),
+        status: status ?? Status.ACTIVE,
       },
     });
 
@@ -101,7 +103,7 @@ class ConsService {
   }
 
   async update(id: number, updateConsInput: UpdateConsInput) {
-    const { name } = updateConsInput;
+    const { name, status } = updateConsInput;
 
     // Check cons exists
     const existingCons = await prisma.cons.findUnique({
@@ -120,7 +122,8 @@ class ConsService {
         id,
       },
       data: {
-        name: name || existingCons.name,
+        name: name ?? existingCons.name,
+        status: status ?? existingCons.status,
       },
     });
 

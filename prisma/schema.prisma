@@ -57,11 +57,17 @@ model User {
   workoutsUpdated         Workout[]         @relation("WorkoutUpdatedBy")
   bankInformationCreated  BankInformation[] @relation("BankInformationCreatedBy")
   bankInformationUpdated  BankInformation[] @relation("BankInformationUpdatedBy")
+  shopLevelsCreated       ShopLevel[]       @relation("ShopLevelCreatedBy")
+  shopLevelsUpdated       ShopLevel[]       @relation("ShopLevelUpdatedBy")
+  shopsCreated            Shop[]            @relation("ShopCreatedBy")
+  shopsUpdated            Shop[]            @relation("ShopUpdatedBy")
 }
 
 model Role {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String? @db.Text()
+  status      Status  @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -75,11 +81,14 @@ model Role {
 }
 
 model Permission {
-  id             Int              @id @default(autoincrement())
-  name           String           @unique
-  description    String?          @db.Text()
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String? @db.Text()
+  status      Status  @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   RolePermission RolePermission[]
 }
 
@@ -109,6 +118,7 @@ model MemberType {
   id      Int      @id @default(autoincrement())
   name    String   @unique
   members Member[]
+  status  Status   @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -143,9 +153,10 @@ model MemberPlan {
 }
 
 model Pros {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  guard String @unique
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  guard  String @unique
+  status Status @default(ACTIVE)
 
   memberPlans MemberPlan[]
 
@@ -158,9 +169,10 @@ model Pros {
 }
 
 model Cons {
-  id    Int    @id @default(autoincrement())
-  name  String
-  guard String @unique
+  id     Int    @id @default(autoincrement())
+  name   String
+  guard  String @unique
+  status Status @default(ACTIVE)
 
   memberPlans MemberPlan[]
 
@@ -173,18 +185,20 @@ model Cons {
 }
 
 model Member {
-  id           Int            @id @default(autoincrement())
+  id           Int        @id @default(autoincrement())
   name         String
-  code         String         @unique // YC0244
-  email        String?        @unique
-  phone        String?        @unique
+  code         String     @unique // YC0244
+  email        String?    @unique
+  phone        String?    @unique
   password     String
-  memberType   MemberType     @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
+  memberType   MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int
-  status       Status         @default(ACTIVE)
-  profile      MemberProfile?
-  language     Language       @default(ENG)
-  theme        Theme          @default(LIGHT)
+
+  profile MemberProfile?
+
+  language Language @default(ENG)
+  theme    Theme    @default(LIGHT)
+  status   Status   @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -210,11 +224,13 @@ enum ProviderType {
 }
 
 model MemberProviderType {
-  id           Int          @id @default(autoincrement())
-  memberId     Int
-  member       Member       @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id       Int    @id @default(autoincrement())
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
   providerType ProviderType
   createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@unique([memberId, providerType])
 }
@@ -245,13 +261,18 @@ enum Theme {
 }
 
 model ShopLevel {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  price       Int      @default(0)
-  duration    Int      @default(0)
-  description String?  @db.Text()
-  postLimit   Int      @default(10)
-  status      Status   @default(ACTIVE)
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  price       Int     @default(0)
+  duration    Int     @default(0)
+  description String? @db.Text()
+  postLimit   Int     @default(10)
+  status      Status  @default(ACTIVE)
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("ShopLevelUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -268,10 +289,14 @@ model Shop {
 
   shopLevelId Int?
   shopLevel   ShopLevel? @relation(fields: [shopLevelId], references: [id])
+  status      Status     @default(ACTIVE)
 
-  status    Status   @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("ShopCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("ShopUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   shopRatings ShopRating[]
   shopPosts   ShopPost[]
@@ -322,12 +347,14 @@ model ShopPostComment {
 }
 
 model Tag {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
+
   createdById Int?
   updatedById Int?
+  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -368,8 +395,9 @@ model PostComment {
 }
 
 model BodyGoal {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -382,8 +410,9 @@ model BodyGoal {
 }
 
 model ProficientLevel {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -395,8 +424,9 @@ model ProficientLevel {
 }
 
 model Category {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -415,8 +445,9 @@ enum Gender {
 }
 
 model Place {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -465,6 +496,8 @@ model Workout {
 
   sets Int?
   reps Int?
+
+  status Status @default(ACTIVE)
 
   createdById Int?
   updatedById Int?

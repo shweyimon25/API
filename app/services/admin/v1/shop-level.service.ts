@@ -7,6 +7,7 @@ import {
   BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
+import { Status } from "@prisma/client";
 
 class ShopLevelService {
   async findAll() {
@@ -60,7 +61,7 @@ class ShopLevelService {
   }
 
   async create(createShopLevelInput: CreateShopLevelInput) {
-    const { name, price, duration, description } = createShopLevelInput;
+    const { name, price, duration, description, status } = createShopLevelInput;
 
     // Check shop level name unique
     const shopLevelName = await prisma.shopLevel.findFirst({
@@ -81,7 +82,11 @@ class ShopLevelService {
     // Create new shop level
     const shopLevel = await prisma.shopLevel.create({
       data: {
-        ...createShopLevelInput,
+        name,
+        price,
+        duration,
+        description,
+        status: status ?? Status.ACTIVE,
       },
     });
 
@@ -89,7 +94,7 @@ class ShopLevelService {
   }
 
   async update(id: number, updateShopLevelInput: UpdateShopLevelInput) {
-    const { name, price, duration, description } = updateShopLevelInput;
+    const { name, price, duration, description, status } = updateShopLevelInput;
 
     // Check shop level exists
     const existingShopLevel = await prisma.shopLevel.findUnique({
@@ -129,7 +134,7 @@ class ShopLevelService {
         id,
       },
       data: {
-        name: name || existingShopLevel.name,
+        name: name ?? existingShopLevel.name,
         price: price !== undefined ? price : existingShopLevel.price,
         duration:
           duration !== undefined ? duration : existingShopLevel.duration,
@@ -137,6 +142,7 @@ class ShopLevelService {
           description !== undefined
             ? description
             : existingShopLevel.description,
+        status: status ?? existingShopLevel.status,
       },
     });
 

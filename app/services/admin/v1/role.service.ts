@@ -4,6 +4,7 @@ import {
   CreateRoleInput,
   UpdateRoleInput,
 } from "../../../schemas/admin/v1/role.schema";
+import { Status } from "@prisma/client";
 
 class RoleService {
   async findAll() {
@@ -96,7 +97,7 @@ class RoleService {
   }
 
   async create(createRoleInput: CreateRoleInput) {
-    const { name } = createRoleInput;
+    const { name, status } = createRoleInput;
 
     // Check role name unique 
     const roleName = await prisma.role.findFirst({
@@ -116,14 +117,17 @@ class RoleService {
 
     // Create new role
     const role = await prisma.role.create({
-      data: createRoleInput,
+      data: {
+        name,
+        status: status ?? Status.ACTIVE,
+      },
     });
 
     return role;
   }
 
   async update(roleId: number, updateRoleInput: UpdateRoleInput) {
-    const { name } = updateRoleInput;
+    const { name, status } = updateRoleInput;
 
     // Check role is existed 
     const existingRole = await prisma.role.findUnique({
@@ -135,29 +139,32 @@ class RoleService {
     }
 
     // Check role name is unique
-    const roleName = await prisma.role.findFirst({
-      where: {
-        name,
-        NOT: {
-          id: roleId
+    if (name && name !== existingRole.name) {
+      const roleName = await prisma.role.findFirst({
+        where: {
+          name,
+          NOT: {
+            id: roleId
+          }
         }
-      }
-    });
+      });
 
-    if (roleName) {
-      throw new ValidationException("Failed to updated role", [
-        {
-          issue: "Name is already existed",
-          field: "name"
-        }
-      ])
+      if (roleName) {
+        throw new ValidationException("Failed to updated role", [
+          {
+            issue: "Name is already existed",
+            field: "name"
+          }
+        ])
+      }
     }
 
     // Update role
     const role = await prisma.role.update({
       where: { id: roleId },
       data: {
-        name: name ?? existingRole.name
+        name: name ?? existingRole.name,
+        status: status ?? existingRole.status,
       }
     });
 

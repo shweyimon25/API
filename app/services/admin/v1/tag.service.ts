@@ -7,6 +7,7 @@ import {
   BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
+import { Status } from "@prisma/client";
 
 class TagService {
   async findAll() {
@@ -129,7 +130,7 @@ class TagService {
   }
 
   async create(createTagInput: CreateTagInput, userId: number) {
-    const { name } = createTagInput;
+    const { name, status } = createTagInput;
 
     // Check if tag name already exists
     const existingTag = await prisma.tag.findUnique({
@@ -151,6 +152,7 @@ class TagService {
     const tag = await prisma.tag.create({
       data: {
         name,
+        status: status ?? Status.ACTIVE,
         createdById: userId,
         updatedById: userId,
       },
@@ -160,7 +162,7 @@ class TagService {
   }
 
   async update(id: number, updateTagInput: UpdateTagInput, userId: number) {
-    const { name } = updateTagInput;
+    const { name, status } = updateTagInput;
 
     // Check tag exists
     const existingTag = await prisma.tag.findUnique({
@@ -198,6 +200,7 @@ class TagService {
       },
       data: {
         name: name ?? existingTag.name,
+        status: status ?? existingTag.status,
         updatedById: userId,
       },
     });

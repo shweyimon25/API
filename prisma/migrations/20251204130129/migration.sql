@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `MemberPlan` ADD COLUMN `duration` INTEGER NOT NULL DEFAULT 1;

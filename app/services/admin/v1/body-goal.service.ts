@@ -2,125 +2,96 @@ import prisma from "../../../../prisma/client";
 import {
     BadRequestException,
 } from "../../../helpers/exceptions";
-import { toKebabCase } from "../../../helpers/helper";
 import {
-    CreateConsInput,
-    UpdateConsInput,
-} from "../../../schemas/admin/v1/cons.schema";
+    CreateBodyGoalInput,
+    UpdateBodyGoalInput,
+} from "../../../schemas/admin/v1/body-goal.schema";
+import { Status } from "@prisma/client";
 
 class BodyGoalService {
     async findAll() {
-        const cons = await prisma.bodygoal.findMany({
+        const bodyGoals = await prisma.bodyGoal.findMany({
             orderBy: {
                 id: "desc",
             },
-            select: {
-                id: true,
-                name: true,
-                guard: true,
-                createdAt: true,
-                updatedAt: true,
-            },
         });
 
-        return cons;
+        return bodyGoals;
     }
 
     async findByPaginate(page: number, perPage: number) {
-        const cons = await prisma.cons.findMany({
+        const bodyGoals = await prisma.bodyGoal.findMany({
             orderBy: {
                 id: "desc",
             },
             skip: (page - 1) * perPage,
             take: perPage,
-            select: {
-                id: true,
-                name: true,
-                guard: true,
-                createdAt: true,
-                updatedAt: true,
-            },
         });
 
-        const totalCons = await prisma.cons.count();
+        const totalBodyGoals = await prisma.bodyGoal.count();
 
         return {
-            data: cons,
+            data: bodyGoals,
             meta: {
-                totalCount: totalCons,
-                totalPages: Math.ceil(totalCons / perPage),
+                totalCount: totalBodyGoals,
+                totalPages: Math.ceil(totalBodyGoals / perPage),
                 currentPage: page,
                 perPage,
                 prevPage: page > 1 ? page - 1 : null,
-                nextPage: page < Math.ceil(totalCons / perPage) ? page + 1 : null,
+                nextPage: page < Math.ceil(totalBodyGoals / perPage) ? page + 1 : null,
                 hasPrevPage: page > 1,
-                hasNextPage: page < Math.ceil(totalCons / perPage),
+                hasNextPage: page < Math.ceil(totalBodyGoals / perPage),
             },
         };
     }
 
     async findOne(id: number) {
-        const cons = await prisma.cons.findUnique({
+        const bodyGoal = await prisma.bodyGoal.findUnique({
             where: {
                 id,
             },
-            select: {
-                id: true,
-                name: true,
-                guard: true,
-                createdAt: true,
-                updatedAt: true,
-                memberPlans: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            },
         });
 
-        if (!cons) {
-            throw new BadRequestException("Cons not found");
+        if (!bodyGoal) {
+            throw new BadRequestException("Body goal not found");
         }
 
-        return cons;
+        return bodyGoal;
     }
 
-    async create(createConsInput: CreateConsInput) {
-        const { name } = createConsInput;
+    async create(createBodyGoalInput: CreateBodyGoalInput) {
+        const { name, status } = createBodyGoalInput;
 
-        // Create cons
-        const cons = await prisma.cons.create({
+        const bodyGoal = await prisma.bodyGoal.create({
             data: {
                 name,
-                guard: toKebabCase(name)
+                status: status ?? Status.ACTIVE,
             },
         });
 
-        return this.findOne(cons.id);
+        return this.findOne(bodyGoal.id);
     }
 
-    async update(id: number, updateConsInput: UpdateConsInput) {
-        const { name } = updateConsInput;
+    async update(id: number, updateBodyGoalInput: UpdateBodyGoalInput) {
+        const { name, status } = updateBodyGoalInput;
 
-        // Check cons exists
-        const existingCons = await prisma.cons.findUnique({
+        const existingBodyGoal = await prisma.bodyGoal.findUnique({
             where: {
                 id,
             },
         });
 
-        if (!existingCons) {
-            throw new BadRequestException("Cons not found");
+        if (!existingBodyGoal) {
+            throw new BadRequestException("Body goal not found");
         }
 
-        // Update cons
-        await prisma.cons.update({
+        await prisma.bodyGoal.update({
             where: {
                 id,
             },
             data: {
-                name: name || existingCons.name,
+                name: name ?? existingBodyGoal.name,
+                status: status ?? existingBodyGoal.status,
             },
         });
 
@@ -128,15 +99,15 @@ class BodyGoalService {
     }
 
     async destroy(id: number) {
-        const cons = await this.findOne(id);
+        const bodyGoal = await this.findOne(id);
 
-        await prisma.cons.delete({
+        await prisma.bodyGoal.delete({
             where: {
                 id,
             },
         });
 
-        return cons;
+        return bodyGoal;
     }
 }
 

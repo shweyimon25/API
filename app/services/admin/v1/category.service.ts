@@ -4,6 +4,7 @@ import {
   CreateCategoryInput,
   UpdateCategoryInput,
 } from "../../../schemas/admin/v1/category.schema";
+import { Status } from "@prisma/client";
 
 class CategoryService {
   async findAll() {
@@ -57,9 +58,11 @@ class CategoryService {
   }
 
   async create(createCategoryInput: CreateCategoryInput) {
+    const { name, status } = createCategoryInput;
     const category = await prisma.category.create({
       data: {
-        ...createCategoryInput,
+        name,
+        status: status ?? Status.ACTIVE,
       },
     });
 
@@ -67,7 +70,7 @@ class CategoryService {
   }
 
   async update(id: number, updateCategoryInput: UpdateCategoryInput) {
-    const { name } = updateCategoryInput;
+    const { name, status } = updateCategoryInput;
 
     // Check category exists
     const existingCategory = await prisma.category.findUnique({
@@ -85,7 +88,8 @@ class CategoryService {
         id,
       },
       data: {
-        name: name || existingCategory.name,
+        name: name ?? existingCategory.name,
+        status: status ?? existingCategory.status,
       },
     });
 

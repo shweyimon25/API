@@ -7,6 +7,7 @@ export class BankInformationResource {
       bankAccountNumber: bankInformation.bankAccountNumber,
       phone: bankInformation.phone,
       paymentTypes: bankInformation.paymentTypes,
+      status: bankInformation.status,
       createdBy: bankInformation.createdBy
         ? {
             id: bankInformation.createdBy.id,

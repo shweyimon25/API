@@ -3,7 +3,7 @@ import {
   UpdateBankInformationInput,
 } from "../../../schemas/admin/v1/bank-information.schema";
 import prisma from "../../../../prisma/client";
-import { PaymentTypes } from "@prisma/client";
+import { PaymentTypes, Status } from "@prisma/client";
 import {
   NotFoundException,
   ValidationException,
@@ -124,6 +124,7 @@ class BankInformationService {
       bankAccountNumber,
       phone,
       paymentTypes,
+      status,
     } = createBankInformationInput;
 
     // Check if bank account number already exists
@@ -149,6 +150,7 @@ class BankInformationService {
         bankAccountNumber,
         phone,
         paymentTypes: paymentTypes ?? PaymentTypes.BANK_ACCOUNT,
+        status: status ?? Status.ACTIVE,
         createdById: userId,
         updatedById: userId,
       },
@@ -167,6 +169,7 @@ class BankInformationService {
       bankAccountNumber,
       phone,
       paymentTypes,
+      status,
     } = updateBankInformationInput;
 
     // Check bank information exists
@@ -215,6 +218,7 @@ class BankInformationService {
           bankAccountNumber ?? existingBankInformation.bankAccountNumber,
         phone: phone ?? existingBankInformation.phone,
         paymentTypes: paymentTypes ?? existingBankInformation.paymentTypes,
+        status: status ?? existingBankInformation.status,
         updatedById: userId,
       },
     });

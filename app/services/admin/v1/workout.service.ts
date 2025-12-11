@@ -5,6 +5,7 @@ import {
 } from "../../../helpers/exceptions";
 import { CreateWorkoutInput, UpdateWorkoutInput } from "../../../schemas/admin/v1/workout.schema";
 import prisma from "../../../../prisma/client";
+import { Status } from "@prisma/client";
 
 class WorkoutService {
     async findAll() {
@@ -68,7 +69,8 @@ class WorkoutService {
             memberPlanId,
             workoutDay,
             sets,
-            reps
+            reps,
+            status
         } = createWorkoutInput;
 
         const category = await prisma.category.findUnique({
@@ -179,7 +181,8 @@ class WorkoutService {
                 workoutDay,
                 videoDuration: 12121,
                 sets,
-                reps
+                reps,
+                status: createWorkoutInput.status ?? Status.ACTIVE,
             },
         });
 
@@ -283,6 +286,7 @@ class WorkoutService {
         if (updateWorkoutInput.workoutDay !== undefined) data.workoutDay = updateWorkoutInput.workoutDay;
         if (updateWorkoutInput.sets !== undefined) data.sets = updateWorkoutInput.sets;
         if (updateWorkoutInput.reps !== undefined) data.reps = updateWorkoutInput.reps;
+        if (updateWorkoutInput.status !== undefined) data.status = updateWorkoutInput.status;
 
         await prisma.workout.update({
             where: {

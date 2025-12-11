@@ -8,6 +8,7 @@ import {
   CreateProsInput,
   UpdateProsInput,
 } from "../../../schemas/admin/v1/pros.schema";
+import { Status } from "@prisma/client";
 
 class ProsService {
   async findAll() {
@@ -88,7 +89,7 @@ class ProsService {
   }
 
   async create(createProsInput: CreateProsInput) {
-    const { name } = createProsInput;
+    const { name, status } = createProsInput;
 
     // Check pros name unique
     const prosName = await prisma.pros.findFirst({
@@ -111,6 +112,7 @@ class ProsService {
       data: {
         name,
         guard: toKebabCase(name),
+        status: status ?? Status.ACTIVE,
       },
     });
 
@@ -158,6 +160,7 @@ class ProsService {
       data: {
         name: name ?? existingPros.name,
         guard: name ? toKebabCase(name) : existingPros.guard,
+        status: updateProsInput.status ?? existingPros.status,
       },
     });
 

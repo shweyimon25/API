@@ -4,6 +4,7 @@ import {
 } from "./../../../schemas/admin/v1/place.schema";
 import prisma from "../../../../prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
+import { Status } from "@prisma/client";
 
 class PlaceService {
   async findAll() {
@@ -57,9 +58,11 @@ class PlaceService {
   }
 
   async create(createPlaceInput: CreatePlaceInput) {
+    const { name, status } = createPlaceInput;
     const place = await prisma.place.create({
       data: {
-        ...createPlaceInput,
+        name,
+        status: status ?? Status.ACTIVE,
       },
     });
 
@@ -67,7 +70,7 @@ class PlaceService {
   }
 
   async update(id: number, updatePlaceInput: UpdatePlaceInput) {
-    const { name } = updatePlaceInput;
+    const { name, status } = updatePlaceInput;
 
     const existingPlace = await prisma.place.findUnique({
       where: {
@@ -84,7 +87,8 @@ class PlaceService {
         id,
       },
       data: {
-        name: name || existingPlace.name,
+        name: name ?? existingPlace.name,
+        status: status ?? existingPlace.status,
       },
     });
 

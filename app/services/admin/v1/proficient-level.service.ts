@@ -7,6 +7,7 @@ import {
   CreateProficientLevelInput,
   UpdateProficientLevelInput,
 } from "../../../schemas/admin/v1/proficient-level.schema";
+import { Status } from "@prisma/client";
 
 class ProficientLevelService {
   async findAll() {
@@ -61,9 +62,11 @@ class ProficientLevelService {
   }
 
   async create(createProficientLevelInput: CreateProficientLevelInput) {
+    const { name, status } = createProficientLevelInput;
     const proficientLevel = await prisma.proficientLevel.create({
       data: {
-        ...createProficientLevelInput,
+        name,
+        status: status ?? Status.ACTIVE,
       },
     });
 
@@ -71,7 +74,7 @@ class ProficientLevelService {
   }
 
   async update(id: number, updateProficientInput: UpdateProficientLevelInput) {
-    const { name } = updateProficientInput;
+    const { name, status } = updateProficientInput;
 
     const existingProficientLevel = await prisma.proficientLevel.findUnique({
       where: {
@@ -88,7 +91,8 @@ class ProficientLevelService {
         id,
       },
       data: {
-        name: name || existingProficientLevel.name,
+        name: name ?? existingProficientLevel.name,
+        status: status ?? existingProficientLevel.status,
       },
     });
 

@@ -1,4 +1,4 @@
-import { Day, Gender } from "@prisma/client";
+import { Day, Gender, Status } from "@prisma/client";
 import { z } from "zod";
 
 export const createWorkoutSchema = z.object({
@@ -37,7 +37,8 @@ export const createWorkoutSchema = z.object({
     reps: z.coerce.number({
         required_error: "Reps is required",
         invalid_type_error: "Reps must be number"
-    })
+    }),
+    status: z.nativeEnum(Status).optional()
 });
 
 export const updateWorkoutSchema = z.object({
@@ -46,7 +47,7 @@ export const updateWorkoutSchema = z.object({
     }).optional(),
     gender: z.nativeEnum(Gender, {
         message: "Gender must be MALE | FEMALE | BOTH"
-    }),
+    }).optional(),
     categoryId: z.coerce.number({
         invalid_type_error: "Category must be number"
     }).optional(),
@@ -62,13 +63,14 @@ export const updateWorkoutSchema = z.object({
     memberPlanId: z.coerce.number({
         invalid_type_error: "Member plan must be number"
     }).optional(),
-    workoutDay: z.nativeEnum(Day),
+    workoutDay: z.nativeEnum(Day).optional(),
     sets: z.coerce.number({
         invalid_type_error: "Sets must be number"
     }).optional(),
     reps: z.coerce.number({
         invalid_type_error: "Reps must be number"
-    }).optional()
+    }).optional(),
+    status: z.nativeEnum(Status).optional()
 });
 
 export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;
