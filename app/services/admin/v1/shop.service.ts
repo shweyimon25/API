@@ -3,6 +3,7 @@ import {
   UpdateShopInput,
 } from "./../../../schemas/admin/v1/shop.schema";
 import prisma from "../../../../prisma/client";
+import { Status } from "@prisma/client";
 import {
   BadRequestException,
   ValidationException,
@@ -170,7 +171,7 @@ class ShopService {
         image,
         memberId,
         shopLevelId,
-        status: status ?? true,
+        status: status ?? Status.ACTIVE,
       },
     });
 
@@ -256,7 +257,7 @@ class ShopService {
         memberId: memberId ?? existingShop.memberId,
         shopLevelId:
           shopLevelId !== undefined ? shopLevelId : existingShop.shopLevelId,
-        status: status !== undefined ? status : existingShop.status,
+        status: status ?? existingShop.status,
       },
     });
 

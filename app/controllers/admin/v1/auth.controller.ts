@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Status } from "@prisma/client";
 import UserService from "../../../services/admin/v1/user.service";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 
@@ -36,7 +36,7 @@ class AuthController {
             username: data.emailOrUsername,
           },
         ],
-        status: true,
+        status: Status.ACTIVE,
         roles: {
           some: {
             role: {

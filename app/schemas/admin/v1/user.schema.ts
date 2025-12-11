@@ -1,4 +1,5 @@
 import z from "zod";
+import { Status } from "@prisma/client";
 
 export const createUserSchema = z
   .object({
@@ -20,7 +21,7 @@ export const createUserSchema = z
       required_error: "Role is required",
       invalid_type_error: "Role must be a number",
     }),
-    status: z.boolean().optional(),
+    status: z.nativeEnum(Status).optional(),
     password: z
       .string({
         required_error: "Password is required",
@@ -44,7 +45,7 @@ export const updateUserSchema = z
       .email({ message: "Invalid email address" })
       .optional(),
     roleId: z.number().optional(),
-    status: z.boolean().optional(),
+    status: z.nativeEnum(Status).optional(),
     password: z
       .string()
       .min(6, { message: "Password is minimum 6 characters" })

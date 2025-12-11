@@ -58,4 +58,23 @@ export const generateSlug = async (columnName: string, modelName: Prisma.ModelNa
 
 export const toKebabCase = (text: string) => {
   return text.toLowerCase().trim().replace(/\s+/g, "-");
-}
+};
+
+export const generateMemberCode = async () => {
+  let code: string;
+  let isUnique = false;
+
+  while (!isUnique) {
+    code = "YC" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    const existing = await prisma.member.findUnique({
+      where: { code },
+    });
+
+    if (!existing) {
+      isUnique = true;
+    }
+  }
+
+  return code!;
+};

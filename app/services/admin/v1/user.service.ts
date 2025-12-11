@@ -1,4 +1,5 @@
 import prisma from "../../../../prisma/client";
+import { Status } from "@prisma/client";
 import {
   BadRequestException,
   ValidationException,
@@ -172,7 +173,7 @@ class UserService {
         email,
         username,
         password: hashPassword(password),
-        status,
+        status: status ?? Status.ACTIVE,
         roles: {
           create: {
             role: {
@@ -272,7 +273,7 @@ class UserService {
         email: email || user.email,
         username: username || user.username,
         password: password ? hashPassword(password) : user.password,
-        status,
+        status: status ?? user.status,
       },
     });
 

@@ -1,4 +1,5 @@
 import z from "zod";
+import { Status } from "@prisma/client";
 
 export const createShopSchema = z.object({
   name: z.string({
@@ -20,7 +21,7 @@ export const createShopSchema = z.object({
       invalid_type_error: "Shop level id must be number",
     })
     .optional(),
-  status: z.boolean().optional(),
+  status: z.nativeEnum(Status).optional(),
 });
 
 export const updateShopSchema = z.object({
@@ -28,7 +29,7 @@ export const updateShopSchema = z.object({
   image: z.string().optional(),
   memberId: z.coerce.number().optional(),
   shopLevelId: z.coerce.number().optional(),
-  status: z.boolean().optional(),
+  status: z.nativeEnum(Status).optional(),
 });
 
 export type CreateShopInput = z.infer<typeof createShopSchema>;

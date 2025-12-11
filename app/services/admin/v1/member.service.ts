@@ -1,23 +1,16 @@
+import { ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import {
-  BadRequestException,
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { hashPassword } from "../../../helpers/helper";
+import { hashPassword, generateMemberCode } from "../../../helpers/helper";
 import {
   CreateMemberInput,
   UpdateMemberInput,
 } from "../../../schemas/admin/v1/member.schema";
-import MemberTypeService from "./member-type.service";
 
 class MemberService {
-  private memberTypeService: MemberTypeService;
-
-  constructor() {
-    this.memberTypeService = new MemberTypeService();
-  }
-
   async findAll() {
     const members = await prisma.member.findMany({
       orderBy: {
@@ -27,6 +20,10 @@ class MemberService {
         id: true,
         name: true,
         email: true,
+        phone: true,
+        language: true,
+        theme: true,
+        code: true,
         status: true,
         providerTypes: {
           select: {
@@ -58,6 +55,10 @@ class MemberService {
         id: true,
         name: true,
         email: true,
+        phone: true,
+        language: true,
+        theme: true,
+        code: true,
         status: true,
         providerTypes: {
           select: {
@@ -100,7 +101,11 @@ class MemberService {
       select: {
         id: true,
         name: true,
+        code: true,
         email: true,
+        phone: true,
+        language: true,
+        theme: true,
         status: true,
         providerTypes: {
           select: {
@@ -119,106 +124,26 @@ class MemberService {
     });
 
     if (!member) {
-      throw new BadRequestException("Member not found");
+      throw new NotFoundException("Member not found");
     }
 
     return member;
   }
 
   async create(createMemberInput: CreateMemberInput) {
-    const {
-      name,
-      email,
-      password,
-      memberTypeId,
-      providerTypes,
-      status,
-    } = createMemberInput;
+    const { name, email, phone, password, memberTypeId, address, bio, status } =
+      createMemberInput;
 
     // Check member email is existed
-    const existingEmail = await prisma.member.findFirst({
-      where: {
-        email,
-      },
-    });
-
-    if (existingEmail) {
-      throw new ValidationException("Failed to create member", [
-        {
-          field: "email",
-          issue: "Email is already existed",
-        },
-      ]);
-    }
-
-    // Check member type is existed
-    const existingMemberType = await this.memberTypeService.findOne(
-      memberTypeId
-    );
-
-    if (!existingMemberType) {
-      throw new ValidationException("Failed to create member", [
-        {
-          field: "memberTypeId",
-          issue: "Member type is not existed",
-        },
-      ]);
-    }
-
-    // Create member
-    const member = await prisma.member.create({
-      data: {
-        name,
-        code: "M-" + Date.now(),
-        email,
-        password: hashPassword(password),
-        memberTypeId,
-        status: status ?? true,
-        providerTypes: {
-          create: providerTypes.map((providerType) => ({
-            providerType,
-          })),
-        },
-      },
-    });
-
-    return this.findOne(member.id);
-  }
-
-  async update(memberId: number, updateMemberInput: UpdateMemberInput) {
-    const {
-      name,
-      email,
-      password,
-      memberTypeId,
-      providerTypes,
-      status,
-    } = updateMemberInput;
-
-    // Check member is existing
-    const existingMember = await prisma.member.findUnique({
-      where: {
-        id: memberId,
-      },
-    });
-
-    if (!existingMember) {
-      throw new NotFoundException("Member not found");
-    }
-
-    // Check member email is existed
-    if (email) {
+    if (email && email !== "") {
       const existingEmail = await prisma.member.findFirst({
         where: {
           email,
-          NOT: {
-            id: memberId,
-          },
         },
       });
 
       if (existingEmail) {
-        throw new ValidationException("Failed to update member", [
+        throw new ValidationException("Failed to create member", [
           {
             field: "email",
             issue: "Email is already existed",
@@ -227,56 +152,129 @@ class MemberService {
       }
     }
 
-    // Check member type is existed
-    if (memberTypeId) {
-      const existingMemberType = await this.memberTypeService.findOne(
-        memberTypeId
-      );
+    // Check member phone is existed
+    if (phone && phone !== "") {
+      const existingPhone = await prisma.member.findFirst({
+        where: {
+          phone,
+        },
+      });
 
-      if (!existingMemberType) {
-        throw new ValidationException("Failed to update member", [
+      if (existingPhone) {
+        throw new ValidationException("Failed to create member", [
           {
-            field: "memberTypeId",
-            issue: "Member type is not existed",
+            field: "phone",
+            issue: "Phone is already existed",
           },
         ]);
       }
     }
 
-    // Update member
-    const updateData: any = {
-      name: name ?? existingMember.name,
-      email: email ?? existingMember.email,
-      password: password ? hashPassword(password) : existingMember.password,
-      memberTypeId: memberTypeId ?? existingMember.memberTypeId,
-      status: status !== undefined ? status : existingMember.status,
-    };
-
-    // Update provider types if provided
-    if (providerTypes) {
-      // Delete existing provider types
-      await prisma.memberProviderType.deleteMany({
-        where: {
-          memberId,
+    // Create member
+    const member = await prisma.member.create({
+      data: {
+        name,
+        code: await generateMemberCode(),
+        email,
+        phone,
+        password: hashPassword(password),
+        memberTypeId,
+        status: status ?? Status.ACTIVE,
+        profile: {
+          create: {
+            address,
+            bio,
+          },
         },
-      });
-
-      // Create new provider types
-      updateData.providerTypes = {
-        create: providerTypes.map((providerType) => ({
-          providerType,
-        })),
-      };
-    }
-
-    await prisma.member.update({
-      where: {
-        id: memberId,
+        providerTypes: {
+          create: {
+            providerType: ProviderType.EMAIL,
+          },
+        },
       },
-      data: updateData,
     });
 
-    return this.findOne(memberId);
+    return this.findOne(member.id);
+  }
+
+  async update(id: number, updateMemberInput: UpdateMemberInput) {
+    const { name, email, phone, password, memberTypeId, address, bio, status } =
+      updateMemberInput;
+
+    // Check member is existed
+    const existingMember = await prisma.member.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        profile: true,
+      }
+    });
+
+    if (!existingMember) {
+      throw new NotFoundException("Member not found");
+    }
+
+    // Check member email is existed
+    const existingEmail = await prisma.member.findFirst({
+      where: {
+        email,
+        NOT: {
+          id,
+        },
+      },
+    });
+
+    if (existingEmail) {
+      throw new ValidationException("Failed to update member", [
+        {
+          field: "email",
+          issue: "Email is already existed",
+        },
+      ]);
+    }
+
+    // Check member phone is existed
+    const existingPhone = await prisma.member.findFirst({
+      where: {
+        phone,
+        NOT: {
+          id,
+        },
+      },
+    });
+
+    if (existingPhone) {
+      throw new ValidationException("Failed to update member", [
+        {
+          field: "phone",
+          issue: "Phone is already existed",
+        },
+      ]);
+    }
+
+    // Update member
+    await prisma.member.update({
+      where: {
+        id,
+      },
+      data: {
+        name: name ? name : existingMember.name,
+        email: email ? email : existingMember.email,
+        phone: phone ? phone : existingMember.phone,
+        password: password ? hashPassword(password) : existingMember.password,
+        memberTypeId: memberTypeId ? memberTypeId : existingMember.memberTypeId,
+        status: status ?? existingMember.status,
+        profile: {
+          update: {
+            address: address ?? existingMember.profile?.address,
+            bio: bio ?? existingMember.profile?.bio,
+          },
+        },
+      },
+    });
+
+    return this.findOne(id);
   }
 
   async destroy(id: number) {

@@ -14,12 +14,12 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   name     String
-  email    String  @unique
-  username String  @unique
+  email    String @unique
+  username String @unique
   password String
-  status   Boolean @default(true)
+  status   Status @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -55,6 +55,8 @@ model User {
   placesUpdated           Place[]           @relation("PlaceUpdatedBy")
   workoutsCreated         Workout[]         @relation("WorkoutCreatedBy")
   workoutsUpdated         Workout[]         @relation("WorkoutUpdatedBy")
+  bankInformationCreated  BankInformation[] @relation("BankInformationCreatedBy")
+  bankInformationUpdated  BankInformation[] @relation("BankInformationUpdatedBy")
 }
 
 model Role {
@@ -128,7 +130,7 @@ model MemberPlan {
   cons         Cons[]
   duration     Int        @default(1)
   isVideoGroup Boolean    @default(false)
-  status       Boolean    @default(true)
+  status       Status     @default(ACTIVE)
 
   createdById Int?
   updatedById Int?
@@ -179,7 +181,7 @@ model Member {
   password     String
   memberType   MemberType     @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int
-  status       Boolean        @default(true)
+  status       Status         @default(ACTIVE)
   profile      MemberProfile?
   language     Language       @default(ENG)
   theme        Theme          @default(LIGHT)
@@ -242,25 +244,6 @@ enum Theme {
   LIGHT
 }
 
-model Payment {
-  id           Int           @id @default(autoincrement())
-  memberId     Int
-  member       Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  memberPlan   MemberPlan    @relation(fields: [memberPlanId], references: [id])
-  memberPlanId Int
-  amount       Int           @default(0)
-  attachment   String
-  status       PaymentStatus @default(OPEN)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-}
-
-enum PaymentStatus {
-  OPEN
-  PAID
-  CANCELLED
-}
-
 model ShopLevel {
   id          Int      @id @default(autoincrement())
   name        String   @unique
@@ -268,7 +251,7 @@ model ShopLevel {
   duration    Int      @default(0)
   description String?  @db.Text()
   postLimit   Int      @default(10)
-  status      Boolean  @default(true)
+  status      Status   @default(ACTIVE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -286,7 +269,7 @@ model Shop {
   shopLevelId Int?
   shopLevel   ShopLevel? @relation(fields: [shopLevelId], references: [id])
 
-  status    Boolean  @default(true)
+  status    Status   @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -489,4 +472,51 @@ model Workout {
   updatedBy   User?    @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model BankInformation {
+  id                Int     @id @default(autoincrement())
+  coverPhoto        String?
+  bankAccountHolder String
+  bankAccountNumber String  @unique
+  phone             String
+
+  paymentTypes PaymentTypes @default(BANK_ACCOUNT)
+  status       Status       @default(ACTIVE)
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("BankInformationCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("BankInformationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Payment {
+  id           Int           @id @default(autoincrement())
+  memberId     Int
+  member       Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberPlan   MemberPlan    @relation(fields: [memberPlanId], references: [id])
+  memberPlanId Int
+  amount       Int           @default(0)
+  attachment   String
+  status       PaymentStatus @default(OPEN)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+enum PaymentTypes {
+  BANK_ACCOUNT
+  E_WALLET
+}
+
+enum PaymentStatus {
+  OPEN
+  PAID
+  CANCELLED
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
 }

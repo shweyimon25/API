@@ -1,6 +1,5 @@
-import { ProviderType } from "@prisma/client";
 import { z } from "zod";
-import { email, minLength } from "zod/v4";
+import { Status } from "@prisma/client";
 
 export const createMemberSchema = z
   .object({
@@ -8,27 +7,27 @@ export const createMemberSchema = z
       required_error: "Name is required",
       invalid_type_error: "Name must be string",
     }),
-    email: z
-      .string({
-        required_error: "Email is required",
-        invalid_type_error: "Email must be string",
-      })
-      .email({ message: "Invalid email address" }),
-    username: z.string({
-      required_error: "Username is required",
-      invalid_type_error: "Username must be string",
-    }),
+    email: z.string().optional(),
+    phone: z
+      .string()
+      .min(11, { message: "Phone must be at least 11 digits long" })
+      .max(11, { message: "Phone must be at most 11 digits long" })
+      .optional(),
     memberTypeId: z.coerce.number({
       required_error: "Member type id is required",
       invalid_type_error: "Member type id must be number",
     }),
-    providerTypes: z
-      .array(z.nativeEnum(ProviderType), {
-        required_error: "Provider types are required",
-        invalid_type_error: "Provider types must be an array",
+    address: z
+      .string({
+        invalid_type_error: "Address must be string",
       })
-      .min(1, { message: "At least one provider type is required" }),
-    status: z.boolean().optional(),
+      .optional(),
+    bio: z
+      .string({
+        invalid_type_error: "Bio must be string",
+      })
+      .optional(),
+    status: z.nativeEnum(Status).optional(),
     password: z
       .string({
         required_error: "Password is required",
@@ -43,6 +42,29 @@ export const createMemberSchema = z
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Passwords don't match",
     path: ["passwordConfirm"],
+  })
+  .refine((data) => {
+    if (data.email !== undefined) {
+      return z
+        .string({
+          required_error: "Phone is required",
+          invalid_type_error: "Phone must be string",
+        })
+        .min(10, {
+          message: "Phone must be at least 10 characters",
+        })
+        .max(15, {
+          message: "Phone must be at most 15 characters",
+        });
+    }
+    if (data.phone !== undefined) {
+      return z
+        .string({
+          required_error: "Email is required",
+          invalid_type_error: "Email must be string",
+        })
+        .email({ message: "Invalid email address" });
+    }
   });
 
 export const updateMemberSchema = z
@@ -52,10 +74,21 @@ export const updateMemberSchema = z
         invalid_type_error: "Name must be string",
       })
       .optional(),
-    email: z.string().email("Invalid email address").optional(),
-    username: z
+    email: z
       .string({
-        invalid_type_error: "Username must be string",
+        invalid_type_error: "Email must be string",
+      })
+      .email({ message: "Invalid email address" })
+      .optional(),
+    phone: z
+      .string({
+        invalid_type_error: "Phone must be string",
+      })
+      .min(10, {
+        message: "Phone must be at least 10 characters",
+      })
+      .max(15, {
+        message: "Phone must be at most 15 characters",
       })
       .optional(),
     memberTypeId: z.coerce
@@ -63,18 +96,24 @@ export const updateMemberSchema = z
         invalid_type_error: "Member type must be number",
       })
       .optional(),
-    providerTypes: z
-      .array(z.nativeEnum(ProviderType), {
-        invalid_type_error: "Provider types must be an array of valid provider types",
+    address: z
+      .string({
+        invalid_type_error: "Address must be string",
       })
-      .min(1, { message: "At least one provider type is required" })
       .optional(),
-    status: z.boolean().optional(),
+    bio: z
+      .string({
+        invalid_type_error: "Bio must be string",
+      })
+      .optional(),
+    status: z.nativeEnum(Status).optional(),
     password: z
       .string({
         invalid_type_error: "Password must be string",
       })
-      .min(6)
+      .min(6, {
+        message: "Password must be at least 6 characters",
+      })
       .optional(),
     passwordConfirm: z
       .string({

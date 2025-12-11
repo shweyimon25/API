@@ -3,6 +3,7 @@ import {
   UpdateMemberPlanInput,
 } from "./../../../schemas/admin/v1/member-plan.schema";
 import prisma from "../../../../prisma/client";
+import { Status } from "@prisma/client";
 import {
   BadRequestException,
   NotFoundException,
@@ -163,6 +164,7 @@ class MemberPlanService {
         name: createMemberPlanInput.name,
         duration: createMemberPlanInput.duration,
         isVideoGroup: createMemberPlanInput.isVideoGroup,
+        status: createMemberPlanInput.status ?? Status.ACTIVE,
         memberType: {
           connect: {
             id: existingMemberType.id,

@@ -15,6 +15,7 @@ import adminShopRoute from "./admin/v1/shop.route";
 import adminTagRoute from "./admin/v1/tag.route";
 import adminPostRoute from "./admin/v1/post.route";
 import adminWorkoutRoute from "./admin/v1/workout.route";
+import adminBankInformationRoute from "./admin/v1/bank-information.route";
 
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
@@ -39,6 +40,7 @@ router.use("/admin/v1/shops", adminShopRoute);
 router.use("/admin/v1/tags", adminTagRoute);
 router.use("/admin/v1/posts", adminPostRoute);
 router.use("/admin/v1/workouts", adminWorkoutRoute);
+router.use("/admin/v1/bank-informations", adminBankInformationRoute);
 
 // Member Routes
 router.use("/member/v1/auth", memberAuthRoute);

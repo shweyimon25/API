@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Status } from "@prisma/client";
 
 export const createMemberPlanSchema = z.object({
   name: z.string({
@@ -24,7 +25,7 @@ export const createMemberPlanSchema = z.object({
   isVideoGroup: z.boolean({
     invalid_type_error: "Is video group must be true or false",
   }),
-  status: z.boolean().optional(),
+  status: z.nativeEnum(Status).optional(),
 });
 
 export const updateMemberPlanSchema = z.object({
@@ -35,7 +36,7 @@ export const updateMemberPlanSchema = z.object({
   proIds: z.array(z.coerce.number()).optional(),
   conIds: z.array(z.coerce.number()).optional(),
   isVideoGroup: z.boolean().optional(),
-  status: z.boolean().optional(),
+  status: z.nativeEnum(Status).optional(),
 });
 
 export type CreateMemberPlanInput = z.infer<typeof createMemberPlanSchema>;
