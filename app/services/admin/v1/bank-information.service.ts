@@ -9,9 +9,50 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 
+interface BankInformationFilters {
+  status?: Status;
+  search?: string;
+  paymentTypes?: PaymentTypes;
+}
+
 class BankInformationService {
-  async findAll() {
+  private where(filters?: BankInformationFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.paymentTypes) {
+      where.paymentTypes = filters.paymentTypes;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        {
+          bankAccountHolder: {
+            contains: filters.search,
+          },
+        },
+        {
+          bankAccountNumber: {
+            contains: filters.search,
+          },
+        },
+        {
+          phone: {
+            contains: filters.search,
+          },
+        },
+      ];
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: BankInformationFilters) {
     const bankInformations = await prisma.bankInformation.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -38,8 +79,9 @@ class BankInformationService {
     return bankInformations;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: BankInformationFilters) {
     const bankInformations = await prisma.bankInformation.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -65,7 +107,9 @@ class BankInformationService {
       },
     });
 
-    const totalBankInformations = await prisma.bankInformation.count();
+    const totalBankInformations = await prisma.bankInformation.count({
+      where: this.where(filters),
+    });
 
     return {
       data: bankInformations,

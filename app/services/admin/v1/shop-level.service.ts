@@ -9,9 +9,31 @@ import {
 } from "../../../helpers/exceptions";
 import { Status } from "@prisma/client";
 
+interface ShopLevelFilters {
+  status?: Status;
+  search?: string;
+}
+
 class ShopLevelService {
-  async findAll() {
+  private where(filters?: ShopLevelFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: ShopLevelFilters) {
     const shopLevels = await prisma.shopLevel.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -20,8 +42,9 @@ class ShopLevelService {
     return shopLevels;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: ShopLevelFilters) {
     const shopLevels = await prisma.shopLevel.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -29,7 +52,9 @@ class ShopLevelService {
       take: perPage,
     });
 
-    const totalShopLevels = await prisma.shopLevel.count();
+    const totalShopLevels = await prisma.shopLevel.count({
+      where: this.where(filters),
+    });
 
     return {
       data: shopLevels,

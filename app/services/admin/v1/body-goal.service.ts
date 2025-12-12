@@ -8,9 +8,31 @@ import {
 } from "../../../schemas/admin/v1/body-goal.schema";
 import { Status } from "@prisma/client";
 
+interface BodyGoalFilters {
+    status?: Status;
+    search?: string;
+}
+
 class BodyGoalService {
-    async findAll() {
+    private where(filters?: BodyGoalFilters) {
+        const where: any = {};
+
+        if (filters?.status) {
+            where.status = filters.status;
+        }
+
+        if (filters?.search) {
+            where.name = {
+                contains: filters.search,
+            };
+        }
+
+        return where;
+    }
+
+    async findAll(filters?: BodyGoalFilters) {
         const bodyGoals = await prisma.bodyGoal.findMany({
+            where: this.where(filters),
             orderBy: {
                 id: "desc",
             },
@@ -19,8 +41,9 @@ class BodyGoalService {
         return bodyGoals;
     }
 
-    async findByPaginate(page: number, perPage: number) {
+    async findByPaginate(page: number, perPage: number, filters?: BodyGoalFilters) {
         const bodyGoals = await prisma.bodyGoal.findMany({
+            where: this.where(filters),
             orderBy: {
                 id: "desc",
             },
@@ -28,7 +51,9 @@ class BodyGoalService {
             take: perPage,
         });
 
-        const totalBodyGoals = await prisma.bodyGoal.count();
+        const totalBodyGoals = await prisma.bodyGoal.count({
+            where: this.where(filters),
+        });
 
         return {
             data: bodyGoals,

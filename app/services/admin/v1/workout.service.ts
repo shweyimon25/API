@@ -7,9 +7,51 @@ import { CreateWorkoutInput, UpdateWorkoutInput } from "../../../schemas/admin/v
 import prisma from "../../../../prisma/client";
 import { Status } from "@prisma/client";
 
+interface WorkoutFilters {
+    status?: Status;
+    search?: string;
+    categoryId?: number;
+    bodyGoalId?: number;
+    placeId?: number;
+    memberPlanId?: number;
+}
+
 class WorkoutService {
-    async findAll() {
+    private where(filters?: WorkoutFilters) {
+        const where: any = {};
+
+        if (filters?.status) {
+            where.status = filters.status;
+        }
+
+        if (filters?.search) {
+            where.name = {
+                contains: filters.search,
+            };
+        }
+
+        if (filters?.categoryId) {
+            where.categoryId = filters.categoryId;
+        }
+
+        if (filters?.bodyGoalId) {
+            where.bodyGoalId = filters.bodyGoalId;
+        }
+
+        if (filters?.placeId) {
+            where.placeId = filters.placeId;
+        }
+
+        if (filters?.memberPlanId) {
+            where.memberPlanId = filters.memberPlanId;
+        }
+
+        return where;
+    }
+
+    async findAll(filters?: WorkoutFilters) {
         const workouts = await prisma.workout.findMany({
+            where: this.where(filters),
             orderBy: {
                 id: "desc",
             },
@@ -18,8 +60,9 @@ class WorkoutService {
         return workouts;
     }
 
-    async findByPaginate(page: number, perPage: number) {
+    async findByPaginate(page: number, perPage: number, filters?: WorkoutFilters) {
         const workouts = await prisma.workout.findMany({
+            where: this.where(filters),
             orderBy: {
                 id: "desc",
             },
@@ -27,7 +70,9 @@ class WorkoutService {
             take: perPage,
         });
 
-        const totalWorkouts = await prisma.workout.count();
+        const totalWorkouts = await prisma.workout.count({
+            where: this.where(filters),
+        });
 
         return {
             data: workouts,

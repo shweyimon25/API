@@ -9,9 +9,31 @@ import {
 } from "../../../schemas/admin/v1/proficient-level.schema";
 import { Status } from "@prisma/client";
 
+interface ProficientLevelFilters {
+  status?: Status;
+  search?: string;
+}
+
 class ProficientLevelService {
-  async findAll() {
+  private where(filters?: ProficientLevelFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: ProficientLevelFilters) {
     const proficientLevels = await prisma.proficientLevel.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -20,8 +42,9 @@ class ProficientLevelService {
     return proficientLevels;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: ProficientLevelFilters) {
     const proficientLevel = await prisma.proficientLevel.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -29,7 +52,9 @@ class ProficientLevelService {
       take: perPage,
     });
 
-    const totalProficientLevel = await prisma.proficientLevel.count();
+    const totalProficientLevel = await prisma.proficientLevel.count({
+      where: this.where(filters),
+    });
 
     return {
       data: proficientLevel,

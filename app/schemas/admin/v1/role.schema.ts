@@ -6,13 +6,22 @@ export const createRoleSchema = z.object({
     required_error: "Name is required",
     invalid_type_error: "Name must be string",
   }),
+  permissions: z.array(
+    z.number({
+      required_error: "Permissions is required",
+      invalid_type_error: "Permissions must be array of numbers",
+    })
+  ),
   status: z.nativeEnum(Status).optional(),
 });
 
 export const updateRoleSchema = z.object({
-  name: z.string({
-    invalid_type_error: "Name must be string",
-  }).optional(),
+  name: z
+    .string({
+      invalid_type_error: "Name must be string",
+    })
+    .optional(),
+  permissions: z.array(z.number()).optional(),
   status: z.nativeEnum(Status).optional(),
 });
 

@@ -11,6 +11,12 @@ import {
 } from "../../../helpers/exceptions";
 import MemberTypeService from "./member-type.service";
 
+interface MemberPlanFilters {
+  status?: Status;
+  search?: string;
+  memberTypeId?: number;
+}
+
 class MemberPlanService {
   private memberTypeService: MemberTypeService;
 
@@ -18,8 +24,29 @@ class MemberPlanService {
     this.memberTypeService = new MemberTypeService();
   }
 
-  async findAll() {
+  private where(filters?: MemberPlanFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.memberTypeId) {
+      where.memberTypeId = filters.memberTypeId;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: MemberPlanFilters) {
     const memberPlans = await prisma.memberPlan.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -28,8 +55,9 @@ class MemberPlanService {
     return memberPlans;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: MemberPlanFilters) {
     const memberPlans = await prisma.memberPlan.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -37,7 +65,9 @@ class MemberPlanService {
       take: perPage,
     });
 
-    const totalMemberPlans = await prisma.memberPlan.count();
+    const totalMemberPlans = await prisma.memberPlan.count({
+      where: this.where(filters),
+    });
 
     return {
       data: memberPlans,

@@ -9,9 +9,52 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 
+interface ShopFilters {
+  status?: Status;
+  search?: string;
+  shopLevelId?: number;
+  memberId?: number;
+}
+
 class ShopService {
-  async findAll() {
+  private where(filters?: ShopFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.shopLevelId) {
+      where.shopLevelId = filters.shopLevelId;
+    }
+
+    if (filters?.memberId) {
+      where.memberId = filters.memberId;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        {
+          name: {
+            contains: filters.search,
+          },
+        },
+        {
+          member: {
+            name: {
+              contains: filters.search,
+            },
+          },
+        },
+      ];
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: ShopFilters) {
     const shops = await prisma.shop.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -37,8 +80,9 @@ class ShopService {
     return shops;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: ShopFilters) {
     const shops = await prisma.shop.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -63,7 +107,9 @@ class ShopService {
       },
     });
 
-    const totalShops = await prisma.shop.count();
+    const totalShops = await prisma.shop.count({
+      where: this.where(filters),
+    });
 
     return {
       data: shops,

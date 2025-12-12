@@ -6,9 +6,31 @@ import prisma from "../../../../prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
 import { Status } from "@prisma/client";
 
+interface PlaceFilters {
+  status?: Status;
+  search?: string;
+}
+
 class PlaceService {
-  async findAll() {
+  private where(filters?: PlaceFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: PlaceFilters) {
     const places = await prisma.place.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -17,8 +39,9 @@ class PlaceService {
     return places;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: PlaceFilters) {
     const places = await prisma.place.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -26,7 +49,9 @@ class PlaceService {
       take: perPage,
     });
 
-    const totalPlaces = await prisma.place.count();
+    const totalPlaces = await prisma.place.count({
+      where: this.where(filters),
+    });
 
     return {
       data: places,

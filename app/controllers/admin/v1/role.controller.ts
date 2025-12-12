@@ -3,6 +3,12 @@ import { successResponse } from "../../../helpers/response";
 import RoleService from "../../../services/admin/v1/role.service";
 import { RoleResource } from "../../../resources/admin/v1/role/role.resource";
 import { RoleCollection } from "../../../resources/admin/v1/role/role.collection";
+import { ValidationException } from "../../../helpers/exceptions";
+import { validater } from "../../../helpers/validator";
+import {
+  createRoleSchema,
+  updateRoleSchema,
+} from "../../../schemas/admin/v1/role.schema";
 
 class RoleController {
   private roleService: RoleService;
@@ -32,8 +38,7 @@ class RoleController {
   }
 
   async findOne(req: Request, res: Response) {
-    const { id } = req.params;
-    const role = await this.roleService.findOne(+id);
+    const role = await this.roleService.findOne(+req.params.id);
     return successResponse(
       res,
       "Role details successfully",
@@ -42,7 +47,17 @@ class RoleController {
   }
 
   async create(req: Request, res: Response) {
-    const role = await this.roleService.create(req.body);
+    const { data, error, success } = await validater(
+      createRoleSchema,
+      req.body
+    );
+
+    if (!success) {
+      throw new ValidationException("Role created failed", error);
+    }
+
+    const role = await this.roleService.create(data);
+
     return successResponse(
       res,
       "Role created successfully",
@@ -51,8 +66,17 @@ class RoleController {
   }
 
   async update(req: Request, res: Response) {
-    const { id } = req.params;
-    const role = await this.roleService.update(+id, req.body);
+    const { data, error, success } = await validater(
+      updateRoleSchema,
+      req.body
+    );
+
+    if (!success) {
+      throw new ValidationException("Role updated failed", error);
+    }
+
+    const role = await this.roleService.update(+req.params.id, data);
+
     return successResponse(
       res,
       "Role updated successfully",
@@ -61,12 +85,8 @@ class RoleController {
   }
 
   async destroy(req: Request, res: Response) {
-    const { id } = req.params;
-    await this.roleService.destory(+id);
-    return successResponse(
-      res,
-      "Role deleted successfully",
-    );
+    await this.roleService.destory(+req.params.id);
+    return successResponse(res, "Role deleted successfully");
   }
 }
 

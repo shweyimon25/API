@@ -1,44 +1,60 @@
 import prisma from "../../../../prisma/client";
-import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import {
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
 import {
   CreateRoleInput,
   UpdateRoleInput,
 } from "../../../schemas/admin/v1/role.schema";
 import { Status } from "@prisma/client";
 
+interface RoleFilters {
+  status?: Status;
+  search?: string;
+}
+
 class RoleService {
-  async findAll() {
+  private where(filters?: RoleFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: RoleFilters) {
     const roles = await prisma.role.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
-      },
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        updatedAt: true,
       },
     });
 
     return roles;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: RoleFilters) {
     const roles = await prisma.role.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
       skip: (page - 1) * perPage,
       take: perPage,
-      select: {
-        id: true,
-        name: true,
-        createdAt: true,
-        updatedAt: true,
-      },
     });
 
-    const totalRoles = await prisma.role.count();
+    const totalRoles = await prisma.role.count({
+      where: this.where(filters),
+    });
 
     return {
       data: roles,
@@ -73,17 +89,6 @@ class RoleService {
             },
           },
         },
-        users: {
-          select: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-        },
         createdAt: true,
         updatedAt: true,
       },
@@ -99,19 +104,19 @@ class RoleService {
   async create(createRoleInput: CreateRoleInput) {
     const { name, status } = createRoleInput;
 
-    // Check role name unique 
+    // Check role name unique
     const roleName = await prisma.role.findFirst({
       where: {
-        name
-      }
+        name,
+      },
     });
 
     if (roleName) {
       throw new ValidationException("Failed to created role", [
         {
           field: "name",
-          issue: "Name is already existed"
-        }
+          issue: "Name is already existed",
+        },
       ]);
     }
 
@@ -129,10 +134,10 @@ class RoleService {
   async update(roleId: number, updateRoleInput: UpdateRoleInput) {
     const { name, status } = updateRoleInput;
 
-    // Check role is existed 
+    // Check role is existed
     const existingRole = await prisma.role.findUnique({
-      where: { id: roleId }
-    })
+      where: { id: roleId },
+    });
 
     if (!existingRole) {
       throw new NotFoundException("Role not found");
@@ -144,18 +149,18 @@ class RoleService {
         where: {
           name,
           NOT: {
-            id: roleId
-          }
-        }
+            id: roleId,
+          },
+        },
       });
 
       if (roleName) {
         throw new ValidationException("Failed to updated role", [
           {
             issue: "Name is already existed",
-            field: "name"
-          }
-        ])
+            field: "name",
+          },
+        ]);
       }
     }
 
@@ -165,7 +170,7 @@ class RoleService {
       data: {
         name: name ?? existingRole.name,
         status: status ?? existingRole.status,
-      }
+      },
     });
 
     return role;
@@ -174,8 +179,8 @@ class RoleService {
   async destory(roleId: number) {
     // Delete role
     await prisma.role.delete({
-      where: { id: roleId }
-    })
+      where: { id: roleId },
+    });
   }
 }
 

@@ -1,7 +1,7 @@
 import prisma from "../../../../prisma/client";
 import { Status } from "@prisma/client";
 import {
-  BadRequestException,
+  NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
 import { hashPassword } from "../../../helpers/helper";
@@ -10,9 +10,54 @@ import {
   UpdateUserInput,
 } from "../../../schemas/admin/v1/user.schema";
 
+interface UserFilters {
+  status?: Status;
+  search?: string;
+  roleId?: number;
+}
+
 class UserService {
-  async findAll() {
+  private where(filters?: UserFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.roleId) {
+      where.roles = {
+        some: {
+          roleId: filters.roleId,
+        },
+      };
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        {
+          name: {
+            contains: filters.search,
+          },
+        },
+        {
+          email: {
+            contains: filters.search,
+          },
+        },
+        {
+          username: {
+            contains: filters.search,
+          },
+        },
+      ];
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: UserFilters) {
     const users = await prisma.user.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -39,8 +84,9 @@ class UserService {
     return users;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: UserFilters) {
     const users = await prisma.user.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -66,7 +112,9 @@ class UserService {
       },
     });
 
-    const totalUsers = await prisma.user.count();
+    const totalUsers = await prisma.user.count({
+      where: this.where(filters),
+    });
 
     return {
       data: users,
@@ -109,7 +157,7 @@ class UserService {
     });
 
     if (!user) {
-      throw new BadRequestException("User not found");
+      throw new NotFoundException("User not found");
     }
 
     return user;
@@ -189,109 +237,108 @@ class UserService {
     return this.findOne(user.id);
   }
 
-  async update(userId: number, updateUserInput: UpdateUserInput) {
+  async update(id: number, updateUserInput: UpdateUserInput) {
     const { name, username, email, password, status, roleId } = updateUserInput;
 
-    // Check user is existing
-    const user = await prisma.user.findUnique({
+    // Check user is existed
+    const existingUser = await prisma.user.findUnique({
       where: {
-        id: userId,
+        id,
       },
-      include: {
-        roles: {
-          select: {
-            role: true,
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Check user email is existed (only if email is being updated)
+    if (email && email !== existingUser.email) {
+      const existingEmail = await prisma.user.findFirst({
+        where: {
+          email,
+          NOT: {
+            id,
           },
         },
-      },
-    });
+      });
 
-    if (!user) {
-      throw new BadRequestException("User not found");
+      if (existingEmail) {
+        throw new ValidationException("Failed to update user", [
+          {
+            field: "email",
+            issue: "Email is already existed",
+          },
+        ]);
+      }
     }
 
-    // Check user username is existed
-    const existingUsername = await prisma.user.findFirst({
-      where: {
-        username,
-        NOT: {
-          id: userId,
+    // Check user username is existed (only if username is being updated)
+    if (username && username !== existingUser.username) {
+      const existingUsername = await prisma.user.findFirst({
+        where: {
+          username,
+          NOT: {
+            id,
+          },
         },
-      },
-    });
+      });
 
-    if (existingUsername) {
-      throw new ValidationException("Failed to created user", [
-        {
-          field: "username",
-          issue: "Username is already existed",
-        },
-      ]);
+      if (existingUsername) {
+        throw new ValidationException("Failed to update user", [
+          {
+            field: "username",
+            issue: "Username is already existed",
+          },
+        ]);
+      }
     }
 
-    // Check user email is existed
-    const existingEmail = await prisma.user.findFirst({
-      where: {
-        email,
-        NOT: {
-          id: userId,
+    // Check role is existed (only if roleId is provided)
+    if (roleId) {
+      const existingRole = await prisma.role.findFirst({
+        where: {
+          id: roleId,
         },
-      },
-    });
+      });
 
-    if (existingEmail) {
-      throw new ValidationException("Failed to created user", [
-        {
-          field: "email",
-          issue: "Email is already existed",
-        },
-      ]);
-    }
-
-    // check role is existed
-    const role = await prisma.role.findFirst({
-      where: {
-        id: roleId,
-      },
-    });
-
-    if (!role) {
-      throw new ValidationException("Failed to created user", [
-        {
-          field: "roleId",
-          issue: "Role is not existed",
-        },
-      ]);
+      if (!existingRole) {
+        throw new ValidationException("Failed to update user", [
+          {
+            field: "roleId",
+            issue: "Role is not existed",
+          },
+        ]);
+      }
     }
 
     await prisma.user.update({
       where: {
-        id: userId,
+        id,
       },
       data: {
-        name: name || user.name,
-        email: email || user.email,
-        username: username || user.username,
-        password: password ? hashPassword(password) : user.password,
-        status: status ?? user.status,
+        name: name || existingUser.name,
+        email: email || existingUser.email,
+        username: username || existingUser.username,
+        password: password ? hashPassword(password) : existingUser.password,
+        status: status ?? existingUser.status,
       },
     });
 
     if (roleId) {
       await prisma.userRole.deleteMany({
         where: {
-          userId,
+          id,
         },
       });
       await prisma.userRole.create({
         data: {
-          userId,
+          userId: id,
           roleId,
         },
       });
     }
 
-    return this.findOne(userId);
+    return this.findOne(id);
   }
 
   async destory(id: number) {

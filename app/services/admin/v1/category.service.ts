@@ -6,9 +6,31 @@ import {
 } from "../../../schemas/admin/v1/category.schema";
 import { Status } from "@prisma/client";
 
+interface CategoryFilters {
+  status?: Status;
+  search?: string;
+}
+
 class CategoryService {
-  async findAll() {
+  private where(filters?: CategoryFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: CategoryFilters) {
     const categories = await prisma.category.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -17,8 +39,9 @@ class CategoryService {
     return categories;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: CategoryFilters) {
     const categories = await prisma.category.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -26,7 +49,9 @@ class CategoryService {
       take: perPage,
     });
 
-    const totalCategory = await prisma.category.count();
+    const totalCategory = await prisma.category.count({
+      where: this.where(filters),
+    });
 
     return {
       data: categories,

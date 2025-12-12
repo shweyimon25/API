@@ -9,9 +9,31 @@ import {
 } from "../../../schemas/admin/v1/cons.schema";
 import { Status } from "@prisma/client";
 
+interface ConsFilters {
+  status?: Status;
+  search?: string;
+}
+
 class ConsService {
-  async findAll() {
+  private where(filters?: ConsFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: ConsFilters) {
     const cons = await prisma.cons.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -27,8 +49,9 @@ class ConsService {
     return cons;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: ConsFilters) {
     const cons = await prisma.cons.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -43,7 +66,9 @@ class ConsService {
       },
     });
 
-    const totalCons = await prisma.cons.count();
+    const totalCons = await prisma.cons.count({
+      where: this.where(filters),
+    });
 
     return {
       data: cons,

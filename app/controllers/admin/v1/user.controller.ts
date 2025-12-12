@@ -7,11 +7,9 @@ import {
   updateUserSchema,
 } from "../../../schemas/admin/v1/user.schema";
 import { ValidationException } from "../../../helpers/exceptions";
-import { PrismaClient } from "@prisma/client";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 
-const prisma = new PrismaClient();
 class UserController {
   private userService: UserService;
 
@@ -20,10 +18,26 @@ class UserController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10 } = req.query;
+    const { page, perPage, status, search, roleId } = req.query;
+
+    // Build filters object
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
+    if (roleId) {
+      filters.roleId = +roleId;
+    }
 
     if (page && perPage) {
-      const users = await this.userService.findByPaginate(+page, +perPage);
+      const users = await this.userService.findByPaginate(
+        +page,
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
       return successResponse(
         res,
         "User list successfully",
@@ -31,7 +45,9 @@ class UserController {
       );
     }
 
-    const users = await this.userService.findAll();
+    const users = await this.userService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
     return successResponse(
       res,
       "User list successfully",
@@ -40,8 +56,7 @@ class UserController {
   }
 
   async findOne(req: Request, res: Response) {
-    const { id } = req.params;
-    const user = await this.userService.findOne(+id);
+    const user = await this.userService.findOne(+req.params.id);
     return successResponse(
       res,
       "User detail successfully",
@@ -69,45 +84,6 @@ class UserController {
   }
 
   async update(req: Request, res: Response) {
-    const { id } = req.params;
-    const { email, name } = req.body;
-
-    if (email) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          email,
-          NOT: { id: +id },
-        },
-      });
-
-      if (existingUser) {
-        throw new ValidationException("User updated failed", [
-          {
-            field: "email",
-            issue: "Email is already exist",
-          },
-        ]);
-      }
-    }
-
-    if (name) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          name,
-          NOT: { id: +id },
-        },
-      });
-
-      if (existingUser) {
-        throw new ValidationException("User updated failed", [
-          {
-            field: "name",
-            issue: "Name is already exist",
-          },
-        ]);
-      }
-    }
-
     const { data, error, success } = await validater(
       updateUserSchema,
       req.body
@@ -117,7 +93,7 @@ class UserController {
       throw new ValidationException("User updated failed", error);
     }
 
-    const user = await this.userService.update(+id, data);
+    const user = await this.userService.update(+req.params.id, data);
 
     return successResponse(
       res,
@@ -127,9 +103,7 @@ class UserController {
   }
 
   async destroy(req: Request, res: Response) {
-    const { id } = req.params;
-    await this.userService.destory(+id);
-    
+    await this.userService.destory(+req.params.id);
     return successResponse(res, "User deleted successfully");
   }
 }

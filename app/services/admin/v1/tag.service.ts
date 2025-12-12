@@ -9,9 +9,31 @@ import {
 } from "../../../helpers/exceptions";
 import { Status } from "@prisma/client";
 
+interface TagFilters {
+  status?: Status;
+  search?: string;
+}
+
 class TagService {
-  async findAll() {
+  private where(filters?: TagFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: TagFilters) {
     const tags = await prisma.tag.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -43,8 +65,9 @@ class TagService {
     return tags;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: TagFilters) {
     const tags = await prisma.tag.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -75,7 +98,9 @@ class TagService {
       },
     });
 
-    const totalTags = await prisma.tag.count();
+    const totalTags = await prisma.tag.count({
+      where: this.where(filters),
+    });
 
     return {
       data: tags,

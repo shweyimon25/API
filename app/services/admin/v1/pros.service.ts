@@ -10,9 +10,31 @@ import {
 } from "../../../schemas/admin/v1/pros.schema";
 import { Status } from "@prisma/client";
 
+interface ProsFilters {
+  status?: Status;
+  search?: string;
+}
+
 class ProsService {
-  async findAll() {
+  private where(filters?: ProsFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: ProsFilters) {
     const pros = await prisma.pros.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -28,8 +50,9 @@ class ProsService {
     return pros;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: ProsFilters) {
     const pros = await prisma.pros.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -44,7 +67,9 @@ class ProsService {
       },
     });
 
-    const totalPros = await prisma.pros.count();
+    const totalPros = await prisma.pros.count({
+      where: this.where(filters),
+    });
 
     return {
       data: pros,

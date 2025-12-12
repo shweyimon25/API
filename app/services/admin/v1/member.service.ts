@@ -10,9 +10,55 @@ import {
   UpdateMemberInput,
 } from "../../../schemas/admin/v1/member.schema";
 
+interface MemberFilters {
+  status?: Status;
+  search?: string;
+  memberTypeId?: number;
+}
+
 class MemberService {
-  async findAll() {
+  private where(filters?: MemberFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.memberTypeId) {
+      where.memberTypeId = filters.memberTypeId;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        {
+          name: {
+            contains: filters.search,
+          },
+        },
+        {
+          email: {
+            contains: filters.search,
+          },
+        },
+        {
+          phone: {
+            contains: filters.search,
+          },
+        },
+        {
+          code: {
+            contains: filters.search,
+          },
+        },
+      ];
+    }
+
+    return where;
+  }
+
+  async findAll(filters?: MemberFilters) {
     const members = await prisma.member.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -44,8 +90,9 @@ class MemberService {
     return members;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters?: MemberFilters) {
     const members = await prisma.member.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -76,7 +123,9 @@ class MemberService {
       },
     });
 
-    const totalMembers = await prisma.member.count();
+    const totalMembers = await prisma.member.count({
+      where: this.where(filters),
+    });
 
     return {
       data: members,
