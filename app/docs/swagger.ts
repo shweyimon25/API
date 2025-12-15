@@ -463,6 +463,10 @@ const adminAuthPaths = {
                 emailOrUsername: { type: "string" },
                 password: { type: "string", format: "password" },
               },
+              example: {
+                emailOrUsername: "admin@admin.com",
+                password: "admin",
+              },
               required: ["emailOrUsername", "password"],
             },
           },
@@ -472,36 +476,6 @@ const adminAuthPaths = {
         200: { description: "Authenticated successfully" },
         400: { description: "Validation failed" },
         401: { description: "Invalid credentials" },
-      },
-    },
-  },
-};
-
-const adminMediaPaths = {
-  "/api/admin/v1/media/upload": {
-    post: {
-      tags: ["Admin - Media"],
-      summary: "Upload media",
-      description: "Upload a media file.",
-      security: [{ bearerAuth: [] as string[] }],
-      requestBody: {
-        required: true,
-        content: {
-          "multipart/form-data": {
-            schema: {
-              type: "object",
-              properties: {
-                file: { type: "string", format: "binary" },
-              },
-              required: ["file"],
-            },
-          },
-        },
-      },
-      responses: {
-        201: { description: "Uploaded successfully" },
-        400: { description: "Upload failed" },
-        401: { description: "Unauthorized" },
       },
     },
   },
@@ -575,7 +549,6 @@ const memberAuthPaths = {
 
 const tags = [
   { name: "Admin - Auth", description: "Admin authentication" },
-  { name: "Admin - Media", description: "Admin media upload" },
   ...adminCrudResources.map((resource) => ({
     name: `Admin - ${resource.title}`,
     description: resource.description,
@@ -586,7 +559,6 @@ const tags = [
 const paths = {
   ...adminAuthPaths,
   ...createCrudPaths(adminCrudResources, "/api/admin/v1", "Admin"),
-  ...adminMediaPaths,
   ...memberAuthPaths,
 };
 

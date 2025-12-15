@@ -30,6 +30,11 @@ class AuthController {
         ],
         status: Status.ACTIVE,
       },
+      include: {
+        profile: true,
+        memberType: true,
+        providerTypes: true,
+      }
     });
 
     if (!member) {
@@ -45,7 +50,18 @@ class AuthController {
     const token: string = generateToken(member, "30d");
 
     return successResponse(res, "User sign in successfully", {
-      user: member,
+      user: {
+        id: member.id,
+        name: member.name,
+        email: member.email,
+        phone: member.phone,
+        status: member.status,
+        createdAt: member.createdAt,
+        updatedAt: member.updatedAt,
+        profile: member.profile,
+        memberType: member.memberType,
+        providerTypes: member.providerTypes,
+      },
       token,
     });
   }

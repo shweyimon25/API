@@ -10,18 +10,23 @@ export const signUpSchema = z.object({
     address: z.string({
         invalid_type_error: "Address must be string"
     }).optional(),
-    password: z.string({
-        required_error: "Password is required",
-        invalid_type_error: "Password must be string"
-    }).min(6, {
-        message: "Password must be at least 6 characters long"
-    }),
+    password: z
+        .string({
+            required_error: "Password is required",
+            invalid_type_error: "Password must be string"
+        })
+        .min(8, { message: "Password must be at least 8 characters" })
+        .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+            {
+                message:
+                    "Password must include uppercase, lowercase, number, and special character",
+            }
+        ),
     passwordConfirm: z.string({
         required_error: "Password confirmation is required",
         invalid_type_error: "Password confirmation must be string"
-    }).min(6, {
-        message: "Password confirmation must be at least 6 characters long"
-    }),
+    })
 }).refine((data) => {
     if (data.loginProviderType === "EMAIL") {
         return z.string({
@@ -38,8 +43,8 @@ export const signUpSchema = z.object({
             message: "Invalid email address"
         });
     }
-}).refine((data) => data.password !== data.passwordConfirm, {
-    message: "Password don't match",
+}).refine((data) => data.password === data.passwordConfirm, {
+    message: "Passwords don't match",
 })
 
 export const sigInSchema = z.object({
