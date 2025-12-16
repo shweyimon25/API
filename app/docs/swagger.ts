@@ -291,6 +291,222 @@ const listParametersByResource: Record<string, ListParameter[]> = {
   ],
 };
 
+const exampleDataByResource: Record<string, { create: any; update: any }> = {
+  users: {
+    create: {
+      name: "John Doe",
+      email: "john.doe@example.com",
+      username: "johndoe",
+      password: "password123",
+      passwordConfirm: "password123",
+      roleId: 1,
+      status: "ACTIVE",
+    },
+    update: {
+      name: "John Doe Updated",
+      email: "john.updated@example.com",
+      username: "johndoe_updated",
+      status: "ACTIVE",
+    },
+  },
+  roles: {
+    create: {
+      name: "Editor",
+      permissions: [1, 2, 3],
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Editor Updated",
+      permissions: [1, 2, 3, 4],
+      status: "ACTIVE",
+    },
+  },
+  "member-plans": {
+    create: {
+      name: "Premium Plan",
+      memberTypeId: 1,
+      price: 50000,
+      duration: 3,
+      isVideoGroup: true,
+      proIds: [1, 2],
+      conIds: [1],
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Premium Plan Updated",
+      price: 60000,
+      duration: 6,
+      status: "ACTIVE",
+    },
+  },
+  members: {
+    create: {
+      name: "Jane Smith",
+      email: "jane.smith@example.com",
+      phone: "09123456789",
+      password: "password123",
+      passwordConfirm: "password123",
+      memberTypeId: 1,
+      address: "123 Main Street",
+      bio: "Fitness enthusiast",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Jane Smith Updated",
+      email: "jane.updated@example.com",
+      status: "ACTIVE",
+    },
+  },
+  pros: {
+    create: {
+      name: "24/7 Access",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "24/7 Access Updated",
+      status: "ACTIVE",
+    },
+  },
+  cons: {
+    create: {
+      name: "Limited Locations",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Limited Locations Updated",
+      status: "ACTIVE",
+    },
+  },
+  "shop-levels": {
+    create: {
+      name: "Gold Level",
+      price: 100000,
+      duration: 12,
+      description: "Premium shop level with extended features",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Gold Level Updated",
+      price: 120000,
+      description: "Updated premium shop level",
+      status: "ACTIVE",
+    },
+  },
+  shops: {
+    create: {
+      name: "Fitness Shop",
+      image: "https://example.com/shop-image.jpg",
+      memberId: 1,
+      shopLevelId: 1,
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Fitness Shop Updated",
+      status: "ACTIVE",
+    },
+  },
+  tags: {
+    create: {
+      name: "Fitness",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Fitness Updated",
+      status: "ACTIVE",
+    },
+  },
+  posts: {
+    create: {
+      tagId: 1,
+      contact: '{"phone": "+1234567890", "email": "contact@example.com"}',
+      privencyType: "PUBLIC",
+    },
+    update: {
+      privencyType: "PRIVATE",
+      contact: '{"phone": "+1234567890"}',
+    },
+  },
+  workouts: {
+    create: {
+      name: "Morning Cardio",
+      video: "https://example.com/video.mp4",
+      thumbnail: "https://example.com/thumbnail.jpg",
+      gender: "BOTH",
+      categoryId: 1,
+      bodyGoalId: 1,
+      proficientLevelId: 1,
+      placeId: 1,
+      memberPlanId: 1,
+      workoutDay: "MONDAY",
+      videoDuration: 1800,
+      sets: 3,
+      reps: 12,
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Morning Cardio Updated",
+      sets: 4,
+      reps: 15,
+      status: "ACTIVE",
+    },
+  },
+  "bank-informations": {
+    create: {
+      bankAccountHolder: "John Doe",
+      bankAccountNumber: "1234567890",
+      phone: "09123456789",
+      paymentTypes: "BANK_ACCOUNT",
+      coverPhoto: "https://example.com/cover.jpg",
+      status: "ACTIVE",
+    },
+    update: {
+      bankAccountHolder: "John Doe Updated",
+      phone: "09123456790",
+      status: "ACTIVE",
+    },
+  },
+  "body-goals": {
+    create: {
+      name: "Weight Loss",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Weight Loss Updated",
+      status: "ACTIVE",
+    },
+  },
+  places: {
+    create: {
+      name: "Gym",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Gym Updated",
+      status: "ACTIVE",
+    },
+  },
+  "proficient-levels": {
+    create: {
+      name: "Beginner",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Beginner Updated",
+      status: "ACTIVE",
+    },
+  },
+  categories: {
+    create: {
+      name: "Cardio",
+      status: "ACTIVE",
+    },
+    update: {
+      name: "Cardio Updated",
+      status: "ACTIVE",
+    },
+  },
+};
+
 const adminCrudResources: CrudResource[] = [
   { name: "users", title: "Users", description: "Manage system users", updateMethod: "put", allowDelete: true },
   { name: "roles", title: "Roles", description: "Manage role definitions", updateMethod: "put", allowDelete: true },
@@ -368,6 +584,11 @@ const createCrudPaths = (
                       type: "object",
                       additionalProperties: true,
                     },
+                    ...(exampleDataByResource[resource.name]?.create
+                      ? {
+                          example: exampleDataByResource[resource.name].create,
+                        }
+                      : {}),
                   },
                 },
               },
@@ -416,6 +637,11 @@ const createCrudPaths = (
                       type: "object",
                       additionalProperties: true,
                     },
+                    ...(exampleDataByResource[resource.name]?.update
+                      ? {
+                          example: exampleDataByResource[resource.name].update,
+                        }
+                      : {}),
                   },
                 },
               },
