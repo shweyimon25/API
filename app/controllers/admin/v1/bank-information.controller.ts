@@ -18,11 +18,25 @@ class BankInformationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage } = req.query;
+    const { page, perPage, status, search, paymentTypes } = req.query;
+
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
+    if (paymentTypes) {
+      filters.paymentTypes = paymentTypes;
+    }
 
     if (page && perPage) {
-      const bankInformations =
-        await this.bankInformationService.findByPaginate(+page, +perPage);
+      const bankInformations = await this.bankInformationService.findByPaginate(
+        +page,
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
       return successResponse(
         res,
         "Bank information list successfully",
@@ -30,7 +44,9 @@ class BankInformationController {
       );
     }
 
-    const bankInformations = await this.bankInformationService.findAll();
+    const bankInformations = await this.bankInformationService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
     return successResponse(
       res,
       "Bank information list successfully",

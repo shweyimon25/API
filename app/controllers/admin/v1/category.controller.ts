@@ -18,12 +18,21 @@ class CategoryController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage } = req.query;
+    const { page, perPage, status, search } = req.query;
+
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
 
     if (page && perPage) {
       const categories = await this.categoryService.findByPaginate(
         +page,
-        +perPage
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
       );
       return successResponse(
         res,
@@ -32,7 +41,9 @@ class CategoryController {
       );
     }
 
-    const categories = await this.categoryService.findAll();
+    const categories = await this.categoryService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
 
     return successResponse(
       res,

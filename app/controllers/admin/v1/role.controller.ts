@@ -18,10 +18,22 @@ class RoleController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage } = req.query;
+    const { page, perPage, status, search } = req.query;
+
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
 
     if (page && perPage) {
-      const roles = await this.roleService.findByPaginate(+page, +perPage);
+      const roles = await this.roleService.findByPaginate(
+        +page,
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
       return successResponse(
         res,
         "Role list successfully",
@@ -29,7 +41,10 @@ class RoleController {
       );
     }
 
-    const roles = await this.roleService.findAll();
+    const roles = await this.roleService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
+
     return successResponse(
       res,
       "Role list successfully",

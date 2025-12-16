@@ -18,12 +18,21 @@ class ProficientLevelController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage } = req.query;
+    const { page, perPage, status, search } = req.query;
+
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
 
     if (page && perPage) {
       const proficientLevels = await this.proficientLevelService.findByPaginate(
         +page,
-        +perPage
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
       );
       return successResponse(
         res,
@@ -32,7 +41,9 @@ class ProficientLevelController {
       );
     }
 
-    const porficientLevel = await this.proficientLevelService.findAll();
+    const porficientLevel = await this.proficientLevelService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
     return successResponse(
       res,
       "Proficient level successfully",

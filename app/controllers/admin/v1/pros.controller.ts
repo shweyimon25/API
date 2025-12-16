@@ -18,10 +18,22 @@ class ProsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10 } = req.query;
+    const { page = 1, perPage = 10, status, search } = req.query;
+
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
 
     if (page && perPage) {
-      const pros = await this.prosService.findByPaginate(+page, +perPage);
+      const pros = await this.prosService.findByPaginate(
+        +page,
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
       return successResponse(
         res,
         "Pros list successfully",
@@ -29,7 +41,9 @@ class ProsController {
       );
     }
 
-    const pros = await this.prosService.findAll();
+    const pros = await this.prosService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
     return successResponse(
       res,
       "Pros list successfully",

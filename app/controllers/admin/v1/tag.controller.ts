@@ -18,10 +18,22 @@ class TagController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage } = req.query;
+    const { page, perPage, status, search } = req.query;
+
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
 
     if (page && perPage) {
-      const tags = await this.tagService.findByPaginate(+page, +perPage);
+      const tags = await this.tagService.findByPaginate(
+        +page,
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
       return successResponse(
         res,
         "Tag list successfully",
@@ -29,7 +41,9 @@ class TagController {
       );
     }
 
-    const tags = await this.tagService.findAll();
+    const tags = await this.tagService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
     return successResponse(
       res,
       "Tag list successfully",

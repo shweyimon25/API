@@ -102,7 +102,7 @@ class RoleService {
   }
 
   async create(createRoleInput: CreateRoleInput) {
-    const { name, status } = createRoleInput;
+    const { name, status, permissions } = createRoleInput;
 
     // Check role name unique
     const roleName = await prisma.role.findFirst({
@@ -120,19 +120,52 @@ class RoleService {
       ]);
     }
 
-    // Create new role
+    // Check permissions exist and are active
+    if (permissions && permissions.length > 0) {
+      const existingPermissions = await prisma.permission.findMany({
+        where: {
+          id: { in: permissions },
+          status: Status.ACTIVE,
+        },
+        select: { id: true },
+      });
+
+      const existingPermissionIds = existingPermissions.map((p) => p.id);
+      const invalidPermissionIds = permissions.filter(
+        (id) => !existingPermissionIds.includes(id)
+      );
+
+      if (invalidPermissionIds.length > 0) {
+        throw new ValidationException("Failed to create role", [
+          {
+            field: "permissions",
+            issue: `Permission(s) with ID(s) ${invalidPermissionIds.join(", ")} do not exist or are inactive`,
+          },
+        ]);
+      }
+    }
+
+    // Create new role with permissions
     const role = await prisma.role.create({
       data: {
         name,
         status: status ?? Status.ACTIVE,
+        permissions:
+          permissions && permissions.length > 0
+            ? {
+                create: permissions.map((permissionId) => ({
+                  permission: { connect: { id: permissionId } },
+                })),
+              }
+            : undefined,
       },
     });
 
-    return role;
+    return this.findOne(role.id);
   }
 
   async update(roleId: number, updateRoleInput: UpdateRoleInput) {
-    const { name, status } = updateRoleInput;
+    const { name, status, permissions } = updateRoleInput;
 
     // Check role is existed
     const existingRole = await prisma.role.findUnique({
@@ -164,16 +197,55 @@ class RoleService {
       }
     }
 
-    // Update role
+    // Check permissions exist and are active
+    if (permissions !== undefined) {
+      if (permissions.length > 0) {
+        const existingPermissions = await prisma.permission.findMany({
+          where: {
+            id: { in: permissions },
+            status: Status.ACTIVE,
+          },
+          select: { id: true },
+        });
+
+        const existingPermissionIds = existingPermissions.map((p) => p.id);
+        const invalidPermissionIds = permissions.filter(
+          (id) => !existingPermissionIds.includes(id)
+        );
+
+        if (invalidPermissionIds.length > 0) {
+          throw new ValidationException("Failed to update role", [
+            {
+              field: "permissions",
+              issue: `Permission(s) with ID(s) ${invalidPermissionIds.join(", ")} do not exist or are inactive`,
+            },
+          ]);
+        }
+      }
+    }
+
+    // Update role with permissions
     const role = await prisma.role.update({
       where: { id: roleId },
       data: {
         name: name ?? existingRole.name,
         status: status ?? existingRole.status,
+        permissions:
+          permissions !== undefined
+            ? {
+                deleteMany: {},
+                create:
+                  permissions.length > 0
+                    ? permissions.map((permissionId) => ({
+                        permission: { connect: { id: permissionId } },
+                      }))
+                    : [],
+              }
+            : undefined,
       },
     });
 
-    return role;
+    return this.findOne(role.id);
   }
 
   async destory(roleId: number) {

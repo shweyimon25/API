@@ -43,7 +43,8 @@ class PermissionService {
         currentPage: page,
         perPage,
         prevPage: page > 1 ? page - 1 : null,
-        nextPage: page < Math.ceil(totalPermissions / perPage) ? page + 1 : null,
+        nextPage:
+          page < Math.ceil(totalPermissions / perPage) ? page + 1 : null,
         hasPrevPage: page > 1,
         hasNextPage: page < Math.ceil(totalPermissions / perPage),
       },

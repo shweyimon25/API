@@ -18,10 +18,22 @@ class ConsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10 } = req.query;
+    const { page = 1, perPage = 10, status, search } = req.query;
+
+    const filters: any = {};
+    if (status) {
+      filters.status = status;
+    }
+    if (search) {
+      filters.search = search as string;
+    }
 
     if (page && perPage) {
-      const cons = await this.consService.findByPaginate(+page, +perPage);
+      const cons = await this.consService.findByPaginate(
+        +page,
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
+      );
       return successResponse(
         res,
         "Cons list successfully",
@@ -29,7 +41,9 @@ class ConsController {
       );
     }
 
-    const cons = await this.consService.findAll();
+    const cons = await this.consService.findAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
     return successResponse(
       res,
       "Cons list successfully",

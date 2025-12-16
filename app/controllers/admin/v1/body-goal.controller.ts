@@ -18,10 +18,22 @@ class BodyGoalController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage } = req.query;
+        const { page, perPage, status, search } = req.query;
+
+        const filters: any = {};
+        if (status) {
+            filters.status = status;
+        }
+        if (search) {
+            filters.search = search as string;
+        }
 
         if (page && perPage) {
-            const cons = await this.bodyGoalService.findByPaginate(+page, +perPage);
+            const cons = await this.bodyGoalService.findByPaginate(
+                +page,
+                +perPage,
+                Object.keys(filters).length > 0 ? filters : undefined
+            );
             return successResponse(
                 res,
                 "Body goal list successfully",
@@ -29,7 +41,9 @@ class BodyGoalController {
             );
         }
 
-        const cons = await this.bodyGoalService.findAll();
+        const cons = await this.bodyGoalService.findAll(
+            Object.keys(filters).length > 0 ? filters : undefined
+        );
         return successResponse(
             res,
             "Body goal list successfully",
