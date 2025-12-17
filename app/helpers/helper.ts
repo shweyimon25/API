@@ -29,7 +29,10 @@ export const generateToken = (
 export const decodeToken = (token: any) =>
   jwt.verify(token, process.env.JWT_SECRET as string);
 
-export const generateSlug = async (columnName: string, modelName: Prisma.ModelName) => {
+export const generateSlug = async (
+  columnName: string,
+  modelName: Prisma.ModelName
+) => {
   const baseSlug = slugify(columnName, { lower: true, strict: true });
 
   const model = (prisma as Record<string, any>)[modelName];
@@ -66,7 +69,7 @@ export const generateMemberCode = async () => {
 
   while (!isUnique) {
     code = "YC" + Math.random().toString(36).substring(2, 8).toUpperCase();
-    
+
     const existing = await prisma.member.findUnique({
       where: { code },
     });
@@ -77,4 +80,32 @@ export const generateMemberCode = async () => {
   }
 
   return code!;
+};
+
+export const generateTimeAgo = (date: Date) => {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const diffInSeconds = diff / 1000;
+  const diffInMinutes = diff / (1000 * 60);
+  const diffInHours = diff / (1000 * 60 * 60);
+  const diffInDays = diff / (1000 * 60 * 60 * 24);
+  const diffInMonths = diff / (1000 * 60 * 60 * 24 * 30);
+  const diffInYears = diff / (1000 * 60 * 60 * 24 * 365);
+
+  if (diffInSeconds < 60) {
+    return `${Math.floor(diffInSeconds)} seconds ago`;
+  }
+  if (diffInMinutes < 60) {
+    return `${Math.floor(diffInMinutes)} minutes ago`;
+  }
+  if (diffInHours < 24) {
+    return `${Math.floor(diffInHours)} hours ago`;
+  }
+  if (diffInDays < 30) {
+    return `${Math.floor(diffInDays)} days ago`;
+  }
+  if (diffInMonths < 12) {
+    return `${Math.floor(diffInMonths)} months ago`;
+  }
+  return `${Math.floor(diffInYears)} years ago`;
 };

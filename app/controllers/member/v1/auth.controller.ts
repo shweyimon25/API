@@ -34,7 +34,7 @@ class AuthController {
         profile: true,
         memberType: true,
         providerTypes: true,
-      }
+      },
     });
 
     if (!member) {
@@ -47,11 +47,18 @@ class AuthController {
       throw new UnauthorizedException();
     }
 
-    const token: string = generateToken(member, "30d");
+    const token: string = generateToken(
+      {
+        id: member.id,
+        loginType: "member",
+      },
+      "30d"
+    );
 
     return successResponse(res, "User sign in successfully", {
       user: {
         id: member.id,
+        code: member.code,
         name: member.name,
         email: member.email,
         phone: member.phone,
@@ -80,6 +87,7 @@ class AuthController {
           email: data.loginProviderValue,
         },
       });
+
       if (existingEmail) {
         throw new ValidationException("Failed to sign up", [
           {
@@ -115,7 +123,6 @@ class AuthController {
           data.loginProviderType === "EMAIL" ? data.loginProviderValue : null,
         phone:
           data.loginProviderType === "PHONE" ? data.loginProviderValue : null,
-        memberType: { connect: { id: 1 } },
         profile: {
           create: {
             address: data.address,
@@ -144,10 +151,13 @@ class AuthController {
       },
     });
 
-    const token: string = generateToken({
-      id: member.id,
-      loginType: "member"
-    }, "30d");
+    const token: string = generateToken(
+      {
+        id: member.id,
+        loginType: "member",
+      },
+      "30d"
+    );
 
     return successResponse(res, "User sign up successfully", {
       user: member,

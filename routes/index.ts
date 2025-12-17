@@ -20,6 +20,7 @@ import adminBankInformationRoute from "./admin/v1/bank-information.route";
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
 import memberProfileRoute from "./member/v1/profile.route";
+import memberPostRoute from "./member/v1/post.route";
 
 // Other Routes
 import mediaRoute from "./media.route";
@@ -46,6 +47,7 @@ router.use("/admin/v1/bank-informations", adminBankInformationRoute);
 // Member Routes
 router.use("/member/v1/auth", memberAuthRoute);
 router.use("/member/v1", memberProfileRoute);
+router.use("/member/v1/posts", memberPostRoute);
 
 // Other Routes
 router.use("/admin/v1/media", mediaRoute);

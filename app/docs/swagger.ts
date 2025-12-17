@@ -418,12 +418,12 @@ const exampleDataByResource: Record<string, { create: any; update: any }> = {
   posts: {
     create: {
       tagId: 1,
-      contact: '{"phone": "+1234567890", "email": "contact@example.com"}',
+      content: "This is a post content",
       privencyType: "PUBLIC",
     },
     update: {
       privencyType: "PRIVATE",
-      contact: '{"phone": "+1234567890"}',
+      content: "This is a post content updated",
     },
   },
   workouts: {

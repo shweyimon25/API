@@ -1,7 +1,7 @@
 import prisma from "../../../../prisma/client";
 import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { comparePassword, hashPassword } from "../../../helpers/helper";
-import { ChangePasswordInput, UpdateProfileInput } from "../../../schemas/member/v1/profie.schema";
+import { ChangePasswordInput, UpdateProfileInput } from "../../../schemas/member/v1/profile.schema";
 
 class ProfileService {
     async profile(id: number) {

@@ -1,4 +1,3 @@
-import { Permission } from "@prisma/client";
 import prisma from "../client";
 
 const memberTypeSeeder = async () => {

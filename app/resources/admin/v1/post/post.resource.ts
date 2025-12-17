@@ -2,7 +2,7 @@ export class PostResource {
   static toResource(post: any) {
     return {
       id: post.id,
-      contact: post.contact,
+      content: post.content,
       tag: post.tag
         ? {
             id: post.tag.id,

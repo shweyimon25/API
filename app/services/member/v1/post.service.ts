@@ -1,7 +1,7 @@
 import {
   CreatePostInput,
   UpdatePostInput,
-} from "./../../../schemas/admin/v1/post.schema";
+} from "../../../schemas/member/v1/post.schema";
 import prisma from "../../../../prisma/client";
 import {
   BadRequestException,
@@ -20,11 +20,6 @@ class PostService {
           select: {
             id: true,
             name: true,
-          },
-        },
-        _count: {
-          select: {
-            postComments: true,
           },
         },
       },
@@ -47,11 +42,7 @@ class PostService {
             name: true,
           },
         },
-        _count: {
-          select: {
-            postComments: true,
-          },
-        },
+        postComments: true,
       },
     });
 
@@ -76,6 +67,15 @@ class PostService {
     const post = await prisma.post.findUnique({
       where: {
         id,
+      },
+      include: {
+        tag: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        postComments: true,
       },
     });
 
@@ -156,7 +156,7 @@ class PostService {
         id,
       },
       data: {
-        content: content ? content : existingPost.content,
+        content: content ?? existingPost.content,
         tagId: tagId ?? existingPost.tagId,
         privencyType: privencyType ?? existingPost.privencyType,
       },

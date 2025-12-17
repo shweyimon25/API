@@ -8,7 +8,7 @@
     "start:dev": "npx nodemon server.ts",
     "db:migrate:dev": "npx prisma migrate diff --from-schema-datamodel prisma/schema.prisma --to-schema-datasource prisma/schema.prisma --script > down.sql && npx prisma migrate dev",
     "db:migrate": "npx prisma migrate deploy",
-    "db:migrate:reset": "npx prisma migrate reset",
+    "db:migrate:reset": "npx prisma migrate reset && npm run db:seed",
     "db:migrate:reset:seed": "npx prisma migrate reset && npm run db:seed",
     "db:seed": "ts-node prisma/seeds/main.ts"
   },

@@ -197,14 +197,14 @@ model Cons {
 }
 
 model Member {
-  id           Int        @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   name         String
-  code         String     @unique // YC0244
-  email        String?    @unique
-  phone        String?    @unique
+  code         String      @unique // YC0244
+  email        String?     @unique
+  phone        String?     @unique
   password     String
-  memberType   MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
-  memberTypeId Int
+  memberType   MemberType? @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
+  memberTypeId Int?
 
   profile MemberProfile?
 
@@ -377,10 +377,11 @@ model Tag {
 
 model Post {
   id           Int          @id @default(autoincrement())
-  contact      Json?
+  content      String
   tag          Tag          @relation(fields: [tagId], references: [id])
   tagId        Int
   privencyType PrivencyType @default(PUBLIC)
+  timeAgo      String
   media        Json?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt

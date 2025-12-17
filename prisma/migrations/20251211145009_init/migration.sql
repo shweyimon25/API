@@ -269,7 +269,7 @@ CREATE TABLE `Tag` (
 -- CreateTable
 CREATE TABLE `Post` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `contact` JSON NULL,
+    `content` VARCHAR(191) NOT NULL,
     `tagId` INTEGER NOT NULL,
     `privencyType` ENUM('PUBLIC', 'PRIVATE', 'FRIEND') NOT NULL DEFAULT 'PUBLIC',
     `media` JSON NULL,
