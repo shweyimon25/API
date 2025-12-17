@@ -27,6 +27,9 @@ class AuthController {
     }
 
     const user = await prisma.user.findFirst({
+      include: {
+        roles: true,
+      },
       where: {
         OR: [
           {
@@ -57,7 +60,10 @@ class AuthController {
       throw new UnauthorizedException();
     }
 
-    const token: string = generateToken(user, "30d");
+    const token: string = generateToken({
+      id: user.id,
+      loginType: "admin"
+    }, "30d");
 
     return successResponse(res, "User sign in successfully", {
       user: UserResource.toResource(await this.userService.findOne(user.id)),

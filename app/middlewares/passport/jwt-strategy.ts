@@ -17,8 +17,23 @@ const opts: StrategyOptions = {
 passport.use(
   new Strategy(opts, async (payload, done: VerifiedCallback) => {
     try {
-      const user = await prisma.user.findUnique({ where: { id: payload.id } });
-      return done(null, user);
+      if (payload.loginType === "admin") {
+        const user = await prisma.user.findUnique({
+          where: { id: payload.id }, include: {
+            roles: true
+          }
+        });
+        return done(null, user);
+      } else {
+        const member = await prisma.member.findUnique({
+          where: { id: payload.id }, include: {
+            profile: true,
+            memberType: true,
+            providerTypes: true,
+          }
+        });
+        return done(null, member);
+      }
     } catch (error) {
       return done(error);
     }

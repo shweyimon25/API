@@ -28,39 +28,51 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  roles                   UserRole[]
-  tagsCreated             Tag[]             @relation("TagCreatedBy")
-  tagsUpdated             Tag[]             @relation("TagUpdatedBy")
-  usersCreated            User[]            @relation("UserCreatedBy")
-  usersUpdated            User[]            @relation("UserUpdatedBy")
-  rolesCreated            Role[]            @relation("RoleCreatedBy")
-  rolesUpdated            Role[]            @relation("RoleUpdatedBy")
-  memberTypesCreated      MemberType[]      @relation("MemberTypeCreatedBy")
-  memberTypesUpdated      MemberType[]      @relation("MemberTypeUpdatedBy")
-  memberPlansCreated      MemberPlan[]      @relation("MemberPlanCreatedBy")
-  memberPlansUpdated      MemberPlan[]      @relation("MemberPlanUpdatedBy")
-  prosCreated             Pros[]            @relation("ProsCreatedBy")
-  prosUpdated             Pros[]            @relation("ProsUpdatedBy")
-  consCreated             Cons[]            @relation("ConsCreatedBy")
-  consUpdated             Cons[]            @relation("ConsUpdatedBy")
-  memberCreaded           Member[]          @relation("MemberCreatedBy")
-  memberUpdated           Member[]          @relation("MemberUpdatedBy")
-  bodyGoalsCreated        BodyGoal[]        @relation("BodyGoalCreatedBy")
-  bodyGoalsUpdated        BodyGoal[]        @relation("BodyGoalUpdatedBy")
-  proficientLevelsCreated ProficientLevel[] @relation("ProficientLevelCreatedBy")
-  proficientLevelsUpdated ProficientLevel[] @relation("ProficientLevelUpdatedBy")
-  categoriesCreated       Category[]        @relation("CategoryCreatedBy")
-  categoriesUpdated       Category[]        @relation("CategoryUpdatedBy")
-  placesCreated           Place[]           @relation("PlaceCreatedBy")
-  placesUpdated           Place[]           @relation("PlaceUpdatedBy")
-  workoutsCreated         Workout[]         @relation("WorkoutCreatedBy")
-  workoutsUpdated         Workout[]         @relation("WorkoutUpdatedBy")
-  bankInformationCreated  BankInformation[] @relation("BankInformationCreatedBy")
-  bankInformationUpdated  BankInformation[] @relation("BankInformationUpdatedBy")
-  shopLevelsCreated       ShopLevel[]       @relation("ShopLevelCreatedBy")
-  shopLevelsUpdated       ShopLevel[]       @relation("ShopLevelUpdatedBy")
-  shopsCreated            Shop[]            @relation("ShopCreatedBy")
-  shopsUpdated            Shop[]            @relation("ShopUpdatedBy")
+  roles                      UserRole[]
+  tagsCreated                Tag[]                @relation("TagCreatedBy")
+  tagsUpdated                Tag[]                @relation("TagUpdatedBy")
+  usersCreated               User[]               @relation("UserCreatedBy")
+  usersUpdated               User[]               @relation("UserUpdatedBy")
+  rolesCreated               Role[]               @relation("RoleCreatedBy")
+  rolesUpdated               Role[]               @relation("RoleUpdatedBy")
+  memberTypesCreated         MemberType[]         @relation("MemberTypeCreatedBy")
+  memberTypesUpdated         MemberType[]         @relation("MemberTypeUpdatedBy")
+  memberPlansCreated         MemberPlan[]         @relation("MemberPlanCreatedBy")
+  memberPlansUpdated         MemberPlan[]         @relation("MemberPlanUpdatedBy")
+  prosCreated                Pros[]               @relation("ProsCreatedBy")
+  prosUpdated                Pros[]               @relation("ProsUpdatedBy")
+  consCreated                Cons[]               @relation("ConsCreatedBy")
+  consUpdated                Cons[]               @relation("ConsUpdatedBy")
+  memberCreaded              Member[]             @relation("MemberCreatedBy")
+  memberUpdated              Member[]             @relation("MemberUpdatedBy")
+  bodyGoalsCreated           BodyGoal[]           @relation("BodyGoalCreatedBy")
+  bodyGoalsUpdated           BodyGoal[]           @relation("BodyGoalUpdatedBy")
+  proficientLevelsCreated    ProficientLevel[]    @relation("ProficientLevelCreatedBy")
+  proficientLevelsUpdated    ProficientLevel[]    @relation("ProficientLevelUpdatedBy")
+  categoriesCreated          Category[]           @relation("CategoryCreatedBy")
+  categoriesUpdated          Category[]           @relation("CategoryUpdatedBy")
+  placesCreated              Place[]              @relation("PlaceCreatedBy")
+  placesUpdated              Place[]              @relation("PlaceUpdatedBy")
+  workoutsCreated            Workout[]            @relation("WorkoutCreatedBy")
+  workoutsUpdated            Workout[]            @relation("WorkoutUpdatedBy")
+  bankInformationCreated     BankInformation[]    @relation("BankInformationCreatedBy")
+  bankInformationUpdated     BankInformation[]    @relation("BankInformationUpdatedBy")
+  shopLevelsCreated          ShopLevel[]          @relation("ShopLevelCreatedBy")
+  shopLevelsUpdated          ShopLevel[]          @relation("ShopLevelUpdatedBy")
+  shopsCreated               Shop[]               @relation("ShopCreatedBy")
+  shopsUpdated               Shop[]               @relation("ShopUpdatedBy")
+  physicalLimitationsCreated PhysicalLimitation[] @relation("PhysicalLimitationCreatedBy")
+  physicalLimitationsUpdated PhysicalLimitation[] @relation("PhysicalLimitationUpdatedBy")
+  dietTypeCreated            DietType[]           @relation("DietTypeCreatedBy")
+  dietTypeUpdated            DietType[]           @relation("DietTypeUpdatedBy")
+  bodyAttentionAreasCreated  BodyAttentionArea[]  @relation("BodyAttentionAreaCreatedBy")
+  bodyAttentionAreasUpdated  BodyAttentionArea[]  @relation("BodyAttentionAreaUpdatedBy")
+  mealTypesCreated           MealType[]           @relation("MealTypeCreatedBy")
+  mealTypesUpdated           MealType[]           @relation("MealTypeUpdatedBy")
+  mealsCreated               Meal[]               @relation("MealCreatedBy")
+  mealsUpdated               Meal[]               @relation("MealUpdatedBy")
+  badHabitsCreated           BadHabit[]           @relation("BadHabitCreatedBy")
+  badHabitsUpdated           BadHabit[]           @relation("BadHabitUpdatedBy")
 }
 
 model Role {
@@ -213,6 +225,7 @@ model Member {
   shops            Shop[]
   shopRatings      ShopRating[]
   shopPostComments ShopPostComment[]
+  waterTrackers    WaterTracker[]
 }
 
 enum ProviderType {
@@ -506,6 +519,107 @@ model Workout {
   updatedBy   User?    @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model PhysicalLimitation {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  photo       String?
+  description String? @db.Text()
+  status      Status  @default(ACTIVE)
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("PhysicalLimitationCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("PhysicalLimitationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DietType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  photo       String?
+  description String?  @db.Text()
+  status      Status   @default(ACTIVE)
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("DietTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("DietTypeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BodyAttentionArea {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("BodyAttentionAreaCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("BodyAttentionAreaUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MealType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  status      Status   @default(ACTIVE)
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("MealTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("MealTypeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  meals       Meal[]
+}
+
+model Meal {
+  id      Int    @id @default(autoincrement())
+  name    String
+  cal     Float  @default(0)
+  carb    Float  @default(0)
+  protein Float  @default(0)
+  fat     Float  @default(0)
+
+  mealTypeId Int
+  mealType   MealType @relation(fields: [mealTypeId], references: [id])
+
+  status Status @default(ACTIVE)
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("MealCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("MealUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BadHabit {
+  id          Int     @id @default(autoincrement())
+  description String  @db.Text()
+  photo       String?
+  status      Status  @default(ACTIVE)
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("BadHabitCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("BadHabitUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WaterTracker {
+  id         Int    @id @default(autoincrement())
+  date       String
+  memberId   Int
+  member     Member @relation(fields: [memberId], references: [id])
+  dailyWater Float  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BankInformation {

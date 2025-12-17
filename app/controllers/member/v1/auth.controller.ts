@@ -135,16 +135,19 @@ class AuthController {
         email: true,
         phone: true,
         code: true,
+        profile: true,
         status: true,
         createdAt: true,
         updatedAt: true,
-        profile: true,
         memberType: true,
         providerTypes: true,
       },
     });
 
-    const token: string = generateToken(member, "30d");
+    const token: string = generateToken({
+      id: member.id,
+      loginType: "member"
+    }, "30d");
 
     return successResponse(res, "User sign up successfully", {
       user: member,

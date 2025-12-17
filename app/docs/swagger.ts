@@ -725,11 +725,48 @@ const memberAuthPaths = {
               },
               required: ["loginProviderType", "loginProviderValue", "password"],
             },
+            examples: {
+              emailLogin: {
+                summary: "Sign in with email",
+                value: {
+                  loginProviderType: "EMAIL",
+                  loginProviderValue: "member@example.com",
+                  password: "Password123!",
+                },
+              },
+              phoneLogin: {
+                summary: "Sign in with phone",
+                value: {
+                  loginProviderType: "PHONE",
+                  loginProviderValue: "09123456789",
+                  password: "Password123!",
+                },
+              },
+            },
           },
         },
       },
       responses: {
-        200: { description: "Authenticated successfully" },
+        200: {
+          description: "Authenticated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string", example: "User sign in successfully" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      user: { type: "object" },
+                      token: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         400: { description: "Validation failed" },
         401: { description: "Invalid credentials" },
       },
@@ -759,15 +796,243 @@ const memberAuthPaths = {
                 "name",
                 "password",
                 "passwordConfirm",
+                "address",
               ],
+            },
+            examples: {
+              emailSignup: {
+                summary: "Sign up with email",
+                value: {
+                  loginProviderType: "EMAIL",
+                  loginProviderValue: "newmember@example.com",
+                  name: "John Doe",
+                  address: "123 Main Street, Yangon",
+                  password: "Password123!",
+                  passwordConfirm: "Password123!",
+                },
+              },
+              phoneSignup: {
+                summary: "Sign up with phone",
+                value: {
+                  loginProviderType: "PHONE",
+                  loginProviderValue: "09123456789",
+                  name: "Jane Smith",
+                  address: "456 Oak Avenue, Mandalay",
+                  password: "Password123!",
+                  passwordConfirm: "Password123!",
+                },
+              },
             },
           },
         },
       },
       responses: {
-        201: { description: "Account created successfully" },
+        201: {
+          description: "Account created successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string", example: "User sign up successfully" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      user: {
+                        type: "object",
+                        properties: {
+                          id: { type: "integer", example: 1 },
+                          name: { type: "string", example: "John Doe" },
+                          email: { type: "string", example: "newmember@example.com" },
+                          phone: { type: "string", example: null },
+                          code: { type: "string", example: "YCABC123" },
+                          status: { type: "string", example: "ACTIVE" },
+                        },
+                      },
+                      token: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
         400: { description: "Validation failed" },
         409: { description: "Account already exists" },
+      },
+    },
+  },
+};
+
+const memberProfilePaths = {
+  "/api/member/v1/profile": {
+    get: {
+      tags: ["Member - Profile"],
+      summary: "Get member profile",
+      description: "Retrieve the authenticated member's profile information",
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: "Profile retrieved successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string", example: "Profile fetched successfully" },
+                  data: {
+                    type: "object",
+                    properties: {
+                      id: { type: "integer", example: 1 },
+                      name: { type: "string", example: "John Doe" },
+                      email: { type: "string", example: "john.doe@example.com" },
+                      phone: { type: "string", example: "09123456789" },
+                      profile: {
+                        type: "object",
+                        properties: {
+                          address: { type: "string", example: "123 Main Street, Yangon" },
+                          bio: { type: "string", example: "Fitness enthusiast and gym lover" },
+                          gender: { type: "string", enum: ["MALE", "FEMALE", "BOTH"], example: "MALE" },
+                          profilePhoto: { type: "string", example: "https://example.com/profile.jpg" },
+                          coverPhoto: { type: "string", example: "https://example.com/cover.jpg" },
+                        },
+                      },
+                      memberType: {
+                        type: "object",
+                        properties: {
+                          id: { type: "integer", example: 1 },
+                          name: { type: "string", example: "Premium" },
+                        },
+                      },
+                      language: { type: "string", enum: ["ENG", "MM"], example: "ENG" },
+                      theme: { type: "string", enum: ["DARK", "PINK", "LIGHT"], example: "LIGHT" },
+                      createdAt: { type: "string", format: "date-time" },
+                      updatedAt: { type: "string", format: "date-time" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        401: { description: "Unauthorized" },
+        404: { description: "Profile not found" },
+      },
+    },
+  },
+  "/api/member/v1/profile/update": {
+    post: {
+      tags: ["Member - Profile"],
+      summary: "Update member profile",
+      description: "Update the authenticated member's profile information",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              properties: {
+                name: { type: "string", example: "John Doe Updated" },
+                bio: { type: "string", example: "Updated bio: Fitness enthusiast and gym lover" },
+                gender: { type: "string", enum: ["MALE", "FEMALE", "BOTH"], example: "MALE" },
+                address: { type: "string", example: "456 Updated Street, Yangon" },
+                language: { type: "string", enum: ["ENG", "MM"], example: "ENG" },
+                theme: { type: "string", enum: ["DARK", "PINK", "LIGHT"], example: "DARK" },
+              },
+            },
+            example: {
+              name: "John Doe Updated",
+              bio: "Updated bio: Fitness enthusiast and gym lover",
+              gender: "MALE",
+              address: "456 Updated Street, Yangon",
+              language: "ENG",
+              theme: "DARK",
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Profile updated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string", example: "Profile updated successfully" },
+                  data: { type: "object" },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Validation failed" },
+        401: { description: "Unauthorized" },
+        404: { description: "Profile not found" },
+      },
+    },
+  },
+  "/api/member/v1/profile/change-password": {
+    post: {
+      tags: ["Member - Profile"],
+      summary: "Change member password",
+      description: "Change the authenticated member's password",
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["oldPassword", "newPassword", "confirmNewPassword"],
+              properties: {
+                oldPassword: {
+                  type: "string",
+                  format: "password",
+                  example: "OldPassword123!",
+                  description: "Current password",
+                },
+                newPassword: {
+                  type: "string",
+                  format: "password",
+                  example: "NewPassword123!",
+                  description: "New password (min 8 chars, must include uppercase, lowercase, number, and special character)",
+                },
+                confirmNewPassword: {
+                  type: "string",
+                  format: "password",
+                  example: "NewPassword123!",
+                  description: "Confirm new password (must match newPassword)",
+                },
+              },
+            },
+            example: {
+              oldPassword: "OldPassword123!",
+              newPassword: "NewPassword123!",
+              confirmNewPassword: "NewPassword123!",
+            },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Password changed successfully",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  message: { type: "string", example: "Password changed successfully" },
+                  data: { type: "object" },
+                },
+              },
+            },
+          },
+        },
+        400: { description: "Validation failed (old password incorrect or passwords don't match)" },
+        401: { description: "Unauthorized" },
+        404: { description: "Member not found" },
       },
     },
   },
@@ -780,12 +1045,14 @@ const tags = [
     description: resource.description,
   })),
   { name: "Member - Auth", description: "Member authentication" },
+  { name: "Member - Profile", description: "Member profile management" },
 ];
 
 const paths = {
   ...adminAuthPaths,
   ...createCrudPaths(adminCrudResources, "/api/admin/v1", "Admin"),
   ...memberAuthPaths,
+  ...memberProfilePaths,
 };
 
 const swaggerDefinition = {
