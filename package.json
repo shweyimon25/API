@@ -17,6 +17,8 @@
   "description": "",
   "devDependencies": {
     "@faker-js/faker": "^9.3.0",
+    "@types/ali-oss": "^6.16.13",
+    "@types/aws-sdk": "^0.0.42",
     "@types/bcrypt": "^5.0.2",
     "@types/multer": "^1.4.12",
     "@types/nodemailer": "^6.4.16",
@@ -34,6 +36,8 @@
     "@types/express": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/swagger-ui-express": "^4.1.8",
+    "ali-oss": "^6.23.0",
+    "aws-sdk": "^2.1693.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

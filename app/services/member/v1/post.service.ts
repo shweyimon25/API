@@ -8,6 +8,7 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 import { generateTimeAgo } from "../../../helpers/helper";
+import { upload } from "../../../helpers/media-upload";
 
 class PostService {
   async findAll() {
@@ -20,6 +21,11 @@ class PostService {
           select: {
             id: true,
             name: true,
+          },
+        },
+        _count: {
+          select: {
+            postComments: true,
           },
         },
       },
@@ -42,7 +48,11 @@ class PostService {
             name: true,
           },
         },
-        postComments: true,
+        _count: {
+          select: {
+            postComments: true,
+          },
+        },
       },
     });
 
@@ -75,7 +85,26 @@ class PostService {
             name: true,
           },
         },
-        postComments: true,
+        postComments: {
+          include: {
+            member: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                code: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+        _count: {
+          select: {
+            postComments: true,
+          },
+        },
       },
     });
 
@@ -86,7 +115,7 @@ class PostService {
     return post;
   }
 
-  async create(createPostInput: CreatePostInput) {
+  async create(createPostInput: CreatePostInput, files: Express.Multer.File[]) {
     const { content, tagId, privencyType } = createPostInput;
 
     // Check tag exists
@@ -105,12 +134,30 @@ class PostService {
       ]);
     }
 
+    // Validate files are provided
+    if (!files || files.length === 0) {
+      throw new ValidationException("Failed to create post", [
+        {
+          field: "files",
+          issue: "Media files are required",
+        },
+      ]);
+    }
+
+    // Upload files to OSS
+    const media = await Promise.all(files.map((file) => upload(file)));
+
+    console.log(media);
+
+    return;
+
     // Create new post
     const post = await prisma.post.create({
       data: {
         content: content ?? "",
         tagId,
         privencyType: privencyType || "PUBLIC",
+        media: media,
         timeAgo: generateTimeAgo(new Date()),
       },
     });

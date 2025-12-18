@@ -22,9 +22,6 @@ import memberAuthRoute from "./member/v1/auth.route";
 import memberProfileRoute from "./member/v1/profile.route";
 import memberPostRoute from "./member/v1/post.route";
 
-// Other Routes
-import mediaRoute from "./media.route";
-
 const router = Router();
 
 // Admin Routes
@@ -48,8 +45,5 @@ router.use("/admin/v1/bank-informations", adminBankInformationRoute);
 router.use("/member/v1/auth", memberAuthRoute);
 router.use("/member/v1", memberProfileRoute);
 router.use("/member/v1/posts", memberPostRoute);
-
-// Other Routes
-router.use("/admin/v1/media", mediaRoute);
 
 export default router;

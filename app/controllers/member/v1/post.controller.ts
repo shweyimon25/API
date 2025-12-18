@@ -47,13 +47,20 @@ class PostController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error, success } = await validater(createPostSchema, req.body);
+    const { data, error, success } = await validater(
+      createPostSchema,
+      req.body
+    );
 
     if (!success) {
       throw new ValidationException("Failed to create post", error);
     }
 
-    const post = await this.postService.create(data);
+    const post = await this.postService.create(
+      data,
+      req.files as Express.Multer.File[]
+    );
+
     return successResponse(
       res,
       "Post created successfully",
@@ -62,7 +69,10 @@ class PostController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error, success } = await validater(updatePostSchema, req.body);
+    const { data, error, success } = await validater(
+      updatePostSchema,
+      req.body
+    );
 
     if (!success) {
       throw new ValidationException("Failed to update post", error);

@@ -352,7 +352,7 @@ model ShopPostComment {
   shopPostId Int
   memberId   Int
   member     Member            @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  comment    Json
+  comment    String            @db.Text()
   parentId   Int?
   parent     ShopPostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies    ShopPostComment[] @relation("CommentReplies")
@@ -401,7 +401,7 @@ model PostComment {
   postId    Int
   memberId  Int
   member    Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  comment   Json
+  comment   String        @db.Text()
   parentId  Int?
   parent    PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   PostComment[] @relation("CommentReplies")
