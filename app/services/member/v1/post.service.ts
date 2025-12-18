@@ -9,6 +9,7 @@ import {
 } from "../../../helpers/exceptions";
 import { generateTimeAgo } from "../../../helpers/helper";
 import { upload } from "../../../helpers/media-upload";
+import { PrivencyType } from "@prisma/client";
 
 class PostService {
   async findAll() {
@@ -22,12 +23,7 @@ class PostService {
             id: true,
             name: true,
           },
-        },
-        _count: {
-          select: {
-            postComments: true,
-          },
-        },
+        }
       },
     });
 
@@ -47,12 +43,7 @@ class PostService {
             id: true,
             name: true,
           },
-        },
-        _count: {
-          select: {
-            postComments: true,
-          },
-        },
+        }
       },
     });
 
@@ -99,12 +90,7 @@ class PostService {
           orderBy: {
             createdAt: "desc",
           },
-        },
-        _count: {
-          select: {
-            postComments: true,
-          },
-        },
+        }
       },
     });
 
@@ -145,19 +131,18 @@ class PostService {
     }
 
     // Upload files to OSS
-    const media = await Promise.all(files.map((file) => upload(file)));
-
-    console.log(media);
-
-    return;
+    const media = await Promise.all(files.map(async (file) => {
+      const { fileUrl } = await upload(file);
+      return fileUrl;
+    }));
 
     // Create new post
     const post = await prisma.post.create({
       data: {
         content: content ?? "",
         tagId,
-        privencyType: privencyType || "PUBLIC",
-        media: media,
+        privencyType: privencyType || PrivencyType.PUBLIC,
+        media,
         timeAgo: generateTimeAgo(new Date()),
       },
     });
@@ -165,7 +150,7 @@ class PostService {
     return this.findOne(post.id);
   }
 
-  async update(id: number, updatePostInput: UpdatePostInput) {
+  async update(id: number, updatePostInput: UpdatePostInput, files: Express.Multer.File[]) {
     const { content, tagId, privencyType } = updatePostInput;
 
     // Check post exists
@@ -197,6 +182,15 @@ class PostService {
       }
     }
 
+    let media: string[] = [];
+
+    if (files && files.length > 0) {
+      media = await Promise.all(files.map(async (file) => {
+        const { fileUrl } = await upload(file);
+        return fileUrl;
+      }));
+    }
+
     // Update post
     await prisma.post.update({
       where: {
@@ -206,6 +200,7 @@ class PostService {
         content: content ?? existingPost.content,
         tagId: tagId ?? existingPost.tagId,
         privencyType: privencyType ?? existingPost.privencyType,
+        media: media ?? existingPost.media,
       },
     });
 

@@ -78,7 +78,8 @@ class PostController {
       throw new ValidationException("Failed to update post", error);
     }
 
-    const post = await this.postService.update(+req.params.id, data);
+    const post = await this.postService.update(+req.params.id, data, req.files as Express.Multer.File[]);
+
     return successResponse(
       res,
       "Post updated successfully",
