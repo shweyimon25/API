@@ -29,11 +29,12 @@ class BodyAttentionAreaController {
     }
 
     if (page && perPage) {
-      const bodyAttentionAreas = await this.bodyAttentionAreaService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const bodyAttentionAreas =
+        await this.bodyAttentionAreaService.findByPaginate(
+          +page,
+          +perPage,
+          Object.keys(filters).length > 0 ? filters : undefined
+        );
       return successResponse(
         res,
         "Body attention area list successfully",
@@ -69,7 +70,10 @@ class BodyAttentionAreaController {
     );
 
     if (error) {
-      throw new ValidationException("Failed to create body attention area", error);
+      throw new ValidationException(
+        "Failed to create body attention area",
+        error
+      );
     }
 
     const userId = (req.user as any)?.id;
@@ -91,7 +95,10 @@ class BodyAttentionAreaController {
     );
 
     if (error) {
-      throw new ValidationException("Failed to update body attention area", error);
+      throw new ValidationException(
+        "Failed to update body attention area",
+        error
+      );
     }
 
     const userId = (req.user as any)?.id;
@@ -120,4 +127,3 @@ class BodyAttentionAreaController {
 }
 
 export default BodyAttentionAreaController;
-

@@ -68,7 +68,7 @@ class BadHabitController {
     }
 
     const userId = (req.user as any)?.id;
-    const badHabit = await this.badHabitService.create(data, userId);
+    const badHabit = await this.badHabitService.create(data, userId, req.files as Express.Multer.File[]);
     return successResponse(
       res,
       "Bad habit created successfully",
@@ -84,7 +84,12 @@ class BadHabitController {
     }
 
     const userId = (req.user as any)?.id;
-    const badHabit = await this.badHabitService.update(+req.params.id, data, userId);
+    const badHabit = await this.badHabitService.update(
+      +req.params.id,
+      data,
+      userId,
+      req.files as Express.Multer.File[]
+    );
     return successResponse(
       res,
       "Bad habit updated successfully",
@@ -103,4 +108,3 @@ class BadHabitController {
 }
 
 export default BadHabitController;
-

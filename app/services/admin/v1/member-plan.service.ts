@@ -55,7 +55,11 @@ class MemberPlanService {
     return memberPlans;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: MemberPlanFilters) {
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    filters?: MemberPlanFilters
+  ) {
     const memberPlans = await prisma.memberPlan.findMany({
       where: this.where(filters),
       orderBy: {

@@ -1,5 +1,8 @@
 import prisma from "../../../../prisma/client";
-import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import {
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
 import {
   CreateBodyAttentionAreaInput,
   UpdateBodyAttentionAreaInput,
@@ -146,13 +149,14 @@ class BodyAttentionAreaService {
   ) {
     const { name, status } = createBodyAttentionAreaInput;
 
-    const existing = await prisma.bodyAttentionArea.findUnique({
-      where: {
-        name,
-      },
-    });
+    const existingBodyAttentionAreaName =
+      await prisma.bodyAttentionArea.findUnique({
+        where: {
+          name,
+        },
+      });
 
-    if (existing) {
+    if (existingBodyAttentionAreaName) {
       throw new ValidationException("Failed to create body attention area", [
         {
           field: "name",
@@ -180,16 +184,17 @@ class BodyAttentionAreaService {
   ) {
     const { name, status } = updateBodyAttentionAreaInput;
 
-    const existing = await this.findOne(id);
+    const existingBodyAttentionArea = await this.findOne(id);
 
-    if (name && name !== existing.name) {
-      const nameExists = await prisma.bodyAttentionArea.findUnique({
-        where: {
-          name,
-        },
-      });
+    if (name && name !== existingBodyAttentionArea.name) {
+      const existingBodyAttentionAreaName =
+        await prisma.bodyAttentionArea.findUnique({
+          where: {
+            name,
+          },
+        });
 
-      if (nameExists) {
+      if (existingBodyAttentionAreaName) {
         throw new ValidationException("Failed to update body attention area", [
           {
             field: "name",
@@ -204,8 +209,8 @@ class BodyAttentionAreaService {
         id,
       },
       data: {
-        name: name ?? existing.name,
-        status: status ?? existing.status,
+        name: name ?? existingBodyAttentionArea.name,
+        status: status ?? existingBodyAttentionArea.status,
         updatedById: userId,
       },
     });
@@ -227,4 +232,3 @@ class BodyAttentionAreaService {
 }
 
 export default BodyAttentionAreaService;
-

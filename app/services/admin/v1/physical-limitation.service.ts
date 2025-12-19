@@ -1,5 +1,9 @@
 import prisma from "../../../../prisma/client";
-import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import {
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
+import { upload } from "../../../helpers/media-upload";
 import {
   CreatePhysicalLimitationInput,
   UpdatePhysicalLimitationInput,
@@ -151,18 +155,20 @@ class PhysicalLimitationService {
 
   async create(
     createPhysicalLimitationInput: CreatePhysicalLimitationInput,
-    userId: number
+    userId: number,
+    files: Express.Multer.File[]
   ) {
-    const { name, photo, description, status } = createPhysicalLimitationInput;
+    const { name, description, status } = createPhysicalLimitationInput;
 
     // Check if name already exists
-    const existing = await prisma.physicalLimitation.findUnique({
-      where: {
-        name,
-      },
-    });
+    const existingPhysicalLimitation =
+      await prisma.physicalLimitation.findUnique({
+        where: {
+          name,
+        },
+      });
 
-    if (existing) {
+    if (existingPhysicalLimitation) {
       throw new ValidationException("Failed to create physical limitation", [
         {
           field: "name",
@@ -171,10 +177,30 @@ class PhysicalLimitationService {
       ]);
     }
 
+    // Upload photo
+    let photo: string | null = null;
+
+    files.forEach(async (file: Express.Multer.File) => {
+      if (file.fieldname === "photo") {
+        const { fileUrl } = await upload(file, "physical-limitation");
+        photo = fileUrl;
+      }
+    });
+
+    // Check if photo is provided
+    if (!photo) {
+      throw new ValidationException("Failed to create physical limitation", [
+        {
+          field: "photo",
+          issue: "Photo is required",
+        },
+      ]);
+    }
+
     const physicalLimitation = await prisma.physicalLimitation.create({
       data: {
         name,
-        photo: photo || null,
+        photo,
         description: description || null,
         status: status ?? Status.ACTIVE,
         createdById: userId,
@@ -188,14 +214,15 @@ class PhysicalLimitationService {
   async update(
     id: number,
     updatePhysicalLimitationInput: UpdatePhysicalLimitationInput,
-    userId: number
+    userId: number,
+    files: Express.Multer.File[]
   ) {
-    const { name, photo, description, status } = updatePhysicalLimitationInput;
+    const { name, description, status } = updatePhysicalLimitationInput;
 
-    const existing = await this.findOne(id);
+    const existingPhysicalLimitation = await this.findOne(id);
 
     // Check if name already exists (if name is being updated)
-    if (name && name !== existing.name) {
+    if (name && name !== existingPhysicalLimitation.name) {
       const nameExists = await prisma.physicalLimitation.findUnique({
         where: {
           name,
@@ -212,15 +239,26 @@ class PhysicalLimitationService {
       }
     }
 
+    let photo: string | null = null;
+
+    if (files && files.length > 0) {
+      files.forEach(async (file: Express.Multer.File) => {
+        if (file.fieldname === "photo") {
+          const { fileUrl } = await upload(file, "physical-limitation");
+          photo = fileUrl;
+        }
+      });
+    }
+
     await prisma.physicalLimitation.update({
       where: {
         id,
       },
       data: {
-        name: name ?? existing.name,
-        photo: photo !== undefined ? (photo || null) : existing.photo,
-        description: description ?? existing.description,
-        status: status ?? existing.status,
+        name: name ?? existingPhysicalLimitation.name,
+        photo: photo ?? existingPhysicalLimitation.photo,
+        description: description ?? existingPhysicalLimitation.description,
+        status: status ?? existingPhysicalLimitation.status,
         updatedById: userId,
       },
     });
@@ -242,4 +280,3 @@ class PhysicalLimitationService {
 }
 
 export default PhysicalLimitationService;
-

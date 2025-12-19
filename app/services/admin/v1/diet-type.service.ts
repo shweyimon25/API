@@ -1,5 +1,9 @@
 import prisma from "../../../../prisma/client";
-import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import {
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
+import { upload } from "../../../helpers/media-upload";
 import {
   CreateDietTypeInput,
   UpdateDietTypeInput,
@@ -66,7 +70,11 @@ class DietTypeService {
     return dietTypes;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: DietTypeFilters) {
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    filters?: DietTypeFilters
+  ) {
     const dietTypes = await prisma.dietType.findMany({
       where: this.where(filters),
       orderBy: {
@@ -145,16 +153,20 @@ class DietTypeService {
     return dietType;
   }
 
-  async create(createDietTypeInput: CreateDietTypeInput, userId: number) {
-    const { name, photo, description, status } = createDietTypeInput;
+  async create(
+    createDietTypeInput: CreateDietTypeInput,
+    userId: number,
+    files: Express.Multer.File[]
+  ) {
+    const { name, description, status } = createDietTypeInput;
 
-    const existing = await prisma.dietType.findUnique({
+    const existingDietType = await prisma.dietType.findUnique({
       where: {
         name,
       },
     });
 
-    if (existing) {
+    if (existingDietType) {
       throw new ValidationException("Failed to create diet type", [
         {
           field: "name",
@@ -163,10 +175,29 @@ class DietTypeService {
       ]);
     }
 
+    let photo: string | null = null;
+
+    for (const file of files) {
+      if (file.fieldname === "photo") {
+        const { fileUrl } = await upload(file, "diet-type");
+        photo = fileUrl;
+        break;
+      }
+    }
+
+    if (!photo) {
+      throw new ValidationException("Failed to create diet type", [
+        {
+          field: "photo",
+          issue: "Photo is required",
+        },
+      ]);
+    }
+
     const dietType = await prisma.dietType.create({
       data: {
         name,
-        photo: photo || null,
+        photo,
         description: description || null,
         status: status ?? Status.ACTIVE,
         createdById: userId,
@@ -177,12 +208,17 @@ class DietTypeService {
     return this.findOne(dietType.id);
   }
 
-  async update(id: number, updateDietTypeInput: UpdateDietTypeInput, userId: number) {
-    const { name, photo, description, status } = updateDietTypeInput;
+  async update(
+    id: number,
+    updateDietTypeInput: UpdateDietTypeInput,
+    userId: number,
+    files: Express.Multer.File[]
+  ) {
+    const { name, description, status } = updateDietTypeInput;
 
-    const existing = await this.findOne(id);
+    const existingDietType = await this.findOne(id);
 
-    if (name && name !== existing.name) {
+    if (name && name !== existingDietType.name) {
       const nameExists = await prisma.dietType.findUnique({
         where: {
           name,
@@ -199,15 +235,27 @@ class DietTypeService {
       }
     }
 
+    let photo: string | null = null;
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        if (file.fieldname === "photo") {
+          const { fileUrl } = await upload(file, "diet-type");
+          photo = fileUrl;
+          break;
+        }
+      }
+    }
+
     await prisma.dietType.update({
       where: {
         id,
       },
       data: {
-        name: name ?? existing.name,
-        photo: photo !== undefined ? (photo || null) : existing.photo,
-        description: description ?? existing.description,
-        status: status ?? existing.status,
+        name: name ?? existingDietType.name,
+        photo: photo ?? existingDietType.photo,
+        description: description ?? existingDietType.description,
+        status: status ?? existingDietType.status,
         updatedById: userId,
       },
     });
@@ -229,4 +277,3 @@ class DietTypeService {
 }
 
 export default DietTypeService;
-

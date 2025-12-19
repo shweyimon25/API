@@ -1,5 +1,8 @@
 import prisma from "../../../../prisma/client";
-import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import {
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
 import {
   CreateMealInput,
   UpdateMealInput,
@@ -160,16 +163,33 @@ class MealService {
   }
 
   async create(createMealInput: CreateMealInput, userId: number) {
-    const { name, cal, carb, protein, fat, mealTypeId, status } = createMealInput;
+    const { name, cal, carb, protein, fat, mealTypeId, status } =
+      createMealInput;
+
+    // Check meal name exists
+    const existingMealName = await prisma.meal.findFirst({
+      where: {
+        name,
+      },
+    });
+
+    if (existingMealName) {
+      throw new ValidationException("Failed to create meal", [
+        {
+          field: "name",
+          issue: "Name already exists",
+        },
+      ]);
+    }
 
     // Check meal type exists
-    const mealType = await prisma.mealType.findUnique({
+    const existingMealType = await prisma.mealType.findUnique({
       where: {
         id: mealTypeId,
       },
     });
 
-    if (!mealType) {
+    if (!existingMealType) {
       throw new ValidationException("Failed to create meal", [
         {
           field: "mealTypeId",
@@ -181,10 +201,10 @@ class MealService {
     const meal = await prisma.meal.create({
       data: {
         name,
-        cal: cal ?? 0,
-        carb: carb ?? 0,
-        protein: protein ?? 0,
-        fat: fat ?? 0,
+        cal,
+        carb,
+        protein,
+        fat,
         mealTypeId,
         status: status ?? Status.ACTIVE,
         createdById: userId,
@@ -196,7 +216,8 @@ class MealService {
   }
 
   async update(id: number, updateMealInput: UpdateMealInput, userId: number) {
-    const { name, cal, carb, protein, fat, mealTypeId, status } = updateMealInput;
+    const { name, cal, carb, protein, fat, mealTypeId, status } =
+      updateMealInput;
 
     const existing = await this.findOne(id);
 
@@ -251,4 +272,3 @@ class MealService {
 }
 
 export default MealService;
-

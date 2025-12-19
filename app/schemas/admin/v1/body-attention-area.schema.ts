@@ -14,6 +14,9 @@ export const updateBodyAttentionAreaSchema = z.object({
   status: z.nativeEnum(Status).optional(),
 });
 
-export type CreateBodyAttentionAreaInput = z.infer<typeof createBodyAttentionAreaSchema>;
-export type UpdateBodyAttentionAreaInput = z.infer<typeof updateBodyAttentionAreaSchema>;
-
+export type CreateBodyAttentionAreaInput = z.infer<
+  typeof createBodyAttentionAreaSchema
+>;
+export type UpdateBodyAttentionAreaInput = z.infer<
+  typeof updateBodyAttentionAreaSchema
+>;

@@ -68,7 +68,7 @@ class DietTypeController {
     }
 
     const userId = (req.user as any)?.id;
-    const dietType = await this.dietTypeService.create(data, userId);
+    const dietType = await this.dietTypeService.create(data, userId, req.files as Express.Multer.File[]);
     return successResponse(
       res,
       "Diet type created successfully",
@@ -84,7 +84,8 @@ class DietTypeController {
     }
 
     const userId = (req.user as any)?.id;
-    const dietType = await this.dietTypeService.update(+req.params.id, data, userId);
+    
+    const dietType = await this.dietTypeService.update(+req.params.id, data, userId, req.files as Express.Multer.File[]);
     return successResponse(
       res,
       "Diet type updated successfully",

@@ -7,6 +7,7 @@ import memberTypeSeeder from "./member-type";
 import proSeeder from "./pros.seeder";
 import conSeeder from "./cons.seeder";
 import tagSeeder from "./tag.seeder";
+import mealTypeSeeder from "./meal-type.seeder";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ const main = async () => {
     await proSeeder();
     await conSeeder();
     await tagSeeder();
+    await mealTypeSeeder();
   } catch (error) {
     console.error(error);
     process.exit(1);

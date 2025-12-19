@@ -1,5 +1,8 @@
 import prisma from "../../../../prisma/client";
-import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import {
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
 import {
   CreateMealTypeInput,
   UpdateMealTypeInput,
@@ -51,18 +54,17 @@ class MealTypeService {
             username: true,
           },
         },
-        _count: {
-          select: {
-            meals: true,
-          },
-        },
       },
     });
 
     return mealTypes;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: MealTypeFilters) {
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    filters?: MealTypeFilters
+  ) {
     const mealTypes = await prisma.mealType.findMany({
       where: this.where(filters),
       orderBy: {
@@ -85,11 +87,6 @@ class MealTypeService {
             name: true,
             email: true,
             username: true,
-          },
-        },
-        _count: {
-          select: {
-            meals: true,
           },
         },
       },
@@ -136,11 +133,6 @@ class MealTypeService {
             username: true,
           },
         },
-        _count: {
-          select: {
-            meals: true,
-          },
-        },
       },
     });
 
@@ -181,7 +173,11 @@ class MealTypeService {
     return this.findOne(mealType.id);
   }
 
-  async update(id: number, updateMealTypeInput: UpdateMealTypeInput, userId: number) {
+  async update(
+    id: number,
+    updateMealTypeInput: UpdateMealTypeInput,
+    userId: number
+  ) {
     const { name, status } = updateMealTypeInput;
 
     const existing = await this.findOne(id);
@@ -231,4 +227,3 @@ class MealTypeService {
 }
 
 export default MealTypeService;
-

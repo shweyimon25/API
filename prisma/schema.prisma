@@ -580,10 +580,10 @@ model MealType {
 model Meal {
   id      Int    @id @default(autoincrement())
   name    String
-  cal     Float  @default(0)
-  carb    Float  @default(0)
-  protein Float  @default(0)
-  fat     Float  @default(0)
+  cal     Float  @default(0.00)
+  carb    Float  @default(0.00)
+  protein Float  @default(0.00)
+  fat     Float  @default(0.00)
 
   mealTypeId Int
   mealType   MealType @relation(fields: [mealTypeId], references: [id])

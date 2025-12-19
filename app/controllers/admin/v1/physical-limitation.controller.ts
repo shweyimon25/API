@@ -29,11 +29,12 @@ class PhysicalLimitationController {
     }
 
     if (page && perPage) {
-      const physicalLimitations = await this.physicalLimitationService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const physicalLimitations =
+        await this.physicalLimitationService.findByPaginate(
+          +page,
+          +perPage,
+          Object.keys(filters).length > 0 ? filters : undefined
+        );
       return successResponse(
         res,
         "Physical limitation list successfully",
@@ -69,13 +70,17 @@ class PhysicalLimitationController {
     );
 
     if (error) {
-      throw new ValidationException("Failed to create physical limitation", error);
+      throw new ValidationException(
+        "Failed to create physical limitation",
+        error
+      );
     }
 
     const userId = (req.user as any)?.id;
     const physicalLimitation = await this.physicalLimitationService.create(
       data,
-      userId
+      userId,
+      req.files as Express.Multer.File[]
     );
     return successResponse(
       res,
@@ -91,14 +96,18 @@ class PhysicalLimitationController {
     );
 
     if (error) {
-      throw new ValidationException("Failed to update physical limitation", error);
+      throw new ValidationException(
+        "Failed to update physical limitation",
+        error
+      );
     }
 
     const userId = (req.user as any)?.id;
     const physicalLimitation = await this.physicalLimitationService.update(
       +req.params.id,
       data,
-      userId
+      userId,
+      req.files as Express.Multer.File[]
     );
     return successResponse(
       res,
@@ -120,4 +129,3 @@ class PhysicalLimitationController {
 }
 
 export default PhysicalLimitationController;
-

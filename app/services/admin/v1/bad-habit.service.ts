@@ -1,5 +1,9 @@
 import prisma from "../../../../prisma/client";
-import { NotFoundException } from "../../../helpers/exceptions";
+import {
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
+import { upload } from "../../../helpers/media-upload";
 import {
   CreateBadHabitInput,
   UpdateBadHabitInput,
@@ -57,7 +61,11 @@ class BadHabitService {
     return badHabits;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: BadHabitFilters) {
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    filters?: BadHabitFilters
+  ) {
     const badHabits = await prisma.badHabit.findMany({
       where: this.where(filters),
       orderBy: {
@@ -136,13 +144,38 @@ class BadHabitService {
     return badHabit;
   }
 
-  async create(createBadHabitInput: CreateBadHabitInput, userId: number) {
-    const { description, photo, status } = createBadHabitInput;
+  async create(
+    createBadHabitInput: CreateBadHabitInput,
+    userId: number,
+    files: Express.Multer.File[]
+  ) {
+    const { description, status } = createBadHabitInput;
+
+    let photo: string | null = null;
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        if (file.fieldname === "photo") {
+          const { fileUrl } = await upload(file, "bad-habit");
+          photo = fileUrl;
+          break;
+        }
+      }
+    }
+
+    if (!photo) {
+      throw new ValidationException("Failed to create bad habit", [
+        {
+          field: "photo",
+          issue: "Photo is required",
+        },
+      ]);
+    }
 
     const badHabit = await prisma.badHabit.create({
       data: {
         description,
-        photo: photo || null,
+        photo,
         status: status ?? Status.ACTIVE,
         createdById: userId,
         updatedById: userId,
@@ -152,19 +185,36 @@ class BadHabitService {
     return this.findOne(badHabit.id);
   }
 
-  async update(id: number, updateBadHabitInput: UpdateBadHabitInput, userId: number) {
-    const { description, photo, status } = updateBadHabitInput;
+  async update(
+    id: number,
+    updateBadHabitInput: UpdateBadHabitInput,
+    userId: number,
+    files: Express.Multer.File[]
+  ) {
+    const { description, status } = updateBadHabitInput;
 
-    const existing = await this.findOne(id);
+    const existingBadHabit = await this.findOne(id);
+
+    let photo: string | null = null;
+
+    if (files && files.length > 0) {
+      for (const file of files) {
+        if (file.fieldname === "photo") {
+          const { fileUrl } = await upload(file, "bad-habit");
+          photo = fileUrl;
+          break;
+        }
+      }
+    }
 
     await prisma.badHabit.update({
       where: {
         id,
       },
       data: {
-        description: description ?? existing.description,
-        photo: photo !== undefined ? (photo || null) : existing.photo,
-        status: status ?? existing.status,
+        description: description ?? existingBadHabit.description,
+        photo: photo ?? existingBadHabit.photo,
+        status: status ?? existingBadHabit.status,
         updatedById: userId,
       },
     });
@@ -186,4 +236,3 @@ class BadHabitService {
 }
 
 export default BadHabitService;
-
