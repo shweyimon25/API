@@ -18,9 +18,18 @@ passport.use(
   new Strategy(opts, async (payload, done: VerifiedCallback) => {
     try {
       if (payload.loginType === "admin") {
-        const user = await prisma.user.findUnique({
-          where: { id: payload.id }, include: {
-            roles: true
+        const user = await prisma.user.findFirst({
+          where: { id: payload.id },
+          include: {
+            roles: {
+              include: {
+                role: {
+                  include: {
+                    permissions: true,
+                  }
+                }
+              }
+            }
           }
         });
         return done(null, user);

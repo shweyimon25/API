@@ -89,3 +89,14 @@ export class ValidationException extends Error {
     this.details = details;
   }
 }
+
+export class ForbiddenException extends Error {
+  public statusCode: number;
+  public error: string;
+
+  constructor(message = exceptionMessages.forbidden) {
+    super(message);
+    this.statusCode = statusCodes.FORBIDDEN;
+    this.error = exceptionMessages.forbidden;
+  }
+}

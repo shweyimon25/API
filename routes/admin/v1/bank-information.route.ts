@@ -2,6 +2,7 @@ import passport from "passport";
 import { Request, Response, Router } from "express";
 import BankInformationController from "../../../app/controllers/admin/v1/bank-information.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
+import { hasPermission } from "../../../app/middlewares/guards/permission.guard";
 
 const router = Router();
 const bankInformationController = new BankInformationController();
@@ -10,6 +11,7 @@ router
   .route("/")
   .get([
     passport.authenticate("jwt", { session: false }),
+    hasPermission(['bank-information:list']),
     asyncHandler(
       async (req: Request, res: Response) =>
         await bankInformationController.findAll(req, res)
@@ -17,6 +19,7 @@ router
   ])
   .post([
     passport.authenticate("jwt", { session: false }),
+    hasPermission(['bank-information:create']),
     asyncHandler(
       async (req: Request, res: Response) =>
         await bankInformationController.create(req, res)
@@ -27,6 +30,7 @@ router
   .route("/:id")
   .get([
     passport.authenticate("jwt", { session: false }),
+    hasPermission(['bank-information:read']),
     asyncHandler(
       async (req: Request, res: Response) =>
         await bankInformationController.findOne(req, res)
@@ -34,6 +38,7 @@ router
   ])
   .post([
     passport.authenticate("jwt", { session: false }),
+    hasPermission(['bank-information:update']),
     asyncHandler(
       async (req: Request, res: Response) =>
         await bankInformationController.update(req, res)
@@ -41,6 +46,7 @@ router
   ])
   .delete([
     passport.authenticate("jwt", { session: false }),
+    hasPermission(['bank-information:delete']),
     asyncHandler(
       async (req: Request, res: Response) =>
         await bankInformationController.destroy(req, res)

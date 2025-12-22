@@ -1,12 +1,6 @@
 import { Request, Response } from "express";
 import PostService from "../../../services/admin/v1/post.service";
 import { successResponse } from "../../../helpers/response";
-import { validater } from "../../../helpers/validator";
-import {
-  createPostSchema,
-  updatePostSchema,
-} from "../../../schemas/admin/v1/post.schema";
-import { ValidationException } from "../../../helpers/exceptions";
 import { PostCollection } from "../../../resources/admin/v1/post/post.collection";
 import { PostResource } from "../../../resources/admin/v1/post/post.resource";
 
@@ -42,45 +36,6 @@ class PostController {
     return successResponse(
       res,
       "Post details successfully",
-      PostResource.toResource(post)
-    );
-  }
-
-  async create(req: Request, res: Response) {
-    const { data, error } = await validater(createPostSchema, req.body);
-
-    if (error) {
-      throw new ValidationException("Failed to create post", error);
-    }
-
-    const post = await this.postService.create(data);
-    return successResponse(
-      res,
-      "Post created successfully",
-      PostResource.toResource(post)
-    );
-  }
-
-  async update(req: Request, res: Response) {
-    const { data, error } = await validater(updatePostSchema, req.body);
-
-    if (error) {
-      throw new ValidationException("Failed to update post", error);
-    }
-
-    const post = await this.postService.update(+req.params.id, data);
-    return successResponse(
-      res,
-      "Post updated successfully",
-      PostResource.toResource(post)
-    );
-  }
-
-  async destroy(req: Request, res: Response) {
-    const post = await this.postService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Post deleted successfully",
       PostResource.toResource(post)
     );
   }
