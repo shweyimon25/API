@@ -149,7 +149,7 @@ class BadHabitService {
     userId: number,
     files: Express.Multer.File[]
   ) {
-    const { description, status } = createBadHabitInput;
+    const { name, description, status } = createBadHabitInput;
 
     let photo: string | null = null;
 
@@ -174,6 +174,7 @@ class BadHabitService {
 
     const badHabit = await prisma.badHabit.create({
       data: {
+        name,
         description,
         photo,
         status: status ?? Status.ACTIVE,
@@ -191,7 +192,7 @@ class BadHabitService {
     userId: number,
     files: Express.Multer.File[]
   ) {
-    const { description, status } = updateBadHabitInput;
+    const { name, description, status } = updateBadHabitInput;
 
     const existingBadHabit = await this.findOne(id);
 
@@ -212,6 +213,7 @@ class BadHabitService {
         id,
       },
       data: {
+        name: name ?? existingBadHabit.name,
         description: description ?? existingBadHabit.description,
         photo: photo ?? existingBadHabit.photo,
         status: status ?? existingBadHabit.status,
