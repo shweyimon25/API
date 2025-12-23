@@ -228,6 +228,21 @@ model Member {
   waterTrackers    WaterTracker[]
 }
 
+model OTP {
+  id         Int      @id @default(autoincrement())
+  email      String?
+  phone      String?
+  otp        String
+  expiresAt  DateTime
+  isVerified Boolean  @default(false)
+  isUsed     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([email, otp])
+  @@unique([phone, otp])
+}
+
 enum ProviderType {
   GOOGLE
   FACEBOOK
@@ -601,7 +616,7 @@ model Meal {
 model BadHabit {
   id          Int     @id @default(autoincrement())
   name        String  @unique
-  description String?  @db.Text()
+  description String? @db.Text()
   photo       String?
   status      Status  @default(ACTIVE)
 
