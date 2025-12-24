@@ -18,8 +18,8 @@ dotenv.config();
 
 const main = async () => {
   try {
-    await roleSeeder();
     await permissionSeeder();
+    await roleSeeder();
     await adminUserSeeder();
     await memberTypeSeeder();
     await proSeeder();

@@ -25,7 +25,17 @@ passport.use(
               include: {
                 role: {
                   include: {
-                    permissions: true,
+                    permissions: {
+                      select: {
+                        permission: {
+                          select: {
+                            name: true,
+                            id: true,
+                            description: true,
+                          }
+                        }
+                      }
+                    },
                   }
                 }
               }

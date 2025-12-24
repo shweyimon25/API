@@ -15,6 +15,7 @@ import {
   verifyOtpSchema,
 } from "../../../schemas/member/v1/auth.schema";
 import { OTP, ProviderType, Status } from "@prisma/client";
+import { sendOTPEmail } from "../../../helpers/send-mail";
 
 class AuthController {
   async signIn(req: Request, res: Response) {
@@ -107,6 +108,8 @@ class AuthController {
           email: data.providerValue,
         },
       });
+
+      await sendOTPEmail(data.providerValue, newOtp); 
 
       if (existingOtp) {
         await prisma.oTP.update({
