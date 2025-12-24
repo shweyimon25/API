@@ -158,7 +158,7 @@ class ShopService {
   }
 
   async create(createShopInput: CreateShopInput) {
-    const { name, image, memberId, shopLevelId, status } = createShopInput;
+    const { name, memberId, shopLevelId, status } = createShopInput;
 
     // Check member exists
     const member = await prisma.member.findUnique({
@@ -214,7 +214,6 @@ class ShopService {
     const shop = await prisma.shop.create({
       data: {
         name,
-        image,
         memberId,
         shopLevelId,
         status: status ?? Status.ACTIVE,
@@ -225,7 +224,7 @@ class ShopService {
   }
 
   async update(id: number, updateShopInput: UpdateShopInput) {
-    const { name, image, memberId, shopLevelId, status } = updateShopInput;
+    const { name, memberId, shopLevelId, status } = updateShopInput;
 
     // Check shop exists
     const existingShop = await prisma.shop.findUnique({
@@ -299,7 +298,6 @@ class ShopService {
       },
       data: {
         name: name ?? existingShop.name,
-        image: image !== undefined ? image : existingShop.image,
         memberId: memberId ?? existingShop.memberId,
         shopLevelId:
           shopLevelId !== undefined ? shopLevelId : existingShop.shopLevelId,

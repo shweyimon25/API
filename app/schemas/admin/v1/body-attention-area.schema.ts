@@ -2,16 +2,13 @@ import z from "zod";
 import { Status } from "@prisma/client";
 
 export const createBodyAttentionAreaSchema = z.object({
-  name: z.string({
-    required_error: "Name is required",
-    invalid_type_error: "Name must be a string",
-  }),
-  status: z.nativeEnum(Status).optional(),
+  name: z.string().min(1, { message: "Name is required" }),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export const updateBodyAttentionAreaSchema = z.object({
   name: z.string().optional(),
-  status: z.nativeEnum(Status).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export type CreateBodyAttentionAreaInput = z.infer<

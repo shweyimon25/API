@@ -3,7 +3,7 @@ import { ProviderType } from "@prisma/client";
 
 export const requestOtpSchema = z
   .object({
-    providerType: z.nativeEnum(ProviderType),
+    providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
     providerValue: z.string(),
   })
   .refine((data) => {
@@ -26,7 +26,7 @@ export const requestOtpSchema = z
 
 export const verifyOtpSchema = z
   .object({
-    providerType: z.nativeEnum(ProviderType),
+    providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
     providerValue: z.string(),
     otp: z.string(),
   })
@@ -50,7 +50,7 @@ export const verifyOtpSchema = z
 
 export const signUpSchema = z
   .object({
-    providerType: z.nativeEnum(ProviderType),
+    providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
     providerValue: z.string(),
     name: z.string().min(1, { message: "Name is required" }),
     address: z.string().optional(),
@@ -90,23 +90,20 @@ export const signUpSchema = z
 
 export const sigInSchema = z
   .object({
-    providerType: z.nativeEnum(ProviderType),
+    providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
     providerValue: z.string(),
-    password: z.string({
-      required_error: "Password is required",
-      invalid_type_error: "Password must be string",
-    }),
+    password: z.string().min(1, { message: "Password is required" }),
   })
   .refine((data) => {
     if (data.providerType === ProviderType.EMAIL) {
-      return z.string().email({
+      return z.string().min(1, { message: "Email is required" }).email({
         message: "Invalid email address",
       });
     } else {
       return z
         .string()
-        .min(6, { message: "Phone number is required" })
-        .max(15, { message: "Phone number is too long" });
+        .min(9, { message: "Phone number is required" })
+        .max(15, { message: "Phone number must be at most 15 characters" });
     }
   });
 

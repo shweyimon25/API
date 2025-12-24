@@ -2,75 +2,33 @@ import { Day, Gender, Status } from "@prisma/client";
 import { z } from "zod";
 
 export const createWorkoutSchema = z.object({
-    name: z.string({
-        invalid_type_error: "Name must be string",
-        required_error: "Name is required"
-    }),
-    gender: z.nativeEnum(Gender, {
-        message: "Gender must be MALE | FEMALE | BOTH"
-    }),
-    categoryId: z.coerce.number({
-        required_error: "Category is required",
-        invalid_type_error: "Category must be number"
-    }),
-    bodyGoalId: z.coerce.number({
-        required_error: "Body goal is required",
-        invalid_type_error: "Body goal must be number"
-    }),
-    proficientLevelId: z.coerce.number({
-        required_error: "Proficient level is required",
-        invalid_type_error: "Proficient level must be number"
-    }),
-    placeId: z.coerce.number({
-        required_error: "Place is required",
-        invalid_type_error: "Place must be number"
-    }),
-    memberPlanId: z.coerce.number({
-        required_error: "Member plan is required",
-        invalid_type_error: "Member plan must be number"
-    }),
+    name: z.string().min(1, { message: "Name is required" }),
+    gender: z.nativeEnum(Gender, { message: "Gender must be MALE | FEMALE | BOTH" }),
+    categoryId: z.coerce.number().min(1, { message: "Category is required" }),
+    bodyGoalId: z.coerce.number().min(1, { message: "Body goal is required" }),
+    proficientLevelId: z.coerce.number().min(1, { message: "Proficient level is required" }),
+    placeId: z.coerce.number().min(1, { message: "Place is required" }),
+    memberPlanId: z.coerce.number().min(1, { message: "Member plan is required" }),
     workoutDay: z.nativeEnum(Day),
-    sets: z.coerce.number({
-        required_error: "Sets is required",
-        invalid_type_error: "Sets must be number"
-    }),
-    reps: z.coerce.number({
-        required_error: "Reps is required",
-        invalid_type_error: "Reps must be number"
-    }),
-    status: z.nativeEnum(Status).optional()
+    sets: z.coerce.number().min(1, { message: "Sets is required" }),
+    reps: z.coerce.number().min(1, { message: "Reps is required" }),
+    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional()
 });
 
 export const updateWorkoutSchema = z.object({
-    name: z.string({
-        invalid_type_error: "Name must be string",
-    }).optional(),
+    name: z.string().optional(),
     gender: z.nativeEnum(Gender, {
         message: "Gender must be MALE | FEMALE | BOTH"
     }).optional(),
-    categoryId: z.coerce.number({
-        invalid_type_error: "Category must be number"
-    }).optional(),
-    bodyGoalId: z.coerce.number({
-        invalid_type_error: "Body goal must be number"
-    }).optional(),
-    proficientLevelId: z.coerce.number({
-        invalid_type_error: "Proficient level must be number"
-    }).optional(),
-    placeId: z.coerce.number({
-        invalid_type_error: "Place must be number"
-    }).optional(),
-    memberPlanId: z.coerce.number({
-        invalid_type_error: "Member plan must be number"
-    }).optional(),
+    categoryId: z.coerce.number().optional(),
+    bodyGoalId: z.coerce.number().optional(),
+    proficientLevelId: z.coerce.number().optional(),
+    placeId: z.coerce.number().optional(),
+    memberPlanId: z.coerce.number().optional(),
     workoutDay: z.nativeEnum(Day).optional(),
-    sets: z.coerce.number({
-        invalid_type_error: "Sets must be number"
-    }).optional(),
-    reps: z.coerce.number({
-        invalid_type_error: "Reps must be number"
-    }).optional(),
-    status: z.nativeEnum(Status).optional()
+    sets: z.coerce.number().optional(),
+    reps: z.coerce.number().optional(),
+    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional()
 });
 
 export type CreateWorkoutInput = z.infer<typeof createWorkoutSchema>;

@@ -1,4 +1,4 @@
-import { ZodSchema } from "zod";
+import { ZodSchema, ZodError as ZodErrorType } from "zod";
 
 interface ZodError {
   success: boolean;
@@ -10,18 +10,18 @@ export const validater = async (
   schema: ZodSchema,
   input: object
 ): Promise<ZodError> => {
-  const { success, error, data } = await schema.safeParseAsync(input);
+  const result = await schema.safeParseAsync(input);
 
-  if (error) {
-    const details = error.errors.map((error) => {
+  if (!result.success) {
+    const details = result.error.issues.map((issue) => {
       return {
-        field: error.path[0],
-        issue: error.message,
+        field: issue.path[0] || issue.path.join("."),
+        issue: issue.message,
       };
     });
 
-    return { success, error: details };
+    return { success: false, error: details };
   } else {
-    return { success, data };
+    return { success: true, data: result.data };
   }
 };

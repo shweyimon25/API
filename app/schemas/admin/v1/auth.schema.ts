@@ -2,9 +2,8 @@ import { z } from "zod";
 
 export const signInSchema = z.object({
   emailOrUsername: z
-    .string({
-      required_error: "Email or username is required",
-    })
+    .string()
+    .min(1, { message: "Email or username is required" })
     .refine(
       (val) => {
         if (val.includes("@")) {

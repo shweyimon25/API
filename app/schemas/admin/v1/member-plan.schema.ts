@@ -2,30 +2,16 @@ import { z } from "zod";
 import { Status } from "@prisma/client";
 
 export const createMemberPlanSchema = z.object({
-  name: z.string({
-    required_error: "Name is required",
-    invalid_type_error: "Name must be string",
-  }),
-  memberTypeId: z.coerce.number({
-    required_error: "Member type is required",
-    invalid_type_error: "Member type must be number",
-  }),
-  price: z.coerce.number({
-    required_error: "Price is required",
-    invalid_type_error: "Price must be number",
-  }),
+  name: z.string().min(1, { message: "Name is required" }),
+  memberTypeId: z.coerce.number().min(1, { message: "Member type is required" }),
+  price: z.coerce.number().min(1, { message: "Price is required" }),
   duration: z.coerce
-    .number({
-      required_error: "Duration is required",
-      invalid_type_error: "Duration must be number",
-    })
+    .number().min(1, { message: "Duration is required" })
     .default(1),
   proIds: z.array(z.coerce.number()).optional(),
   conIds: z.array(z.coerce.number()).optional(),
-  isVideoGroup: z.boolean({
-    invalid_type_error: "Is video group must be true or false",
-  }),
-  status: z.nativeEnum(Status).optional(),
+  isVideoGroup: z.boolean().optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export const updateMemberPlanSchema = z.object({
@@ -36,7 +22,7 @@ export const updateMemberPlanSchema = z.object({
   proIds: z.array(z.coerce.number()).optional(),
   conIds: z.array(z.coerce.number()).optional(),
   isVideoGroup: z.boolean().optional(),
-  status: z.nativeEnum(Status).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export type CreateMemberPlanInput = z.infer<typeof createMemberPlanSchema>;

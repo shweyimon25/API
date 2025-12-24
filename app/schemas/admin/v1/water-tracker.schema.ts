@@ -1,21 +1,15 @@
 import z from "zod";
 
 export const createWaterTrackerSchema = z.object({
-  date: z.string({
-    required_error: "Date is required",
-    invalid_type_error: "Date must be a string",
-  }),
-  memberId: z.number({
-    required_error: "Member ID is required",
-    invalid_type_error: "Member ID must be a number",
-  }),
-  dailyWater: z.number().min(0).optional(),
+  date: z.string().min(1, { message: "Date is required" }),
+  memberId: z.coerce.number().min(1, { message: "Member is required" }),
+  dailyWater: z.coerce.number().min(0).optional(),
 });
 
 export const updateWaterTrackerSchema = z.object({
   date: z.string().optional(),
-  memberId: z.number().optional(),
-  dailyWater: z.number().min(0).optional(),
+  memberId: z.coerce.number().optional(),
+  dailyWater: z.coerce.number().min(0).optional(),
 });
 
 export type CreateWaterTrackerInput = z.infer<typeof createWaterTrackerSchema>;

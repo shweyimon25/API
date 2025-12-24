@@ -2,34 +2,21 @@ import z from "zod";
 import { Status } from "@prisma/client";
 
 export const createShopSchema = z.object({
-  name: z.string({
-    required_error: "Name is required",
-    invalid_type_error: "Name must be a string",
-  }),
-  image: z
-    .string({
-      invalid_type_error: "Image must be a string",
-    })
-    .optional(),
-  memberId: z.coerce.number({
-    required_error: "Member id is required",
-    invalid_type_error: "Member id must be number",
-  }),
+  name: z.string().min(1, { message: "Name is required" }),
+  memberId: z.coerce.number().min(1, { message: "Member is required" }),
   shopLevelId: z
     .coerce
-    .number({
-      invalid_type_error: "Shop level id must be number",
-    })
+    .number()
+    .min(1, { message: "Shop level is required" })
     .optional(),
-  status: z.nativeEnum(Status).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export const updateShopSchema = z.object({
   name: z.string().optional(),
-  image: z.string().optional(),
   memberId: z.coerce.number().optional(),
   shopLevelId: z.coerce.number().optional(),
-  status: z.nativeEnum(Status).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export type CreateShopInput = z.infer<typeof createShopSchema>;

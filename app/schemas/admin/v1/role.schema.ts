@@ -2,27 +2,19 @@ import { z } from "zod";
 import { Status } from "@prisma/client";
 
 export const createRoleSchema = z.object({
-  name: z.string({
-    required_error: "Name is required",
-    invalid_type_error: "Name must be string",
-  }),
+  name: z.string().min(1, { message: "Name is required" }),
   permissions: z.array(
-    z.number({
-      required_error: "Permissions is required",
-      invalid_type_error: "Permissions must be array of numbers",
-    })
+    z.coerce.number().min(1, { message: "Permissions is required" })
   ),
-  status: z.nativeEnum(Status).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export const updateRoleSchema = z.object({
   name: z
-    .string({
-      invalid_type_error: "Name must be string",
-    })
+    .string()
     .optional(),
-  permissions: z.array(z.number()).optional(),
-  status: z.nativeEnum(Status).optional(),
+  permissions: z.array(z.coerce.number()).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export type CreateRoleInput = z.infer<typeof createRoleSchema>;

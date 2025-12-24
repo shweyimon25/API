@@ -3,39 +3,28 @@ import { z } from "zod";
 
 export const updateProfileSchema = z.object({
   name: z
-    .string({
-      invalid_type_error: "Name must be string",
-    })
+    .string()
+    .min(1, { message: "Name is required" })
     .optional(),
   bio: z
-    .string({
-      invalid_type_error: "Bio must be string",
-    })
+    .string()
+    .min(1, { message: "Bio is required" })
     .optional(),
-  gender: z.nativeEnum(Gender).optional(),
+  gender: z.nativeEnum(Gender, { message: "Gender must be MALE | FEMALE | BOTH" }).optional(),
   address: z
-    .string({
-      invalid_type_error: "Address must be string",
-    })
+    .string()
+    .min(1, { message: "Address is required" })
     .optional(),
-  language: z.nativeEnum(Language).optional(),
-  theme: z.nativeEnum(Theme).optional(),
+  language: z.nativeEnum(Language, { message: "Language must be ENGLISH | ARABIC" }).optional(),
+  theme: z.nativeEnum(Theme, { message: "Theme must be LIGHT | DARK" }).optional(),
 });
 
 export const changePasswordSchema = z
   .object({
-    oldPassword: z.string({
-      required_error: "Old password is required",
-      invalid_type_error: "Old password must be string",
-    }),
+    oldPassword: z.string().min(1, { message: "Old password is required" }),
     newPassword: z
-      .string({
-        required_error: "New password is required",
-        invalid_type_error: "New password must be string",
-      })
-      .min(8, {
-        message: "New password must be at least 8 characters",
-      })
+      .string()
+      .min(1, { message: "New password is required" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
         {
@@ -43,10 +32,7 @@ export const changePasswordSchema = z
             "New password must include uppercase, lowercase, number, and special character",
         }
       ),
-    confirmNewPassword: z.string({
-      required_error: "Confirm new password is required",
-      invalid_type_error: "Confirm new password must be string",
-    }),
+    confirmNewPassword: z.string().min(1, { message: "Confirm new password is required" }),
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
     message: "New passwords don't match",

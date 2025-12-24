@@ -3,41 +3,29 @@ import { Status } from "@prisma/client";
 
 export const createMemberSchema = z
   .object({
-    name: z.string({
-      required_error: "Name is required",
-      invalid_type_error: "Name must be string",
-    }),
+    name: z.string().min(1, { message: "Name is required" }),
     email: z.string().optional(),
     phone: z
       .string()
-      .min(11, { message: "Phone must be at least 11 digits long" })
-      .max(11, { message: "Phone must be at most 11 digits long" })
+      .min(9, { message: "Phone must be at least 9 digits long" })
+      .max(15, { message: "Phone must be at most 15 digits long" })
       .optional(),
-    memberTypeId: z.coerce.number({
-      required_error: "Member type id is required",
-      invalid_type_error: "Member type id must be number",
-    }),
+    memberTypeId: z.coerce.number().min(1, { message: "Member type id is required" }),
     address: z
-      .string({
-        invalid_type_error: "Address must be string",
-      })
-      .optional(),
+      .string().optional(),
     bio: z
-      .string({
-        invalid_type_error: "Bio must be string",
-      })
-      .optional(),
-    status: z.nativeEnum(Status).optional(),
+      .string().optional(),
+    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
     password: z
-      .string({
-        required_error: "Password is required",
-        invalid_type_error: "Password must be string",
-      })
-      .min(6),
-    passwordConfirm: z.string({
-      required_error: "Password confirm is required",
-      invalid_type_error: "Password confirm must be string",
-    }),
+      .string()
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        {
+          message:
+            "Password must include uppercase, lowercase, number, and special character",
+        }
+      ),
+    passwordConfirm: z.string(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Passwords don't match",
@@ -46,79 +34,56 @@ export const createMemberSchema = z
   .refine((data) => {
     if (data.email !== undefined) {
       return z
-        .string({
-          required_error: "Phone is required",
-          invalid_type_error: "Phone must be string",
-        })
-        .min(10, {
-          message: "Phone must be at least 10 characters",
-        })
-        .max(15, {
-          message: "Phone must be at most 15 characters",
-        });
+        .string()
+        .email({ message: "Invalid email address" });
     }
     if (data.phone !== undefined) {
       return z
-        .string({
-          required_error: "Email is required",
-          invalid_type_error: "Email must be string",
-        })
-        .email({ message: "Invalid email address" });
+        .string()
+        .min(9, { message: "Phone must be at least 9 characters" })
+        .max(15, { message: "Phone must be at most 15 characters" });
     }
   });
 
 export const updateMemberSchema = z
   .object({
     name: z
-      .string({
-        invalid_type_error: "Name must be string",
-      })
-      .optional(),
+      .string().optional(),
     email: z
-      .string({
-        invalid_type_error: "Email must be string",
-      })
+      .string()
       .email({ message: "Invalid email address" })
       .optional(),
     phone: z
-      .string({
-        invalid_type_error: "Phone must be string",
-      })
-      .min(10, {
-        message: "Phone must be at least 10 characters",
+      .string()
+      .min(9, {
+        message: "Phone must be at least 9 characters",
       })
       .max(15, {
         message: "Phone must be at most 15 characters",
       })
       .optional(),
     memberTypeId: z.coerce
-      .number({
-        invalid_type_error: "Member type must be number",
-      })
+      .number()
       .optional(),
     address: z
-      .string({
-        invalid_type_error: "Address must be string",
-      })
+      .string()
       .optional(),
     bio: z
-      .string({
-        invalid_type_error: "Bio must be string",
-      })
+      .string()
       .optional(),
-    status: z.nativeEnum(Status).optional(),
+    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
     password: z
-      .string({
-        invalid_type_error: "Password must be string",
-      })
-      .min(6, {
-        message: "Password must be at least 6 characters",
-      })
+      .string()
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        {
+          message:
+            "Password must include uppercase, lowercase, number, and special character",
+        }
+      )
       .optional(),
     passwordConfirm: z
-      .string({
-        invalid_type_error: "Password confirm must be string",
-      })
+      .string()
       .optional(),
   })
   .refine(

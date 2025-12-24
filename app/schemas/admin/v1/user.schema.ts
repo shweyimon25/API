@@ -3,31 +3,25 @@ import { Status } from "@prisma/client";
 
 export const createUserSchema = z
   .object({
-    name: z.string({
-      required_error: "Name is required",
-      invalid_type_error: "Name must be a string",
-    }),
+    name: z.string().min(1, { message: "Name is required" }),
     email: z
-      .string({
-        required_error: "Email is required",
-        invalid_type_error: "Email must be a string",
-      })
+      .string()
+      .min(1, { message: "Email is required" })
       .email({ message: "Invalid email address" }),
-    username: z.string({
-      required_error: "Username is required",
-      invalid_type_error: "Username must be a string",
-    }),
-    roleId: z.coerce.number({
-      required_error: "Role is required",
-      invalid_type_error: "Role must be a number",
-    }),
-    status: z.nativeEnum(Status).optional(),
+    username: z.string()
+      .min(1, { message: "Username is required" })
+      .refine((val) => !val.includes(" "), { message: "Username must not contain spaces" }),
+    roleId: z.coerce.number().min(1, { message: "Role is required" }),
+    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
     password: z
-      .string({
-        required_error: "Password is required",
-        invalid_type_error: "Password must be a string",
-      })
-      .min(6, { message: "Password is minimum 6 characters" }),
+      .string()
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        {
+          message:
+            "Password must include uppercase, lowercase, number, and special character",
+        }
+      ),
     passwordConfirm: z.string(),
   })
   .refine((data) => data.password === data.passwordConfirm, {
@@ -38,18 +32,24 @@ export const createUserSchema = z
 export const updateUserSchema = z
   .object({
     name: z.string().optional(),
-    username: z.string().optional(),
+    username: z.string()
+      .refine((val) => !val || !val.includes(" "), { message: "Username must not contain spaces" })
+      .optional(),
     email: z
       .string()
-      .email()
       .email({ message: "Invalid email address" })
       .optional(),
-    roleId: z.number().optional(),
-    status: z.nativeEnum(Status).optional(),
+    roleId: z.coerce.number().optional(),
+    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
     password: z
       .string()
-      .min(6, { message: "Password is minimum 6 characters" })
-      .optional(),
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+        {
+          message:
+            "Password must include uppercase, lowercase, number, and special character",
+        }
+      ).optional(),
     passwordConfirm: z.string().optional(),
   })
   .refine(

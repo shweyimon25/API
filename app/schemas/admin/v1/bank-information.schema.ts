@@ -2,47 +2,38 @@ import { z } from "zod";
 import { PaymentTypes, Status } from "@prisma/client";
 
 export const createBankInformationSchema = z.object({
-  bankAccountHolder: z.string({
-    required_error: "Bank account holder is required",
-    invalid_type_error: "Bank account holder must be string",
-  }),
-  bankAccountNumber: z.string({
-    required_error: "Bank account number is required",
-    invalid_type_error: "Bank account number must be string",
-  }),
+  bankAccountHolder: z.string().min(1, { message: "Bank account holder is required" }),
+  bankAccountNumber: z.string().min(1, { message: "Bank account number is required" }),
   phone: z
-    .string({
-      required_error: "Phone is required",
-      invalid_type_error: "Phone must be string",
-    })
-    .min(10, {
-      message: "Phone must be at least 10 characters",
+    .string()
+    .min(9, {
+      message: "Phone must be at least 9 characters",
     })
     .max(15, {
       message: "Phone must be at most 15 characters",
     }),
   paymentTypes: z.nativeEnum(PaymentTypes).optional(),
-  status: z.nativeEnum(Status).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export const updateBankInformationSchema = z.object({
   bankAccountHolder: z
-    .string({
-      invalid_type_error: "Bank account holder must be string",
-    })
+    .string()
     .optional(),
   bankAccountNumber: z
-    .string({
-      invalid_type_error: "Bank account number must be string",
-    })
+    .string()
     .optional(),
   phone: z
-    .string({
-      invalid_type_error: "Phone must be string",
+    .string()
+    .min(9, {
+      message: "Phone must be at least 9 characters",
+    })
+    .max(15, {
+      message: "Phone must be at most 15 characters",
     })
     .optional(),
   paymentTypes: z.nativeEnum(PaymentTypes).optional(),
-  status: z.nativeEnum(Status).optional(),
+  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
 });
 
 export type CreateBankInformationInput = z.infer<
