@@ -1,5 +1,4 @@
-import nodemailer from "nodemailer";
-import { Transporter } from "nodemailer";
+import nodemailer, { Transporter } from "nodemailer";
 
 export interface SendMailOptions {
   from: string;
@@ -18,15 +17,36 @@ export interface SendMailOptions {
 }
 
 /**
- * Create and configure nodemailer transporter for Digital Ocean mail service
- * Supports both Digital Ocean managed email and custom SMTP
+ * Create and configure nodemailer transporter
+ * Supports Gmail, Digital Ocean, and other SMTP services
  */
 const createTransporter = (): Transporter => {
-  const mailHost = process.env.MAIL_HOST || "mail.digitalocean.com";
+  const mailHost = process.env.MAIL_HOST || "smtp.gmail.com";
   const mailPort = parseInt(process.env.MAIL_PORT || "587", 10);
-  const mailSecure = process.env.MAIL_SECURE === "true" || mailPort === 465;
-  const mailUsername = process.env.MAIL_USERNAME;
-  const mailPassword = process.env.MAIL_PASSWORD;
+  
+  // Determine secure mode: port 465 uses SSL/TLS directly, other ports use STARTTLS
+  // Port 465 = secure: true (SSL/TLS from start)
+  // Port 587/25 = secure: false (STARTTLS - upgrade plain connection to TLS)
+  let mailSecure: boolean;
+  if (process.env.MAIL_SECURE !== undefined) {
+    mailSecure = process.env.MAIL_SECURE === "true";
+  } else {
+    // Auto-detect: only port 465 uses secure: true
+    mailSecure = mailPort === 465;
+  }
+  
+  // Validate port/secure combination to prevent SSL errors
+  if (mailPort === 465 && !mailSecure) {
+    console.warn("Warning: Port 465 requires MAIL_SECURE=true. Auto-correcting...");
+    mailSecure = true;
+  } else if ((mailPort === 587 || mailPort === 25) && mailSecure) {
+    console.warn("Warning: Port 587/25 requires MAIL_SECURE=false (uses STARTTLS). Auto-correcting...");
+    mailSecure = false;
+  }
+  
+  const mailUsername = process.env.MAIL_USERNAME?.trim();
+  // Remove all spaces from app password (Gmail app passwords should not have spaces)
+  const mailPassword = process.env.MAIL_PASSWORD?.trim().replace(/\s+/g, "");
 
   if (!mailUsername || !mailPassword) {
     throw new Error(
@@ -34,20 +54,33 @@ const createTransporter = (): Transporter => {
     );
   }
 
+  // Log configuration for debugging (without password)
+  console.log("Email transporter configuration:", {
+    host: mailHost,
+    port: mailPort,
+    secure: mailSecure,
+    username: mailUsername,
+    passwordLength: mailPassword.length,
+  });
+
+  // Create SMTP transport configuration
+  // Using type assertion to help TypeScript resolve the correct overload
   const transporter = nodemailer.createTransport({
     host: mailHost,
     port: mailPort,
-    secure: mailSecure, // true for 465, false for other ports
+    secure: mailSecure, // true for 465 (SSL/TLS), false for 587/25 (STARTTLS)
     auth: {
       user: mailUsername,
       pass: mailPassword,
     },
-    // Digital Ocean mail service configuration
-    tls: {
-      // Do not fail on invalid certificates
-      rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== "false",
-    },
-  });
+    // TLS configuration - only for STARTTLS ports (587, 25)
+    ...(!mailSecure && {
+      tls: {
+        // Do not fail on invalid certificates (useful for self-signed certs)
+        rejectUnauthorized: process.env.MAIL_TLS_REJECT_UNAUTHORIZED !== "false",
+      },
+    }),
+  } as Parameters<typeof nodemailer.createTransport>[0]);
 
   return transporter;
 };
@@ -97,8 +130,22 @@ export const sendMail = async (options: SendMailOptions) => {
       error: error.message,
       to: options.to,
       subject: options.subject,
+      code: error.code,
+      command: error.command,
     });
-    throw new Error(`Failed to send email: ${error.message}`);
+
+    // Provide helpful error messages for common Gmail authentication errors
+    let errorMessage = error.message;
+    if (error.message?.includes("Invalid credentials") || error.message?.includes("535")) {
+      errorMessage = `Gmail authentication failed. Please verify:
+1. MAIL_USERNAME is correct: ${process.env.MAIL_USERNAME}
+2. MAIL_PASSWORD is the App Password (not regular password) - remove all spaces
+3. 2-Step Verification is enabled on your Gmail account
+4. App Password was generated correctly from Google Account settings
+5. The app password hasn't been revoked or regenerated`;
+    }
+
+    throw new Error(`Failed to send email: ${errorMessage}`);
   }
 };
 
