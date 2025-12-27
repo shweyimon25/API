@@ -18,7 +18,7 @@ const proSeeder = async () => {
     },
     {
       name: "Able to track daily water usage",
-      guard: "able-to-track-daily-calories",
+      guard: "able-to-track-daily-water-usage",
     },
     {
       name: "Able to view shop posts",

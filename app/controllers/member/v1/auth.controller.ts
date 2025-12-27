@@ -27,7 +27,10 @@ class AuthController {
 
     const member = await prisma.member.findFirst({
       where: {
-        OR: [{ email: data.providerType }, { phone: data.providerType }],
+        OR: [
+          { email: data.providerType === ProviderType.EMAIL ? data.providerValue : null },
+          { phone: data.providerType === ProviderType.PHONE ? data.providerValue : null },
+        ],
         status: Status.ACTIVE,
       },
       include: {

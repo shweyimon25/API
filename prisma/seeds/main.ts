@@ -3,16 +3,17 @@ import prisma from "../client";
 import roleSeeder from "./role.seeder";
 import permissionSeeder from "./permission.seeder";
 import adminUserSeeder from "./admin-user.seeder";
-import memberTypeSeeder from "./member-type";
+import memberTypeSeeder from "./member-type.seeder";
 import proSeeder from "./pros.seeder";
 import conSeeder from "./cons.seeder";
 import tagSeeder from "./tag.seeder";
 import mealTypeSeeder from "./meal-type.seeder";
 import physicalLimitaionSeeder from "./physical-limitation.seeder";
 import dietTypeSeeder from "./diet-type.seeder";
-import bodyAttentionAreaSeeder from "./body-attention-area.seeder"
+import bodyAttentionAreaSeeder from "./body-attention-area.seeder";
 import badHabitSeeder from "./bad-habit.seeder";
 import categorySeeder from "./category.seeder";
+import memberPlanSeeder from "./member-plan.seeder";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ const main = async () => {
     await bodyAttentionAreaSeeder();
     await badHabitSeeder();
     await categorySeeder();
+    await memberPlanSeeder();
   } catch (error) {
     console.error(error);
     process.exit(1);
