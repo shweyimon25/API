@@ -5,8 +5,18 @@ export class RoleCollection {
     return roles.map((role) => ({
       id: role.id,
       name: role.name,
+      status: role.status,
+      createdBy: role.createdBy,
+      updatedBy: role.updatedBy,
       createdAt: role.createdAt,
       updatedAt: role.updatedAt,
+    }));
+  }
+
+  public static toCommonCollection(roles: any[]) {
+    return roles.map((role) => ({
+      id: role.id,
+      name: role.name,
     }));
   }
 

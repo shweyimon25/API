@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
+import { User } from "@prisma/client";
 
 class UserController {
   private userService: UserService;
@@ -55,6 +56,28 @@ class UserController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { search, roleId } = req.query;
+
+    // Build filters object
+    const filters: any = {};
+    if (search) {
+      filters.search = search as string;
+    }
+    if (roleId) {
+      filters.roleId = +roleId;
+    }
+
+    const users = await this.userService.findCommonAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
+    return successResponse(
+      res,
+      "Common User list successfully",
+      UserCollection.toCommonCollection(users)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const user = await this.userService.findOne(+req.params.id);
     return successResponse(
@@ -74,7 +97,7 @@ class UserController {
       throw new ValidationException("User created failed", error);
     }
 
-    const user = await this.userService.create(data);
+    const user = await this.userService.create(data, (req.user as User).id);
 
     return successResponse(
       res,
@@ -93,7 +116,7 @@ class UserController {
       throw new ValidationException("User updated failed", error);
     }
 
-    const user = await this.userService.update(+req.params.id, data);
+    const user = await this.userService.update(+req.params.id, data, (req.user as User).id);
 
     return successResponse(
       res,

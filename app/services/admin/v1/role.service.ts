@@ -37,6 +37,36 @@ class RoleService {
       orderBy: {
         id: "desc",
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        }
+      }
+    });
+
+    return roles;
+  }
+
+  async findCommonAll(filters?: RoleFilters) {
+    const roles = await prisma.role.findMany({
+      where: {
+        ...this.where(filters),
+        status: Status.ACTIVE,
+      },
+      orderBy: {},
+      select: {
+        id: true,
+        name: true,
+      },
     });
 
     return roles;
@@ -50,6 +80,20 @@ class RoleService {
       },
       skip: (page - 1) * perPage,
       take: perPage,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        }
+      }
     });
 
     const totalRoles = await prisma.role.count({
@@ -101,7 +145,7 @@ class RoleService {
     return role;
   }
 
-  async create(createRoleInput: CreateRoleInput) {
+  async create(createRoleInput: CreateRoleInput, userId: number) {
     const { name, status, permissions } = createRoleInput;
 
     // Check role name unique
@@ -153,18 +197,21 @@ class RoleService {
         permissions:
           permissions && permissions.length > 0
             ? {
-                create: permissions.map((permissionId) => ({
-                  permission: { connect: { id: permissionId } },
-                })),
-              }
+              create: permissions.map((permissionId) => ({
+                permission: { connect: { id: permissionId } },
+              })),
+            }
             : undefined,
+        createdBy: {
+          connect: { id: userId }
+        }
       },
     });
 
     return this.findOne(role.id);
   }
 
-  async update(roleId: number, updateRoleInput: UpdateRoleInput) {
+  async update(roleId: number, updateRoleInput: UpdateRoleInput, userId: number) {
     const { name, status, permissions } = updateRoleInput;
 
     // Check role is existed
@@ -233,15 +280,18 @@ class RoleService {
         permissions:
           permissions !== undefined
             ? {
-                deleteMany: {},
-                create:
-                  permissions.length > 0
-                    ? permissions.map((permissionId) => ({
-                        permission: { connect: { id: permissionId } },
-                      }))
-                    : [],
-              }
+              deleteMany: {},
+              create:
+                permissions.length > 0
+                  ? permissions.map((permissionId) => ({
+                    permission: { connect: { id: permissionId } },
+                  }))
+                  : [],
+            }
             : undefined,
+        updatedBy: {
+          connect: { id: userId }
+        }
       },
     });
 

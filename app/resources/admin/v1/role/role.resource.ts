@@ -12,6 +12,9 @@ export class RoleResource {
         name: user.user.name,
         email: user.user.email,
       })) || [],
+      status: role.status,
+      createdBy: role.createdBy,
+      updatedBy: role.updatedBy,
       createdAt: role.createdAt,
       updatedAt: role.updatedAt,
     };

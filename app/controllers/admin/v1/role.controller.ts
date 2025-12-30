@@ -52,6 +52,23 @@ class RoleController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query; 
+
+    const filters: any = {};
+    if (search) {
+      filters.search = search as string;
+    }
+
+    const roles = await this.roleService.findCommonAll(filters);
+    
+    return successResponse(
+      res,
+      "Common Role list successfully",
+      RoleCollection.toCommonCollection(roles)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const role = await this.roleService.findOne(+req.params.id);
     return successResponse(
@@ -71,7 +88,7 @@ class RoleController {
       throw new ValidationException("Role created failed", error);
     }
 
-    const role = await this.roleService.create(data);
+    const role = await this.roleService.create(data, (req.user as any).id);
 
     return successResponse(
       res,
@@ -90,7 +107,7 @@ class RoleController {
       throw new ValidationException("Role updated failed", error);
     }
 
-    const role = await this.roleService.update(+req.params.id, data);
+    const role = await this.roleService.update(+req.params.id, data, (req.user as any).id);
 
     return successResponse(
       res,

@@ -76,8 +76,40 @@ class UserService {
             },
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true
+          },
+        },
         createdAt: true,
         updatedAt: true,
+      },
+    });
+
+    return users;
+  }
+
+  async findCommonAll(filters?: UserFilters) {
+    const users = await prisma.user.findMany({
+      where: {
+        ...filters,
+        status: Status.ACTIVE,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
       },
     });
 
@@ -105,6 +137,18 @@ class UserService {
                 name: true,
               },
             },
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true
           },
         },
         createdAt: true,
@@ -151,6 +195,11 @@ class UserService {
             },
           },
         },
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+        },
         createdAt: true,
         updatedAt: true,
       },
@@ -163,7 +212,7 @@ class UserService {
     return user;
   }
 
-  async create(createUserInput: CreateUserInput) {
+  async create(createUserInput: CreateUserInput, userId: number) {
     const { name, username, email, password, status, roleId } = createUserInput;
 
     // Check user username is existed
@@ -231,13 +280,16 @@ class UserService {
             },
           },
         },
+        createdBy: {
+          connect: { id: userId }
+        },
       },
     });
 
     return this.findOne(user.id);
   }
 
-  async update(id: number, updateUserInput: UpdateUserInput) {
+  async update(id: number, updateUserInput: UpdateUserInput, userId: number) {
     const { name, username, email, password, status, roleId } = updateUserInput;
 
     // Check user is existed
@@ -321,6 +373,9 @@ class UserService {
         username: username || existingUser.username,
         password: password ? hashPassword(password) : existingUser.password,
         status: status ?? existingUser.status,
+        updatedBy: {
+          connect: { id: userId }
+        },
       },
     });
 
@@ -344,10 +399,13 @@ class UserService {
   async destory(id: number) {
     const user = await this.findOne(id);
 
-    await prisma.user.delete({
+    await prisma.user.update({
       where: {
         id,
       },
+      data: {
+        deletedAt: new Date(),
+      }
     });
 
     return user;

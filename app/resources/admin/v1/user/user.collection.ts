@@ -12,8 +12,19 @@ export class UserCollection {
           name: r.role.name,
         };
       }),
+      createdBy: user.createdBy,
+      updatedBy: user.updatedBy,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+    }));
+  }
+
+  static toCommonCollection(users: any[]) {
+    return users.map((user: any) => ({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      email: user.email,
     }));
   }
 

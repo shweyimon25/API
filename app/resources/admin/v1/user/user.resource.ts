@@ -12,6 +12,8 @@ export class UserResource {
           name: r.role.name,
         };
       }),
+      createdBy: user.createdBy,
+      updatedBy: user.updatedBy,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
