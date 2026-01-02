@@ -53,7 +53,7 @@ class RoleController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query; 
+    const { search } = req.query;
 
     const filters: any = {};
     if (search) {
@@ -61,7 +61,7 @@ class RoleController {
     }
 
     const roles = await this.roleService.findCommonAll(filters);
-    
+
     return successResponse(
       res,
       "Common Role list successfully",

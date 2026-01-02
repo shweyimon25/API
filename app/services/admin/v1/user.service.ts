@@ -198,7 +198,14 @@ class UserService {
         createdBy: {
           select: {
             id: true,
+            name: true,
+          }
+        },
+        updatedBy: {
+          select: {
+            id: true,
             name: true
+          }
         },
         createdAt: true,
         updatedAt: true,
@@ -397,7 +404,7 @@ class UserService {
   }
 
   async destory(id: number) {
-    const user = await this.findOne(id);
+    await this.findOne(id);
 
     await prisma.user.update({
       where: {
@@ -407,8 +414,6 @@ class UserService {
         deletedAt: new Date(),
       }
     });
-
-    return user;
   }
 }
 

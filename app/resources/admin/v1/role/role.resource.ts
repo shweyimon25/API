@@ -7,11 +7,6 @@ export class RoleResource {
         id: permission.permission.id,
         name: permission.permission.name,
       })) || [],
-      users: role.users?.map((user: any) => ({
-        id: user.user.id,
-        name: user.user.name,
-        email: user.user.email,
-      })) || [],
       status: role.status,
       createdBy: role.createdBy,
       updatedBy: role.updatedBy,

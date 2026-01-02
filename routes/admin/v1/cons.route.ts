@@ -26,6 +26,14 @@ router
     ),
   ]);
 
+router.route('/common').get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['con:list']),
+  asyncHandler(
+    async (req: Request, res: Response) => await consController.findCommonAll(req, res)
+  )
+])
+
 router
   .route("/:id")
   .get([

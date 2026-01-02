@@ -45,7 +45,7 @@ router
         await userController.findOne(req, res)
     ),
   ])
-  .put([
+  .post([
     passport.authenticate("jwt", { session: false }),
     hasPermission(['user:update']),
     asyncHandler(

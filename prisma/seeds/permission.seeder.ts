@@ -80,26 +80,26 @@ const permissionSeeder = async () => {
       description: "Delete a member",
     },
 
-    // Membership
+    // Member Type
     {
-      name: "membership:list",
-      description: "Show all memberships",
+      name: "member-type:list",
+      description: "Show all member types",
     },
     {
-      name: "membership:read",
-      description: "Show membership details",
+      name: "member-type:read",
+      description: "Show member type details",
     },
     {
-      name: "membership:create",
-      description: "Create new membership",
+      name: "member-type:create",
+      description: "Create new member type",
     },
     {
-      name: "membership:update",
-      description: "Update a membership",
+      name: "member-type:update",
+      description: "Update a member type",
     },
     {
-      name: "membership:delete",
-      description: "Delete a membership",
+      name: "member-type:delete",
+      description: "Delete a member type",
     },
 
     // Pro 

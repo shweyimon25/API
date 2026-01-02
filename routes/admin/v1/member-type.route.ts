@@ -18,6 +18,11 @@ router
     ),
   ]);
 
+router.route('/common').get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['member'])
+]);
+
 router
   .route("/:id")
   .get([

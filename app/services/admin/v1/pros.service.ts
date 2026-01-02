@@ -3,7 +3,7 @@ import {
   BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { generateSlug, toKebabCase } from "../../../helpers/helper";
+import { toKebabCase } from "../../../helpers/helper";
 import {
   CreateProsInput,
   UpdateProsInput,
@@ -24,9 +24,10 @@ class ProsService {
     }
 
     if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
+      where.OR = [
+        { name: { contains: filters.search } },
+        { guard: { contains: filters.search } }
+      ];
     }
 
     return where;
@@ -38,13 +39,39 @@ class ProsService {
       orderBy: {
         id: "desc",
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
+    });
+
+    return pros;
+  }
+
+  async findCommonAll(filters?: ProsFilters) {
+    const pros = await prisma.pros.findMany({
+      where: {
+        ...this.where(filters),
+        status: Status.ACTIVE,
+      },
+      orderBy: {
+        id: "desc",
+      },
       select: {
         id: true,
         name: true,
-        guard: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+        guard: true
+      }
     });
 
     return pros;
@@ -58,13 +85,20 @@ class ProsService {
       },
       skip: (page - 1) * perPage,
       take: perPage,
-      select: {
-        id: true,
-        name: true,
-        guard: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          }
+        }
+      }
     });
 
     const totalPros = await prisma.pros.count({
@@ -91,19 +125,20 @@ class ProsService {
       where: {
         id,
       },
-      select: {
-        id: true,
-        name: true,
-        guard: true,
-        createdAt: true,
-        updatedAt: true,
-        memberPlans: {
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        updatedBy: {
           select: {
             id: true,
             name: true,
-          },
-        },
-      },
+          }
+        }
+      }
     });
 
     if (!pros) {
@@ -113,7 +148,7 @@ class ProsService {
     return pros;
   }
 
-  async create(createProsInput: CreateProsInput) {
+  async create(createProsInput: CreateProsInput, userId: number) {
     const { name, status } = createProsInput;
 
     // Check pros name unique
@@ -138,13 +173,16 @@ class ProsService {
         name,
         guard: toKebabCase(name),
         status: status ?? Status.ACTIVE,
+        createdBy: {
+          connect: { id: userId }
+        },
       },
     });
 
     return this.findOne(pros.id);
   }
 
-  async update(prosId: number, updateProsInput: UpdateProsInput) {
+  async update(prosId: number, updateProsInput: UpdateProsInput, userId: number) {
     const { name } = updateProsInput;
 
     // Check pros existed
@@ -186,6 +224,7 @@ class ProsService {
         name: name ?? existingPros.name,
         guard: name ? toKebabCase(name) : existingPros.guard,
         status: updateProsInput.status ?? existingPros.status,
+        updatedBy: { connect: { id: userId } },
       },
     });
 
@@ -193,15 +232,14 @@ class ProsService {
   }
 
   async destroy(id: number) {
-    const pros = await this.findOne(id);
+    await this.findOne(id);
 
-    await prisma.pros.delete({
-      where: {
-        id,
-      },
+    await prisma.pros.update({
+      where: { id },
+      data: {
+        deletedAt: new Date()
+      }
     });
-
-    return pros;
   }
 }
 

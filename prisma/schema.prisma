@@ -19,15 +19,15 @@ model User {
   email    String @unique
   username String @unique
   password String
-  status   Status @default(ACTIVE)  
+  status   Status @default(ACTIVE)
 
   deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("UserCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("UserUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("UserCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   roles                      UserRole[]
   tagsCreated                Tag[]                @relation("TagCreatedBy")
@@ -82,12 +82,13 @@ model Role {
   description String? @db.Text()
   status      Status  @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("RoleCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("RoleCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   permissions RolePermission[]
   users       UserRole[]
@@ -133,6 +134,7 @@ model MemberType {
   members Member[]
   status  Status   @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?        @relation("MemberTypeCreatedBy", fields: [createdById], references: [id])
@@ -155,6 +157,7 @@ model MemberPlan {
   isVideoGroup Boolean    @default(false)
   status       Status     @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("MemberPlanCreatedBy", fields: [createdById], references: [id])
@@ -173,12 +176,13 @@ model Pros {
 
   memberPlans MemberPlan[]
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("ProsCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("ProsUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("ProsCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("ProsUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Cons {
@@ -189,12 +193,13 @@ model Cons {
 
   memberPlans MemberPlan[]
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("ConsCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("ConsUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("ConsCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("ConsUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Member {
@@ -213,12 +218,13 @@ model Member {
   theme    Theme    @default(LIGHT)
   status   Status   @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("MemberCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("MemberUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("MemberUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   providerTypes    MemberProviderType[]
   postComments     PostComment[]
@@ -299,12 +305,13 @@ model ShopLevel {
   postLimit   Int     @default(10)
   status      Status  @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("ShopLevelUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("ShopLevelUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   shops Shop[]
 }
@@ -321,12 +328,13 @@ model Shop {
   shopLevel   ShopLevel? @relation(fields: [shopLevelId], references: [id])
   status      Status     @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("ShopCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("ShopUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("ShopCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("ShopUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   shopRatings ShopRating[]
   shopPosts   ShopPost[]
@@ -381,12 +389,13 @@ model Tag {
   name   String @unique
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("TagCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("TagUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   posts Post[]
 }
@@ -430,12 +439,13 @@ model BodyGoal {
   name   String @unique
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("BodyGoalCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("BodyGoalUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("BodyGoalCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("BodyGoalUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   workouts Workout[]
 }
@@ -445,6 +455,7 @@ model ProficientLevel {
   name   String @unique
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("ProficientLevelCreatedBy", fields: [createdById], references: [id])
@@ -459,12 +470,13 @@ model Category {
   name   String @unique
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("CategoryCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("CategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   workouts Workout[]
 }
@@ -480,6 +492,7 @@ model Place {
   name   String @unique
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("PlaceCreatedBy", fields: [createdById], references: [id])
@@ -530,12 +543,13 @@ model Workout {
 
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model PhysicalLimitation {
@@ -545,26 +559,29 @@ model PhysicalLimitation {
   description String? @db.Text()
   status      Status  @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("PhysicalLimitationCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("PhysicalLimitationUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("PhysicalLimitationCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("PhysicalLimitationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model DietType {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
   photo       String?
-  description String?  @db.Text()
-  status      Status   @default(ACTIVE)
+  description String? @db.Text()
+  status      Status  @default(ACTIVE)
+
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("DietTypeCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("DietTypeUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("DietTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("DietTypeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model BodyAttentionArea {
@@ -572,24 +589,27 @@ model BodyAttentionArea {
   name   String @unique
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("BodyAttentionAreaCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("BodyAttentionAreaUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("BodyAttentionAreaCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("BodyAttentionAreaUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model MealType {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  status      Status   @default(ACTIVE)
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
+
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("MealTypeCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("MealTypeUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("MealTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("MealTypeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   meals       Meal[]
 }
 
@@ -606,12 +626,13 @@ model Meal {
 
   status Status @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("MealCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("MealUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("MealCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("MealUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model BadHabit {
@@ -621,12 +642,13 @@ model BadHabit {
   photo       String?
   status      Status  @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("BadHabitCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("BadHabitUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("BadHabitCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("BadHabitUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model WaterTracker {
@@ -650,12 +672,13 @@ model BankInformation {
   paymentTypes PaymentTypes @default(BANK_ACCOUNT)
   status       Status       @default(ACTIVE)
 
+  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
-  createdBy   User?    @relation("BankInformationCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("BankInformationUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?     @relation("BankInformationCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?     @relation("BankInformationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Payment {

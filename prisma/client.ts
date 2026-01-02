@@ -2,6 +2,27 @@ import { Prisma, PrismaClient } from "@prisma/client";
 
 const SOFT_DELETE_MODELS = new Set([
     Prisma.ModelName.User,
+    Prisma.ModelName.Role,
+    Prisma.ModelName.MemberType,
+    Prisma.ModelName.MemberPlan,
+    Prisma.ModelName.Pros,
+    Prisma.ModelName.Cons,
+    Prisma.ModelName.Member,
+    Prisma.ModelName.ShopLevel,
+    Prisma.ModelName.Shop,
+    Prisma.ModelName.Tag,
+    Prisma.ModelName.BodyGoal,
+    Prisma.ModelName.ProficientLevel,
+    Prisma.ModelName.Category,
+    Prisma.ModelName.Place,
+    Prisma.ModelName.Workout,
+    Prisma.ModelName.PhysicalLimitation,
+    Prisma.ModelName.DietType,
+    Prisma.ModelName.BodyAttentionArea,
+    Prisma.ModelName.MealType,
+    Prisma.ModelName.Meal,
+    Prisma.ModelName.BadHabit,
+    Prisma.ModelName.BankInformation,
 ]);
 
 const prisma = new PrismaClient().$extends({
@@ -31,6 +52,17 @@ const prisma = new PrismaClient().$extends({
 
                 return query(args);
             },
+
+            async findUnique({ model, args, query }: any) {
+                if (!model || !SOFT_DELETE_MODELS.has(model)) {
+                    return query(args);
+                }
+
+                args.where ??= {};
+                (args.where as any).deletedAt = null;
+
+                return query(args);
+            }
         },
     },
 });

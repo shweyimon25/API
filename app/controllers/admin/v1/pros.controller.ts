@@ -18,9 +18,10 @@ class ProsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10, status, search } = req.query;
+    const { page, perPage, status, search } = req.query;
 
     const filters: any = {};
+
     if (status) {
       filters.status = status;
     }
@@ -44,10 +45,31 @@ class ProsController {
     const pros = await this.prosService.findAll(
       Object.keys(filters).length > 0 ? filters : undefined
     );
+
     return successResponse(
       res,
       "Pros list successfully",
       ProsCollection.toCollection(pros)
+    );
+  }
+
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    const filters: any = {};
+
+    if (search) {
+      filters.search = search as string;
+    }
+
+    const pros = await this.prosService.findCommonAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
+
+    return successResponse(
+      res,
+      "Common Pros list successfully",
+      ProsCollection.toCommonCollection(pros)
     );
   }
 
@@ -71,7 +93,7 @@ class ProsController {
       throw new ValidationException("Pros created failed", error);
     }
 
-    const pros = await this.prosService.create(data);
+    const pros = await this.prosService.create(data, (req.user as any).id);
 
     return successResponse(
       res,
@@ -91,7 +113,7 @@ class ProsController {
       throw new ValidationException("Pros updated failed", error);
     }
 
-    const pros = await this.prosService.update(+id, data);
+    const pros = await this.prosService.update(+id, data, (req.user as any).id);
 
     return successResponse(
       res,
@@ -103,7 +125,6 @@ class ProsController {
   async destroy(req: Request, res: Response) {
     const { id } = req.params;
     await this.prosService.destroy(+id);
-
     return successResponse(res, "Pros deleted successfully");
   }
 }

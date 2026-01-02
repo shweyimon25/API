@@ -1,5 +1,3 @@
-import { RoleResource } from "./role.resource";
-
 export class RoleCollection {
   public static toCollection(roles: any[]) {
     return roles.map((role) => ({
@@ -25,6 +23,9 @@ export class RoleCollection {
       data: roles.data.map((role: any) => ({
         id: role.id,
         name: role.name,
+        status: role.status,
+        createdBy: role.createdBy,
+        updatedBy: role.updatedBy,
         createdAt: role.createdAt,
         updatedAt: role.updatedAt,
       })),

@@ -1,19 +1,73 @@
+import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-import { BadRequestException } from "../../../helpers/exceptions";
+import { NotFoundException } from "../../../helpers/exceptions";
+
+interface MemberTypeFilters {
+  search?: string;
+  status?: Status
+}
 
 class MemberTypeService {
-  async findAll() {
+  private where(filters?: MemberTypeFilters) {
+    const where: any = {};
+
+    if (filters?.status) {
+      where.status = filters.status;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        { name: { contains: filters.search } },
+      ];
+    }
+
+    return where;
+  }
+
+
+  async findAll(filters?: MemberTypeFilters) {
     const memberTypes = await prisma.memberType.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    return memberTypes;
+  }
+
+  async findCommonAll(filters?: MemberTypeFilters) {
+    return 'con';
+    const memberTypes = await prisma.memberType.findMany({
+      where: {
+        ...this.where(filters),
+        status: Status.ACTIVE
+      },
+      orderBy: {
+        id: "desc"
       },
     });
 
     return memberTypes;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, filters: MemberTypeFilters) {
     const memberTypes = await prisma.memberType.findMany({
+      where: this.where(filters),
       orderBy: {
         id: "desc",
       },
@@ -21,7 +75,9 @@ class MemberTypeService {
       take: perPage,
     });
 
-    const totalMemberTypes = await prisma.memberType.count();
+    const totalMemberTypes = await prisma.memberType.count({
+      where: this.where(filters)
+    });
 
     return {
       data: memberTypes,
@@ -40,14 +96,14 @@ class MemberTypeService {
   }
 
   async findOne(id: number) {
-    const memberType = await prisma.memberType.findUnique({
+    const memberType = await prisma.memberType.findFirst({
       where: {
         id,
       },
     });
 
     if (!memberType) {
-      throw new BadRequestException("Member type not found");
+      throw new NotFoundException("Member type not found");
     }
 
     return memberType;

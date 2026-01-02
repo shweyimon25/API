@@ -10,18 +10,41 @@ class PermissionController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10 } = req.query;
+    const { page, perPage, search } = req.query;
+
+    const filters: any = {};
+
+    if (search) {
+      filters.search = search as string;
+    }
 
     if (page && perPage) {
       const permissions = await this.permissionService.findByPaginate(
         +page,
-        +perPage
+        +perPage,
+        Object.keys(filters).length > 0 ? filters : undefined
       );
       return successResponse(res, "Permission list successfully", permissions);
     }
 
-    const permissions = await this.permissionService.findAll();
+    const permissions = await this.permissionService.findAll(Object.keys(filters).length > 0 ? filters : undefined);
     return successResponse(res, "Permission list successfully", permissions);
+  }
+
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    const filters: any = {};
+
+    if (search) {
+      filters.search = search as string;
+    }
+
+    const permissions = await this.permissionService.findCommonAll(
+      Object.keys(filters).length > 0 ? filters : undefined
+    );
+
+    return successResponse(res, "Common Permission list successfully", permissions);
   }
 
   async findOne(req: Request, res: Response) {

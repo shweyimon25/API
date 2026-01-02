@@ -62,11 +62,23 @@ class RoleService {
         ...this.where(filters),
         status: Status.ACTIVE,
       },
-      orderBy: {},
-      select: {
-        id: true,
-        name: true,
+      orderBy: {
+        id: "desc"
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      }
     });
 
     return roles;
@@ -120,9 +132,7 @@ class RoleService {
       where: {
         id,
       },
-      select: {
-        id: true,
-        name: true,
+      include: {
         permissions: {
           select: {
             permission: {
@@ -133,8 +143,18 @@ class RoleService {
             },
           },
         },
-        createdAt: true,
-        updatedAt: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -211,12 +231,12 @@ class RoleService {
     return this.findOne(role.id);
   }
 
-  async update(roleId: number, updateRoleInput: UpdateRoleInput, userId: number) {
+  async update(id: number, updateRoleInput: UpdateRoleInput, userId: number) {
     const { name, status, permissions } = updateRoleInput;
 
     // Check role is existed
     const existingRole = await prisma.role.findUnique({
-      where: { id: roleId },
+      where: { id },
     });
 
     if (!existingRole) {
@@ -229,7 +249,7 @@ class RoleService {
         where: {
           name,
           NOT: {
-            id: roleId,
+            id,
           },
         },
       });
@@ -273,7 +293,7 @@ class RoleService {
 
     // Update role with permissions
     const role = await prisma.role.update({
-      where: { id: roleId },
+      where: { id },
       data: {
         name: name ?? existingRole.name,
         status: status ?? existingRole.status,
@@ -298,10 +318,16 @@ class RoleService {
     return this.findOne(role.id);
   }
 
-  async destory(roleId: number) {
-    // Delete role
-    await prisma.role.delete({
-      where: { id: roleId },
+  async destory(id: number) {
+    await this.findOne(id);
+
+    await prisma.role.update({
+      where: {
+        id
+      },
+      data: {
+        deletedAt: new Date()
+      }
     });
   }
 }

@@ -1,15 +1,14 @@
 export class ProsResource {
-  static toResource(pros: any) {
+  static toResource(pro: any) {
     return {
-      id: pros.id,
-      name: pros.name,
-      guard: pros.guard,
-      memberPlans: pros.memberPlans?.map((plan: any) => ({
-        id: plan.id,
-        name: plan.name,
-      })) || [],
-      createdAt: pros.createdAt,
-      updatedAt: pros.updatedAt,
+      id: pro.id,
+      name: pro.name,
+      guard: pro.guard,
+      status: pro.status,
+      createdBy: pro.createdBy,
+      updatedBy: pro.updatedBy,
+      createdAt: pro.createdAt,
+      updatedAt: pro.updatedAt,
     };
   }
 }

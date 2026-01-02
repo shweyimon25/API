@@ -8,6 +8,13 @@ export class PermissionCollection {
         }));
     }
 
+    static toCommonCollection(permissions: any[]) {
+        return permissions.map((permission: any) => ({
+            id: permission.id,
+            name: permission.name,
+        }));
+    }
+
     static withPagination(permissions: { data: any[]; meta: any }) {
         return {
             data: this.toCollection(permissions.data),

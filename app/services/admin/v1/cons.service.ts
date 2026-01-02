@@ -1,6 +1,7 @@
 import prisma from "../../../../prisma/client";
 import {
   BadRequestException,
+  NotFoundException,
 } from "../../../helpers/exceptions";
 import { toKebabCase } from "../../../helpers/helper";
 import {
@@ -23,9 +24,10 @@ class ConsService {
     }
 
     if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
+      where.OR = [
+        { name: { contains: filters.search } },
+        { guard: { contains: filters.search } }
+      ];
     }
 
     return where;
@@ -37,13 +39,34 @@ class ConsService {
       orderBy: {
         id: "desc",
       },
-      select: {
-        id: true,
-        name: true,
-        guard: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    return cons;
+  }
+
+  async findCommonAll(filters?: ConsFilters) {
+    const cons = await prisma.cons.findMany({
+      where: {
+        ...this.where(filters),
+        status: Status.ACTIVE
       },
+      orderBy: {
+        id: "desc"
+      }
     });
 
     return cons;
@@ -57,13 +80,20 @@ class ConsService {
       },
       skip: (page - 1) * perPage,
       take: perPage,
-      select: {
-        id: true,
-        name: true,
-        guard: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
 
     const totalCons = await prisma.cons.count({
@@ -90,29 +120,30 @@ class ConsService {
       where: {
         id,
       },
-      select: {
-        id: true,
-        name: true,
-        guard: true,
-        createdAt: true,
-        updatedAt: true,
-        memberPlans: {
+      include: {
+        createdBy: {
           select: {
             id: true,
-            name: true,
-          },
+            name: true
+          }
         },
-      },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
 
     if (!cons) {
-      throw new BadRequestException("Cons not found");
+      throw new NotFoundException("Cons not found");
     }
 
     return cons;
   }
 
-  async create(createConsInput: CreateConsInput) {
+  async create(createConsInput: CreateConsInput, userId: number) {
     const { name, status } = createConsInput;
 
     // Create cons
@@ -121,13 +152,18 @@ class ConsService {
         name,
         guard: toKebabCase(name),
         status: status ?? Status.ACTIVE,
+        createdBy: {
+          connect: {
+            id: userId
+          }
+        }
       },
     });
 
     return this.findOne(cons.id);
   }
 
-  async update(id: number, updateConsInput: UpdateConsInput) {
+  async update(id: number, updateConsInput: UpdateConsInput, userId: number) {
     const { name, status } = updateConsInput;
 
     // Check cons exists
@@ -149,6 +185,11 @@ class ConsService {
       data: {
         name: name ?? existingCons.name,
         status: status ?? existingCons.status,
+        updatedBy: {
+          connect: {
+            id: userId
+          }
+        }
       },
     });
 

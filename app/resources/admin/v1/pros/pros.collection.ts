@@ -4,8 +4,19 @@ export class ProsCollection {
       id: pro.id,
       name: pro.name,
       guard: pro.guard,
+      status: pro.status,
+      createdBy: pro.createdBy,
+      updatedBy: pro.updatedBy,
       createdAt: pro.createdAt,
       updatedAt: pro.updatedAt,
+    }));
+  }
+
+  static toCommonCollection(pros: any[]) {
+    return pros.map((pro) => ({
+      id: pro.id,
+      name: pro.name,
+      guard: pro.guard,
     }));
   }
 

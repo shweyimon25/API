@@ -18,7 +18,7 @@ class ConsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page = 1, perPage = 10, status, search } = req.query;
+    const { page, perPage, status, search } = req.query;
 
     const filters: any = {};
     if (status) {
@@ -51,6 +51,23 @@ class ConsController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    const filters: any = {};
+    if (search) {
+      filters.search = search as string;
+    }
+
+    const cons = await this.consService.findCommonAll(filters);
+
+    return successResponse(
+      res,
+      "Common cons list successfully",
+      ConsCollection.toCommonCollection(cons)
+    )
+  }
+
   async findOne(req: Request, res: Response) {
     const { id } = req.params;
     const cons = await this.consService.findOne(+id);
@@ -71,7 +88,7 @@ class ConsController {
       throw new ValidationException("Cons created failed", error);
     }
 
-    const cons = await this.consService.create(data);
+    const cons = await this.consService.create(data, (req.user as any).id);
 
     return successResponse(
       res,
@@ -91,7 +108,7 @@ class ConsController {
       throw new ValidationException("Cons updated failed", error);
     }
 
-    const cons = await this.consService.update(+id, data);
+    const cons = await this.consService.update(+id, data, (req.user as any).id);
 
     return successResponse(
       res,

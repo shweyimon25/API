@@ -1,12 +1,29 @@
 export class MemberTypeCollection {
-  static toCollection(res: any[]) {
-    return res;
+  static toCollection(memberTypes: any[]) {
+    return memberTypes.map((memberType) => {
+      return {
+        id: memberType.id,
+        name: memberType.name,
+        status: memberType.status,
+        createdAt: memberType.createdAt,
+        updatedAt: memberType.updatedAt
+      }
+    });
   }
 
-  static withPagination(res: { data: any[]; meta: any }) {
+  static toCommonCollection(memberTypes: any[]) {
+    return memberTypes.map((memberType) => {
+      return {
+        id: memberType.id,
+        name: memberType.name
+      }
+    })
+  }
+
+  static withPagination(memberType: { data: any[]; meta: any }) {
     return {
-      data: this.toCollection(res.data),
-      meta: res.meta,
+      data: this.toCollection(memberType.data),
+      meta: memberType.meta,
     };
   }
 }

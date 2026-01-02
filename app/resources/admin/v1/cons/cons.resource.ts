@@ -1,15 +1,14 @@
 export class ConsResource {
-  static toResource(cons: any) {
+  static toResource(con: any) {
     return {
-      id: cons.id,
-      name: cons.name,
-      guard: cons.guard,
-      memberPlans: cons.memberPlans?.map((plan: any) => ({
-        id: plan.id,
-        name: plan.name,
-      })) || [],
-      createdAt: cons.createdAt,
-      updatedAt: cons.updatedAt,
+      id: con.id,
+      name: con.name,
+      guard: con.guard,
+      status: con.status,
+      createdBy: con.createdBy,
+      updatedBy: con.updatedBy,
+      createdAt: con.createdAt,
+      updatedAt: con.updatedAt,
     };
   }
 }
