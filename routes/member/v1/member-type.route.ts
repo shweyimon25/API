@@ -14,16 +14,6 @@ router
       async (req: Request, res: Response) =>
         await memberTypeController.findAll(req, res)
     ),
-  ]);   
-
-router
-  .route("/:id")
-  .get([
-    passport.authenticate("jwt", { session: false }),
-    asyncHandler(
-      async (req: Request, res: Response) =>
-        await memberTypeController.findOne(req, res)
-    ),
   ]);
 
 export default router;

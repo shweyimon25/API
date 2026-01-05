@@ -1,60 +1,88 @@
+import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
 
+interface MemberPlanFilters {
+  duration?: number;
+  search?: string;
+  memberTypeId?: number;
+}
+
+
 class MemberPlanService {
-  async findAll() {
+  private where(filters?: MemberPlanFilters) {
+    const where: any = {};
+
+    if (filters?.duration) {
+      where.duration = filters.duration;
+    }
+
+    if (filters?.memberTypeId) {
+      where.memberTypeId = filters.memberTypeId;
+    }
+
+    if (filters?.search) {
+      where.name = {
+        contains: filters.search,
+      };
+    }
+
+    return where;
+  }
+
+  async findAll(filters: MemberPlanFilters) {
     const memberPlans = await prisma.memberPlan.findMany({
       orderBy: {
         id: "desc",
       },
-      include: {
-        pros: true,
-        cons: true,
+      where: {
+        ...this.where(filters),
+        status: Status.ACTIVE
       },
+      include: {
+        memberType: {
+          select: {
+            id: true,
+            name: true,
+            status: true
+          }
+        }
+      }
     });
 
     return memberPlans;
-  }
-
-  async findByPaginate(page: number, perPage: number) {
-    const memberPlans = await prisma.memberPlan.findMany({
-      orderBy: {
-        id: "desc",
-      },
-      skip: (page - 1) * perPage,
-      take: perPage,
-      include: {
-        pros: true,
-        cons: true,
-      },
-    });
-
-    const totalMemberPlans = await prisma.memberPlan.count();
-
-    return {
-      data: memberPlans,
-      meta: {
-        totalCount: totalMemberPlans,
-        totalPages: Math.ceil(totalMemberPlans / perPage),
-        currentPage: page,
-        perPage,
-        prevPage: page > 1 ? page - 1 : null,
-        nextPage:
-          page < Math.ceil(totalMemberPlans / perPage) ? page + 1 : null,
-        hasPrevPage: page > 1,
-        hasNextPage: page < Math.ceil(totalMemberPlans / perPage),
-      },
-    };
   }
 
   async findOne(id: number) {
     const memberPlan = await prisma.memberPlan.findUnique({
       where: {
         id,
+        status: Status.ACTIVE
       },
       include: {
-        pros: true,
-        cons: true,
+        memberType: {
+          select: {
+            id: true,
+            name: true,
+            status: true
+          }
+        },
+        pros: {
+          select: {
+            id: true,
+            name: true,
+            guard: true,
+            status: true,
+          }
+        },
+        cons: {
+          select: {
+            id: true,
+            name: true,
+            guard: true,
+            status: true
+          }
+        },
       },
     });
 

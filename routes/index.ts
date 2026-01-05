@@ -29,8 +29,9 @@ import memberAuthRoute from "./member/v1/auth.route";
 import memberProfileRoute from "./member/v1/profile.route";
 import memberPostRoute from "./member/v1/post.route";
 import memberTagRoute from "./member/v1/tag.route";
-import memberMemberPlanRoute from "./member/v1/member-plan.route";
 import memberMemberTypeRoute from "./member/v1/member-type.route";
+import memberPlanRoute from "./member/v1/member-plan.route";
+import membershipRoute from "./member/v1/membership.route";
 
 const router = Router();
 
@@ -63,7 +64,8 @@ router.use("/member/v1/auth", memberAuthRoute);
 router.use("/member/v1", memberProfileRoute);
 router.use("/member/v1/posts", memberPostRoute);
 router.use("/member/v1/tags", memberTagRoute);
-router.use("/member/v1/member-plans", memberMemberPlanRoute);
 router.use("/member/v1/member-types", memberMemberTypeRoute);
+router.use("/member/v1/member-plans", memberPlanRoute);
+router.use("/member/v1/membership", membershipRoute);
 
 export default router;

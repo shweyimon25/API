@@ -4,7 +4,7 @@ import { Status } from "@prisma/client";
 export const createMemberSchema = z
   .object({
     name: z.string().min(1, { message: "Name is required" }),
-    email: z.string().optional(),
+    email: z.string().email({ message: "Invalid email address" }).optional(),
     phone: z
       .string()
       .min(9, { message: "Phone must be at least 9 digits long" })

@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc && cp -rf public dist",
     "start": "npm run build && node ./dist/server.js",
-    "start:dev": "npx nodemon server.ts",
+    "start:dev": "nodemon",
     "db:migrate:dev": "npx prisma migrate diff --from-schema-datamodel prisma/schema.prisma --to-schema-datasource prisma/schema.prisma --script > down.sql && npx prisma migrate dev",
     "db:migrate": "npx prisma migrate deploy",
     "db:migrate:reset": "npx prisma migrate reset && npm run db:seed",

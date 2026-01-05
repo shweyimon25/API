@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
 
@@ -7,23 +8,12 @@ class MemberTypeService {
       orderBy: {
         id: "desc",
       },
+      where: {
+        status: Status.ACTIVE
+      }
     });
 
     return memberTypes;
-  }
-
-  async findOne(id: number) {
-    const memberType = await prisma.memberType.findUnique({
-      where: {
-        id,
-      },
-    });
-
-    if (!memberType) {
-      throw new NotFoundException("Member type not found");
-    }
-
-    return memberType;
   }
 }
 
