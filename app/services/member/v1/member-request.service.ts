@@ -1,10 +1,10 @@
-import { ProviderType, Status } from "@prisma/client";
+import { MemberRequestStatus, ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-import { TrainerMemberRequestInput } from "../../../schemas/member/v1/membership.schema";
+import { TrainerMemberRequestInput } from "../../../schemas/member/v1/member-request.schema";
 import { BadRequestException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
 
-class MembershipService {
+class MemberRequestService {
     async trainerMemberRequest(trainerMemberRequestInput: TrainerMemberRequestInput, files: Express.Multer.File[], userId: number) {
         const {
             memberPlanId,
@@ -14,18 +14,6 @@ class MembershipService {
             yearOfExp,
             reason,
             gender,
-            heightFeet,
-            heightInches,
-            weight,
-            neck,
-            waist,
-            shoulders,
-            thigh,
-            calf,
-            arms,
-            wrist,
-            chest,
-            hip,
         } = trainerMemberRequestInput;
 
         // Check member plan is existed
@@ -141,61 +129,27 @@ class MembershipService {
             throw new BadRequestException("Cannot request to become a trainer because you are already a trainer")
         }
 
-        const updateMember = await prisma.member.update({
+        const existingTrainerMemberRequest = await prisma.memberRequest.findFirst({
             where: {
-                id: userId,
-            },
-            data: {
+                memberId: userId,
                 memberTypeId: 2,
-                profile: {
-                    update: {
-                        age,
-                        gender,
-                        yearOfExp,
-                        reason,
-                        certificates,
-                        photos,
-                    }
-                },
-                bodyMeasurement: {
-                    upsert: {
-                        create: {
-                            heightFeet,
-                            heightInches,
-                            weight,
-                            neck,
-                            waist,
-                            shoulders,
-                            thigh,
-                            calf,
-                            arms,
-                            wrist,
-                            chest,
-                            hip,
-                        },
-                        update: {
-                            heightFeet,
-                            heightInches,
-                            weight,
-                            neck,
-                            waist,
-                            shoulders,
-                            thigh,
-                            calf,
-                            arms,
-                            wrist,
-                            chest,
-                            hip,
-                        }
-                    }
-                }
             }
         });
+
+        if(existingTrainerMemberRequest) {
+            throw new BadRequestException("You have already requested")
+        }
 
         const trainerMemberRequest = await prisma.memberRequest.create({
             data: {
                 memberId: userId,
                 memberTypeId: 2,
+                age,
+                gender,
+                yearOfExp,
+                reason,
+                certificates,
+                photos,
             },
             include: {
                 member: {
@@ -204,37 +158,7 @@ class MembershipService {
                         name: true,
                         email: true,
                         phone: true,
-                        profile: {
-                            select: {
-                                age: true,
-                                gender: true,
-                                yearOfExp: true,
-                                reason: true,
-                                certificates: true,
-                                photos: true,
-                            }
-                        },
-                        bodyMeasurement: {
-                            select: {
-                                heightFeet: true,
-                                heightInches: true,
-                                weight: true,
-                                neck: true,
-                                waist: true,
-                                shoulders: true,
-                                thigh: true,
-                                calf: true,
-                                arms: true,
-                                wrist: true,
-                                chest: true,
-                                hip: true,
-                            }
-                        },
-                        memberType: {
-                            select: {
-                                name: true,
-                            }
-                        },
+                        status: true
                     }
                 },
                 memberType: true,
@@ -249,4 +173,4 @@ class MembershipService {
     }
 }
 
-export default MembershipService;
+export default MemberRequestService;

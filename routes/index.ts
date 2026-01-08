@@ -23,6 +23,7 @@ import adminMealTypeRoute from "./admin/v1/meal-type.route";
 import adminMealRoute from "./admin/v1/meal.route";
 import adminBadHabitRoute from "./admin/v1/bad-habit.route";
 import adminWaterTrackerRoute from "./admin/v1/water-tracker.route";
+import adminMemberRequestRoute from "./admin/v1/member-request.route";
 
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
@@ -31,7 +32,7 @@ import memberPostRoute from "./member/v1/post.route";
 import memberTagRoute from "./member/v1/tag.route";
 import memberMemberTypeRoute from "./member/v1/member-type.route";
 import memberPlanRoute from "./member/v1/member-plan.route";
-import membershipRoute from "./member/v1/membership.route";
+import memberRequestRoute from "./member/v1/member-request.route";
 
 const router = Router();
 
@@ -58,14 +59,15 @@ router.use("/admin/v1/meal-types", adminMealTypeRoute);
 router.use("/admin/v1/meals", adminMealRoute);
 router.use("/admin/v1/bad-habits", adminBadHabitRoute);
 router.use("/admin/v1/water-trackers", adminWaterTrackerRoute);
+router.use("/admin/v1/member-requests", adminMemberRequestRoute);
 
 // Member Routes
 router.use("/member/v1/auth", memberAuthRoute);
-router.use("/member/v1", memberProfileRoute);
+router.use("/member/v1/profile", memberProfileRoute);
 router.use("/member/v1/posts", memberPostRoute);
 router.use("/member/v1/tags", memberTagRoute);
 router.use("/member/v1/member-types", memberMemberTypeRoute);
 router.use("/member/v1/member-plans", memberPlanRoute);
-router.use("/member/v1/membership", membershipRoute);
+router.use("/member/v1/member-request", memberRequestRoute);
 
 export default router;

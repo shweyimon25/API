@@ -8,6 +8,7 @@ import {
 } from "../../../schemas/member/v1/profile.schema";
 import ProfileService from "../../../services/member/v1/profile.service";
 import { Request, Response } from "express";
+import { updateBodyMeasurementsSchema } from "../../../schemas/member/v1/auth.schema";
 
 class ProfileController {
   private profileService: ProfileService;
@@ -55,6 +56,17 @@ class ProfileController {
     );
 
     return successResponse(res, "Password changed successfully", member);
+  }
+
+  async updateBodyMeasurements(req: Request, res: Response) {
+    const { data, error, success } = await validater(updateBodyMeasurementsSchema, req.body);
+
+    if(!success) {
+      throw new ValidationException("Failed to update body measurement", error);
+    }
+
+    const member = await this.profileService.updateBodyMeasurements((req.user as Member).id, data);
+    return successResponse(res, "Body measurement updated successfully", member);
   }
 }
 

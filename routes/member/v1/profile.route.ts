@@ -6,24 +6,31 @@ import passport from "passport";
 const router = Router();
 const profileController = new ProfileController();
 
-router.get("/profile", [
+router.get("/", [
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
         async (req: Request, res: Response) => await profileController.profile(req, res)
     ),
 ]);
 
-router.post('/profile/update', [
+router.post('/update', [
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
         async (req: Request, res: Response) => await profileController.update(req, res)
     ),
 ]);
 
-router.post('/profile/change-password', [
+router.post('/change-password', [
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
         async (req: Request, res: Response) => await profileController.changePassword(req, res)
+    ),
+]);
+
+router.post('/body-measurements', [
+    passport.authenticate("jwt", { session: false }), 
+    asyncHandler(
+        async (req: Request, res: Response) => await profileController.updateBodyMeasurements(req, res)
     ),
 ]);
 

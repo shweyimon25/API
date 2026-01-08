@@ -1,18 +1,18 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
-import MembershipController from "../../../app/controllers/member/v1/membership.controller";
+import MemberRequestController from "../../../app/controllers/member/v1/member-request.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
 const router = Router();
-const membershipController = new MembershipController();
+const memberRequestController = new MemberRequestController();
 
 router
-    .route("/trainer-member-request")
+    .route("/trainer-member")
     .post([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(
             async (req: Request, res: Response) =>
-                await membershipController.trainerMemberRequest(req, res)
+                await memberRequestController.trainerMemberRequest(req, res)
         ),
     ]);
 

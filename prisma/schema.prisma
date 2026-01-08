@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -211,6 +211,14 @@ model MemberRequest {
   member         Member              @relation(fields: [memberId], references: [id])
   memberTypeId   Int
   memberType     MemberType          @relation(fields: [memberTypeId], references: [id])
+
+  age            Int?
+  gender         Gender?
+  yearOfExp      Int?
+  reason         String?             @db.Text()
+  certificates   Json?
+  photos         Json?
+
   status         MemberRequestStatus @default(PENDING)
   rejectedReason String?             @db.Text() // Only For Rejected Member Request
 
@@ -222,8 +230,6 @@ model MemberRequest {
   rejectedAt   DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-
-  @@unique([memberId, memberTypeId])
 }
 
 model Member {

@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { validater } from "../../../helpers/validator";
-import { trainerMemberRequestSchema } from "../../../schemas/member/v1/membership.schema";
+import { trainerMemberRequestSchema } from "../../../schemas/member/v1/member-request.schema";
 import { ValidationException } from "../../../helpers/exceptions";
-import MemberShipService from "../../../services/member/v1/membership.service";
-import MembershipService from "../../../services/member/v1/membership.service";
+import MemberShipService from "../../../services/member/v1/member-request.service";
+import MembershipService from "../../../services/member/v1/member-request.service";
 import { User } from "@prisma/client";
 import { successResponse } from "../../../helpers/response";
 
-class MemberShipController {
+class MemberRequestController {
     private membershipService: MemberShipService;
 
     constructor() {
@@ -22,8 +22,8 @@ class MemberShipController {
         }
 
         const trainerMember = await this.membershipService.trainerMemberRequest(data, req.files as Express.Multer.File[], (req.user as User).id);
-        return successResponse(res, "Trainer member request sent successfully", trainerMember);
+        return successResponse(res, "Trainer member request successfully", trainerMember);
     }
 }
 
-export default MemberShipController;
+export default MemberRequestController;

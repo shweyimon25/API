@@ -1,6 +1,7 @@
 import prisma from "../../../../prisma/client";
 import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { comparePassword, hashPassword } from "../../../helpers/helper";
+import { UpdateBodyMeasurementsInput } from "../../../schemas/member/v1/auth.schema";
 import { ChangePasswordInput, UpdateProfileInput } from "../../../schemas/member/v1/profile.schema";
 
 class ProfileService {
@@ -93,6 +94,78 @@ class ProfileService {
         });
 
         return this.profile(id);
+    }
+
+    async updateBodyMeasurements(id: number, updateBodyMeasurementsInput: UpdateBodyMeasurementsInput) {
+        const {
+            heightFeet,
+            heightInches,
+            weight,
+            neck,
+            waist,
+            shoulders,
+            thigh,
+            calf,
+            arms,
+            wrist,
+            chest,
+            hip } = updateBodyMeasurementsInput;
+
+        const member = await prisma.member.update({
+            where: { id },
+            data: {
+                bodyMeasurement: {
+                    upsert: {
+                        create: {
+                            heightFeet,
+                            heightInches,
+                            weight,
+                            neck,
+                            waist,
+                            shoulders,
+                            thigh,
+                            calf,
+                            arms,
+                            wrist,
+                            chest,
+                            hip,
+                        },
+                        update: {
+                            heightFeet,
+                            heightInches,
+                            weight,
+                            neck,
+                            waist,
+                            shoulders,
+                            thigh,
+                            calf,
+                            arms,
+                            wrist,
+                            chest,
+                            hip,
+                        }
+                    }
+                }
+            },
+            select: {
+                id: true,
+                code: true,
+                name: true,
+                email: true,
+                phone: true,
+                status: true,
+                bodyMeasurement: true,
+                profile: true,
+                memberType: true,
+                providerTypes: true,
+                language: true,
+                theme: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        });
+
+        return member;
     }
 }
 

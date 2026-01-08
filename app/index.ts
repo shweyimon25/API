@@ -9,8 +9,6 @@ import { createServer } from "node:http";
 import "./middlewares/passport/jwt-strategy";
 import multer from "multer";
 import loggerMiddleware from "./middlewares/logger.middleware";
-import swaggerUi from "swagger-ui-express";
-import swaggerSpec from "./docs/swagger";
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -22,8 +20,6 @@ app.use(express.json());
 app.use("/public/uploads", express.static("public/uploads"));
 app.use(cors({ origin: "*" }));
 app.use(express.urlencoded({ extended: true }));
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get("/docs.json", (_req, res) => res.json(swaggerSpec));
 
 // Routes
 app.use("/api", upload.any(), routes);
