@@ -112,7 +112,7 @@ class AuthController {
         },
       });
 
-      await sendOTPEmail(data.providerValue, newOtp); 
+      await sendOTPEmail(data.providerValue, newOtp);
 
       if (existingOtp) {
         await prisma.oTP.update({
@@ -387,6 +387,9 @@ class AuthController {
             address: data.address,
           },
         },
+        bodyMeasurement: {
+          create: {},
+        },
         password: hashPassword(data.password),
         status: Status.ACTIVE,
         providerTypes: {
@@ -433,6 +436,10 @@ class AuthController {
       user: member,
       token,
     });
+  }
+
+  async updateBodyMeasurements() {
+    
   }
 }
 

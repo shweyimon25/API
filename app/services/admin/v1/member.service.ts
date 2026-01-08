@@ -235,6 +235,9 @@ class MemberService {
             bio,
           },
         },
+        bodyMeasurement: {
+          create: {},
+        },
         providerTypes: {
           create: {
             providerType: ProviderType.EMAIL,

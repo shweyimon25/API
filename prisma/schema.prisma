@@ -74,6 +74,8 @@ model User {
   mealsUpdated               Meal[]               @relation("MealUpdatedBy")
   badHabitsCreated           BadHabit[]           @relation("BadHabitCreatedBy")
   badHabitsUpdated           BadHabit[]           @relation("BadHabitUpdatedBy")
+  memberRequestsApproved     MemberRequest[]      @relation("MemberRequestApprovedBy")
+  memberRequestsRejected     MemberRequest[]      @relation("MemberRequestRejectedBy")
 }
 
 model Role {
@@ -134,14 +136,15 @@ model MemberType {
   members Member[]
   status  Status   @default(ACTIVE)
 
-  deletedAt   DateTime?
-  createdById Int?
-  updatedById Int?
-  createdBy   User?        @relation("MemberTypeCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?        @relation("MemberTypeUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  memberPlans MemberPlan[]
+  deletedAt      DateTime?
+  createdById    Int?
+  updatedById    Int?
+  createdBy      User?           @relation("MemberTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy      User?           @relation("MemberTypeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  memberPlans    MemberPlan[]
+  memberRequests MemberRequest[]
 }
 
 model MemberPlan {
@@ -202,6 +205,27 @@ model Cons {
   updatedAt   DateTime  @updatedAt
 }
 
+model MemberRequest {
+  id             Int                 @id @default(autoincrement())
+  memberId       Int
+  member         Member              @relation(fields: [memberId], references: [id])
+  memberTypeId   Int
+  memberType     MemberType          @relation(fields: [memberTypeId], references: [id])
+  status         MemberRequestStatus @default(PENDING)
+  rejectedReason String?             @db.Text() // Only For Rejected Member Request
+
+  approvedById Int?
+  approvedBy   User?     @relation("MemberRequestApprovedBy", fields: [approvedById], references: [id])
+  rejectedById Int?
+  rejectedBy   User?     @relation("MemberRequestRejectedBy", fields: [rejectedById], references: [id])
+  approvedAt   DateTime?
+  rejectedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([memberId, memberTypeId])
+}
+
 model Member {
   id           Int         @id @default(autoincrement())
   name         String
@@ -233,6 +257,8 @@ model Member {
   shopRatings      ShopRating[]
   shopPostComments ShopPostComment[]
   waterTrackers    WaterTracker[]
+  memberRequests   MemberRequest[]
+  bodyMeasurement  BodyMeasurement?
 }
 
 model OTP {
@@ -258,6 +284,12 @@ enum ProviderType {
   PHONE
 }
 
+enum MemberRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model MemberProviderType {
   id       Int    @id @default(autoincrement())
   memberId Int
@@ -281,8 +313,32 @@ model MemberProfile {
   bio          String? @db.Text()
   gender       Gender?
   age          Int?
-  yearOfExp    Int? // Only For Trainer
-  reason       String? // Only For Trainer
+  yearOfExp    Int?    @default(0) // Only For Trainer Member
+  reason       String? @db.Text() // Only For Trainer Member
+  certificates Json? // Only For Trainer Member
+  photos       Json? // Only For Trainer Member
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BodyMeasurement {
+  id       Int    @id @default(autoincrement())
+  memberId Int    @unique
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  heightFeet   String?
+  heightInches String?
+  weight       String?
+  neck         String?
+  waist        String?
+  shoulders    String?
+  thigh        String?
+  calf         String?
+  arms         String?
+  wrist        String?
+  chest        String?
+  hip          String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

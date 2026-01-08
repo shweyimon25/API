@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { PhysicalLimitationCollection } from "../../../resources/admin/v1/physical-limitation/physical-limitation.collection";
 import { PhysicalLimitationResource } from "../../../resources/admin/v1/physical-limitation/physical-limitation.resource";
+import { User } from "@prisma/client";
 
 class PhysicalLimitationController {
   private physicalLimitationService: PhysicalLimitationService;
@@ -76,12 +77,12 @@ class PhysicalLimitationController {
       );
     }
 
-    const userId = (req.user as any)?.id;
     const physicalLimitation = await this.physicalLimitationService.create(
       data,
-      userId,
+      (req.user as User).id,
       req.files as Express.Multer.File[]
     );
+
     return successResponse(
       res,
       "Physical limitation created successfully",
@@ -102,13 +103,13 @@ class PhysicalLimitationController {
       );
     }
 
-    const userId = (req.user as any)?.id;
     const physicalLimitation = await this.physicalLimitationService.update(
       +req.params.id,
       data,
-      userId,
+      (req.user as User).id,
       req.files as Express.Multer.File[]
     );
+
     return successResponse(
       res,
       "Physical limitation updated successfully",

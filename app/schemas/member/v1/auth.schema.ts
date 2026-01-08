@@ -107,7 +107,23 @@ export const sigInSchema = z
     }
   });
 
+export const updateBodyMeasurementsSchema = z.object({
+  heightFeet: z.string().min(1, { message: "Height in feet is required" }),
+  heightInches: z.string().min(1, { message: "Height in inches is required" }),
+  weight: z.string().min(1, { message: "Weight is required" }),
+  neck: z.string().min(1, { message: "Neck is required" }),
+  waist: z.string().min(1, { message: "Waist is required" }),
+  shoulders: z.string().min(1, { message: "Shoulders is required" }),
+  thigh: z.string().min(1, { message: "Thigh is required" }),
+  calf: z.string().min(1, { message: "Calf is required" }),
+  arms: z.string().min(1, { message: "Arms is required" }),
+  wrist: z.string().min(1, { message: "Wrist is required" }),
+  chest: z.string().min(1, { message: "Chest is required" }),
+  hip: z.string().min(1, { message: "Hip is required" }),
+});
+
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type SignInInput = z.infer<typeof sigInSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
+export type UpdateBodyMeasurementsInput = z.infer<typeof updateBodyMeasurementsSchema>;

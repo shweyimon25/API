@@ -1,12 +1,34 @@
-import { Status } from "@prisma/client";
+import { ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { TrainerMemberRequestInput } from "../../../schemas/member/v1/membership.schema";
-import { NotFoundException } from "../../../helpers/exceptions";
+import { BadRequestException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import { upload } from "../../../helpers/media-upload";
 
 class MembershipService {
-    async trainerMemberRequest(trainerMemberRequestInput: TrainerMemberRequestInput) {
-        const { memberPlanId, age, email, phone, yearOfExp, reason } = trainerMemberRequestInput;
+    async trainerMemberRequest(trainerMemberRequestInput: TrainerMemberRequestInput, files: Express.Multer.File[], userId: number) {
+        const {
+            memberPlanId,
+            age,
+            email,
+            phone,
+            yearOfExp,
+            reason,
+            gender,
+            heightFeet,
+            heightInches,
+            weight,
+            neck,
+            waist,
+            shoulders,
+            thigh,
+            calf,
+            arms,
+            wrist,
+            chest,
+            hip,
+        } = trainerMemberRequestInput;
 
+        // Check member plan is existed
         const memberPlan = await prisma.memberPlan.findFirst({
             where: {
                 id: memberPlanId,
@@ -22,11 +44,208 @@ class MembershipService {
             throw new NotFoundException("Member plan not found");
         }
 
-        console.log(memberPlan);
+        // Check member is existed
+        const member = await prisma.member.findUnique({
+            where: {
+                id: userId,
+            },
+            include: {
+                providerTypes: true,
+            }
+        });
+
+        if (!member) {
+            throw new NotFoundException("Member not found");
+        }
+
+        if (member?.providerTypes.some(providerType => providerType.providerType === ProviderType.PHONE || providerType.providerType === ProviderType.APPLE || providerType.providerType === ProviderType.FACEBOOK)) {
+            if (!email) {
+                throw new ValidationException("Member request failed", [
+                    {
+                        field: "email",
+                        issue: "Email is required",
+                    },
+                ]);
+            }
+        }
+
+        if (member?.providerTypes.some(providerType => providerType.providerType === ProviderType.EMAIL || providerType.providerType === ProviderType.GOOGLE)) {
+            if (!phone) {
+                throw new ValidationException("Member request failed", [
+                    {
+                        field: "phone",
+                        issue: "Phone is required",
+                    },
+                ]);
+            }
+        }
+
+        // Upload trainer member photos 
+        const photoFiles = files.filter((file: Express.Multer.File) => file.fieldname === "photos");
+        const photos = await Promise.all(
+            photoFiles.map(async (file: Express.Multer.File) => {
+                const { fileUrl } = await upload(file, "trainer-member-photos");
+                return fileUrl;
+            })
+        );
+
+        if (photos.length === 0 || photos.length < 5) {
+            throw new ValidationException("Member request failed", [
+                {
+                    field: "photos",
+                    issue: "Photos are required and must be less than or equal to 5",
+                },
+            ]);
+        }
+
+        // Upload trainer member certificate
+        const certificateFiles = files.filter((file: Express.Multer.File) => file.fieldname === "certificates");
+
+        const certificates = await Promise.all(
+            certificateFiles.map(async (file: Express.Multer.File) => {
+                const { fileUrl } = await upload(file, "trainer-member-certificates");
+                return fileUrl;
+            })
+        );
+
+        // Member must be a trainer or a member with no member type
+        const existingMember = await prisma.member.findFirst({
+            where: {
+                AND: [
+                    {
+                        id: userId,
+                    },
+                    {
+                        OR: [
+                            {
+                                memberTypeId: null,
+                            },
+                            {
+                                memberTypeId: 2,
+                            },
+                        ]
+                    }
+                ]
+            },
+            include: {
+                profile: true,
+                bodyMeasurement: true,
+            }
+        });
+
+        if (existingMember?.memberTypeId === 1) {
+            throw new BadRequestException("Cannot request to become a trainer because you are a gym member")
+        }
+
+        if (existingMember?.memberTypeId === 2) {
+            throw new BadRequestException("Cannot request to become a trainer because you are already a trainer")
+        }
+
+        const updateMember = await prisma.member.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                memberTypeId: 2,
+                profile: {
+                    update: {
+                        age,
+                        gender,
+                        yearOfExp,
+                        reason,
+                        certificates,
+                        photos,
+                    }
+                },
+                bodyMeasurement: {
+                    upsert: {
+                        create: {
+                            heightFeet,
+                            heightInches,
+                            weight,
+                            neck,
+                            waist,
+                            shoulders,
+                            thigh,
+                            calf,
+                            arms,
+                            wrist,
+                            chest,
+                            hip,
+                        },
+                        update: {
+                            heightFeet,
+                            heightInches,
+                            weight,
+                            neck,
+                            waist,
+                            shoulders,
+                            thigh,
+                            calf,
+                            arms,
+                            wrist,
+                            chest,
+                            hip,
+                        }
+                    }
+                }
+            }
+        });
+
+        const trainerMemberRequest = await prisma.memberRequest.create({
+            data: {
+                memberId: userId,
+                memberTypeId: 2,
+            },
+            include: {
+                member: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        profile: {
+                            select: {
+                                age: true,
+                                gender: true,
+                                yearOfExp: true,
+                                reason: true,
+                                certificates: true,
+                                photos: true,
+                            }
+                        },
+                        bodyMeasurement: {
+                            select: {
+                                heightFeet: true,
+                                heightInches: true,
+                                weight: true,
+                                neck: true,
+                                waist: true,
+                                shoulders: true,
+                                thigh: true,
+                                calf: true,
+                                arms: true,
+                                wrist: true,
+                                chest: true,
+                                hip: true,
+                            }
+                        },
+                        memberType: {
+                            select: {
+                                name: true,
+                            }
+                        },
+                    }
+                },
+                memberType: true,
+            }
+        });
+
+        return trainerMemberRequest;
     }
 
     async gymMemberRequest() {
-
+        //
     }
 }
 
