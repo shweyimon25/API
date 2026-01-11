@@ -14,6 +14,7 @@ import bodyAttentionAreaSeeder from "./body-attention-area.seeder";
 import badHabitSeeder from "./bad-habit.seeder";
 import categorySeeder from "./category.seeder";
 import memberPlanSeeder from "./member-plan.seeder";
+import bankInformationSeeder from "./bank-information.seeder";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ const main = async () => {
   try {
     await permissionSeeder();
     await roleSeeder();
+    await bankInformationSeeder();
     await adminUserSeeder();
     await memberTypeSeeder();
     await proSeeder();

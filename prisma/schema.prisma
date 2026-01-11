@@ -76,6 +76,8 @@ model User {
   badHabitsUpdated           BadHabit[]           @relation("BadHabitUpdatedBy")
   memberRequestsApproved     MemberRequest[]      @relation("MemberRequestApprovedBy")
   memberRequestsRejected     MemberRequest[]      @relation("MemberRequestRejectedBy")
+  paymentsCancelled          Payment[]            @relation("PaymentCancelledBy")
+  paymentsApproved           Payment[]            @relation("PaymentApprovedBy")
 }
 
 model Role {
@@ -145,6 +147,7 @@ model MemberType {
   updatedAt      DateTime        @updatedAt
   memberPlans    MemberPlan[]
   memberRequests MemberRequest[]
+  payments       Payment[]
 }
 
 model MemberPlan {
@@ -206,18 +209,18 @@ model Cons {
 }
 
 model MemberRequest {
-  id             Int                 @id @default(autoincrement())
-  memberId       Int
-  member         Member              @relation(fields: [memberId], references: [id])
-  memberTypeId   Int
-  memberType     MemberType          @relation(fields: [memberTypeId], references: [id])
+  id           Int        @id @default(autoincrement())
+  memberId     Int
+  member       Member     @relation(fields: [memberId], references: [id])
+  memberTypeId Int
+  memberType   MemberType @relation(fields: [memberTypeId], references: [id])
 
-  age            Int?
-  gender         Gender?
-  yearOfExp      Int?
-  reason         String?             @db.Text()
-  certificates   Json?
-  photos         Json?
+  age          Int?
+  gender       Gender?
+  yearOfExp    Int?
+  reason       String? @db.Text()
+  certificates Json?
+  photos       Json?
 
   status         MemberRequestStatus @default(PENDING)
   rejectedReason String?             @db.Text() // Only For Rejected Member Request
@@ -744,19 +747,41 @@ model BankInformation {
   updatedBy   User?     @relation("BankInformationUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  payments    Payment[]
 }
 
 model Payment {
-  id           Int           @id @default(autoincrement())
-  memberId     Int
-  member       Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  memberPlan   MemberPlan    @relation(fields: [memberPlanId], references: [id])
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  memberPlan   MemberPlan @relation(fields: [memberPlanId], references: [id])
   memberPlanId Int
-  amount       Int           @default(0)
-  attachment   String
-  status       PaymentStatus @default(OPEN)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+
+  memberTypeId Int
+  memberType   MemberType @relation(fields: [memberTypeId], references: [id])
+
+  bankInformationId Int
+  bankInformation   BankInformation @relation(fields: [bankInformationId], references: [id])
+
+  amount      Int       @default(0)
+  attachment  String
+  requestDate DateTime? @default(now())
+
+  status PaymentStatus @default(DRAFT)
+
+  approvedBy   User?     @relation("PaymentApprovedBy", fields: [approvedById], references: [id])
+  approvedById Int?
+  approvedAt   DateTime?
+
+  cancelledBy     User?     @relation("PaymentCancelledBy", fields: [cancelledById], references: [id])
+  cancelledById   Int?
+  cancelledAt     DateTime?
+  cancelledReason String?   @db.Text()
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PaymentTypes {
@@ -765,9 +790,10 @@ enum PaymentTypes {
 }
 
 enum PaymentStatus {
-  OPEN
-  PAID
+  DRAFT
+  CONFIRMED
   CANCELLED
+  PAID
 }
 
 enum Status {

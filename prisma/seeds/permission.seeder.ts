@@ -486,7 +486,21 @@ const permissionSeeder = async () => {
     {
       name: "workout:delete",
       description: "Delete a workout",
-    }
+    },
+
+    // Payment 
+    {
+      name: "payment:list",
+      description: "Show all payments",
+    },
+    {
+      name: "payment:read",
+      description: "Show payment details",
+    },
+    {
+      name: "payment:update",
+      description: "Update a payment",
+    },
   ];
 
   for (const permission of permissions) {
