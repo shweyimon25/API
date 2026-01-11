@@ -1,23 +1,37 @@
 import { z } from "zod";
-import { Status } from "@prisma/client";
+import { Gender, Status } from "@prisma/client";
 
 export const createMemberSchema = z
   .object({
-    name: z.string().min(1, { message: "Name is required" }),
-    email: z.string().email({ message: "Invalid email address" }).optional(),
+    name: z.string({
+      message: "Name is required",
+    }),
+    email: z.string({
+      message: "Email is required",
+    }).email({
+      message: "Invalid email address",
+    }),
     phone: z
-      .string()
-      .min(9, { message: "Phone must be at least 9 digits long" })
-      .max(15, { message: "Phone must be at most 15 digits long" })
-      .optional(),
-    memberTypeId: z.coerce.number().min(1, { message: "Member type id is required" }),
+      .string({
+        message: "Phone is required",
+      })
+      .min(9, {
+        message: "Phone must be at least 9 digits long",
+      })
+      .max(15, {
+        message: "Phone must be at most 15 digits long",
+      }),
     address: z
       .string().optional(),
     bio: z
       .string().optional(),
-    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+    gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.BOTH], { message: "Gender must be MALE | FEMALE | BOTH" }).optional(),
+    age: z.coerce.number().optional(),
+    status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
     password: z
-      .string()
+      .string({
+        message: "Password is required",
+      })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
         {
@@ -25,24 +39,13 @@ export const createMemberSchema = z
             "Password must include uppercase, lowercase, number, and special character",
         }
       ),
-    passwordConfirm: z.string(),
+    passwordConfirm: z.string({
+      message: "Password confirmation is required",
+    }),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Passwords don't match",
     path: ["passwordConfirm"],
-  })
-  .refine((data) => {
-    if (data.email !== undefined) {
-      return z
-        .string()
-        .email({ message: "Invalid email address" });
-    }
-    if (data.phone !== undefined) {
-      return z
-        .string()
-        .min(9, { message: "Phone must be at least 9 characters" })
-        .max(15, { message: "Phone must be at most 15 characters" });
-    }
   });
 
 export const updateMemberSchema = z
@@ -62,16 +65,15 @@ export const updateMemberSchema = z
         message: "Phone must be at most 15 characters",
       })
       .optional(),
-    memberTypeId: z.coerce
-      .number()
-      .optional(),
     address: z
       .string()
       .optional(),
     bio: z
       .string()
       .optional(),
-    status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+    gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.BOTH], { message: "Gender must be MALE | FEMALE | BOTH" }).optional(),
+    age: z.coerce.number().optional(),
+    status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
     password: z
       .string()
       .regex(
@@ -97,19 +99,6 @@ export const updateMemberSchema = z
     {
       message: "Passwords don't match",
       path: ["passwordConfirm"],
-    }
-  )
-  .refine(
-    (data) => {
-      // If passwordConfirm is provided, password must also be provided
-      if (data.passwordConfirm && !data.password) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Password is required when password confirm is provided",
-      path: ["password"],
     }
   );
 

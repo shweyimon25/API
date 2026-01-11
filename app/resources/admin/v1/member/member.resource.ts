@@ -1,22 +1,23 @@
+import { ProviderType } from "@prisma/client";
+
 export class MemberResource {
   static toResource(member: any) {
     return {
       id: member.id,
       name: member.name,
       email: member.email,
-      username: member.username,
+      phone: member.phone,
+      language: member.language,
+      theme: member.theme,
+      code: member.code,
       status: member.status,
-      providerTypes: member.providerTypes
-        ? member.providerTypes.map((pt: any) => pt.providerType)
-        : [],
-      memberType: member.memberType
-        ? {
-            id: member.memberType.id,
-            name: member.memberType.name,
-          }
-        : null,
+      profile: member.profile,
+      providerTypes: member.providerTypes?.map((item: { providerType: ProviderType }) => item.providerType),
+      memberType: member.memberType,
       createdAt: member.createdAt,
       updatedAt: member.updatedAt,
+      createdBy: member.createdBy,
+      updatedBy: member.updatedBy,
     };
   }
 }

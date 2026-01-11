@@ -44,7 +44,8 @@ model User {
   prosUpdated                Pros[]               @relation("ProsUpdatedBy")
   consCreated                Cons[]               @relation("ConsCreatedBy")
   consUpdated                Cons[]               @relation("ConsUpdatedBy")
-  memberCreaded              Member[]             @relation("MemberCreatedBy")
+  memberCreated              Member[]             @relation("MemberCreatedBy")
+  memberDeleted              Member[]             @relation("MemberDeletedBy")
   memberUpdated              Member[]             @relation("MemberUpdatedBy")
   bodyGoalsCreated           BodyGoal[]           @relation("BodyGoalCreatedBy")
   bodyGoalsUpdated           BodyGoal[]           @relation("BodyGoalUpdatedBy")
@@ -239,8 +240,8 @@ model Member {
   id           Int         @id @default(autoincrement())
   name         String
   code         String      @unique // YC0244
-  email        String?     @unique
-  phone        String?     @unique
+  email        String?
+  phone        String?
   password     String
   memberType   MemberType? @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int?
@@ -252,9 +253,11 @@ model Member {
   status   Status   @default(ACTIVE)
 
   deletedAt   DateTime?
+  deletedById Int?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  deletedBy   User?     @relation("MemberDeletedBy", fields: [deletedById], references: [id])
   updatedBy   User?     @relation("MemberUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

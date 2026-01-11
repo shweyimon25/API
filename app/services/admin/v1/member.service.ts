@@ -1,4 +1,4 @@
-import { ProviderType, Status } from "@prisma/client";
+import { Prisma, ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import {
   NotFoundException,
@@ -10,55 +10,10 @@ import {
   UpdateMemberInput,
 } from "../../../schemas/admin/v1/member.schema";
 
-interface MemberFilters {
-  status?: Status;
-  search?: string;
-  memberTypeId?: number;
-}
-
 class MemberService {
-  private where(filters?: MemberFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.memberTypeId) {
-      where.memberTypeId = filters.memberTypeId;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        {
-          name: {
-            contains: filters.search,
-          },
-        },
-        {
-          email: {
-            contains: filters.search,
-          },
-        },
-        {
-          phone: {
-            contains: filters.search,
-          },
-        },
-        {
-          code: {
-            contains: filters.search,
-          },
-        },
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: MemberFilters) {
+  async findAll(where?: Prisma.MemberWhereInput) {
     const members = await prisma.member.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -71,6 +26,20 @@ class MemberService {
         theme: true,
         code: true,
         status: true,
+        profile: {
+          select: {
+            address: true,
+            bio: true,
+            gender: true,
+            profilePhoto: true,
+            coverPhoto: true,
+            age: true,
+            yearOfExp: true,
+            reason: true,
+            certificates: true,
+            photos: true,
+          },
+        },
         providerTypes: {
           select: {
             providerType: true,
@@ -84,15 +53,27 @@ class MemberService {
         },
         createdAt: true,
         updatedAt: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     return members;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: MemberFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.MemberWhereInput) {
     const members = await prisma.member.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -107,6 +88,20 @@ class MemberService {
         theme: true,
         code: true,
         status: true,
+        profile: {
+          select: {
+            address: true,
+            bio: true,
+            gender: true,
+            profilePhoto: true,
+            coverPhoto: true,
+            age: true,
+            yearOfExp: true,
+            reason: true,
+            certificates: true,
+            photos: true,
+          },
+        },
         providerTypes: {
           select: {
             providerType: true,
@@ -120,11 +115,23 @@ class MemberService {
         },
         createdAt: true,
         updatedAt: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     const totalMembers = await prisma.member.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -156,6 +163,20 @@ class MemberService {
         language: true,
         theme: true,
         status: true,
+        profile: {
+          select: {
+            address: true,
+            bio: true,
+            gender: true,
+            profilePhoto: true,
+            coverPhoto: true,
+            age: true,
+            yearOfExp: true,
+            reason: true,
+            certificates: true,
+            photos: true,
+          },
+        },
         providerTypes: {
           select: {
             providerType: true,
@@ -166,6 +187,18 @@ class MemberService {
             id: true,
             name: true,
           },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true
+          }
         },
         createdAt: true,
         updatedAt: true,
@@ -179,12 +212,30 @@ class MemberService {
     return member;
   }
 
-  async create(createMemberInput: CreateMemberInput) {
-    const { name, email, phone, password, memberTypeId, address, bio, status } =
+  async findCommonAll(where?: Prisma.MemberWhereInput) {
+    const members = await prisma.member.findMany({
+      where: {
+        status: Status.ACTIVE,
+        deletedAt: null,
+        ...where,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+      },
+    });
+    return members;
+  }
+
+  async create(createMemberInput: CreateMemberInput, userId: number) {
+    const { name, email, phone, password, address, bio, age, gender, status } =
       createMemberInput;
 
-    // Check member email is existed
-    if (email && email !== "") {
+    if (email) {
       const existingEmail = await prisma.member.findFirst({
         where: {
           email,
@@ -201,8 +252,7 @@ class MemberService {
       }
     }
 
-    // Check member phone is existed
-    if (phone && phone !== "") {
+    if (phone) {
       const existingPhone = await prisma.member.findFirst({
         where: {
           phone,
@@ -219,7 +269,6 @@ class MemberService {
       }
     }
 
-    // Create member
     const member = await prisma.member.create({
       data: {
         name,
@@ -227,12 +276,13 @@ class MemberService {
         email,
         phone,
         password: hashPassword(password),
-        memberTypeId,
         status: status ?? Status.ACTIVE,
         profile: {
           create: {
             address,
             bio,
+            age,
+            gender
           },
         },
         bodyMeasurement: {
@@ -243,17 +293,19 @@ class MemberService {
             providerType: ProviderType.EMAIL,
           },
         },
+        createdBy: {
+          connect: { id: userId }
+        },
       },
     });
 
     return this.findOne(member.id);
   }
 
-  async update(id: number, updateMemberInput: UpdateMemberInput) {
-    const { name, email, phone, password, memberTypeId, address, bio, status } =
+  async update(id: number, updateMemberInput: UpdateMemberInput, userId: number) {
+    const { name, email, phone, password, address, bio, age, gender, status } =
       updateMemberInput;
 
-    // Check member is existed
     const existingMember = await prisma.member.findUnique({
       where: {
         id,
@@ -267,45 +319,46 @@ class MemberService {
       throw new NotFoundException("Member not found");
     }
 
-    // Check member email is existed
-    const existingEmail = await prisma.member.findFirst({
-      where: {
-        email,
-        NOT: {
-          id,
+    if (email) {
+      const existingEmail = await prisma.member.findFirst({
+        where: {
+          email,
+          NOT: {
+            id,
+          },
         },
-      },
-    });
+      });
 
-    if (existingEmail) {
-      throw new ValidationException("Failed to update member", [
-        {
-          field: "email",
-          issue: "Email is already existed",
-        },
-      ]);
+      if (existingEmail) {
+        throw new ValidationException("Failed to update member", [
+          {
+            field: "email",
+            issue: "Email is already existed",
+          },
+        ]);
+      }
     }
 
-    // Check member phone is existed
-    const existingPhone = await prisma.member.findFirst({
-      where: {
-        phone,
-        NOT: {
-          id,
+    if (phone) {
+      const existingPhone = await prisma.member.findFirst({
+        where: {
+          phone,
+          NOT: {
+            id,
+          },
         },
-      },
-    });
+      });
 
-    if (existingPhone) {
-      throw new ValidationException("Failed to update member", [
-        {
-          field: "phone",
-          issue: "Phone is already existed",
-        },
-      ]);
+      if (existingPhone) {
+        throw new ValidationException("Failed to update member", [
+          {
+            field: "phone",
+            issue: "Phone is already existed",
+          },
+        ]);
+      }
     }
 
-    // Update member
     await prisma.member.update({
       where: {
         id,
@@ -315,32 +368,38 @@ class MemberService {
         email: email ? email : existingMember.email,
         phone: phone ? phone : existingMember.phone,
         password: password ? hashPassword(password) : existingMember.password,
-        memberTypeId: memberTypeId ? memberTypeId : existingMember.memberTypeId,
         status: status ?? existingMember.status,
         profile: {
           update: {
             address: address ?? existingMember.profile?.address,
             bio: bio ?? existingMember.profile?.bio,
+            age: age ?? existingMember.profile?.age,
+            gender: gender ?? existingMember.profile?.gender,
           },
         },
+        updatedBy: {
+          connect: { id: userId }
+        }
       },
     });
 
     return this.findOne(id);
   }
 
-  async destroy(id: number) {
-    // Find member
-    const member = await this.findOne(id);
+  async destroy(id: number, userId: number) {
+    await this.findOne(id);
 
-    // Delete member
-    await prisma.member.delete({
+    await prisma.member.update({
       where: {
         id,
       },
+      data: {
+        deletedAt: new Date(),
+        deletedBy: {
+          connect: { id: userId }
+        }
+      }
     });
-
-    return member;
   }
 }
 

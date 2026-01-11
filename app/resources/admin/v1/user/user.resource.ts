@@ -6,10 +6,10 @@ export class UserResource {
       email: user.email,
       username: user.username,
       status: user.status,
-      roles: user.roles.map((r: any) => {
+      roles: user.roles.map((role: any) => {
         return {
-          id: r.role.id,
-          name: r.role.name,
+          id: role.id,
+          name: role.name,
         };
       }),
       createdBy: user.createdBy,
