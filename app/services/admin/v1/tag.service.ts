@@ -7,33 +7,12 @@ import {
   BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { Status } from "@prisma/client";
-
-interface TagFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class TagService {
-  private where(filters?: TagFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: TagFilters) {
+  async findAll(where?: Prisma.TagWhereInput) {
     const tags = await prisma.tag.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -65,9 +44,9 @@ class TagService {
     return tags;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: TagFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.TagWhereInput) {
     const tags = await prisma.tag.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -99,7 +78,7 @@ class TagService {
     });
 
     const totalTags = await prisma.tag.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -152,6 +131,25 @@ class TagService {
     }
 
     return tag;
+  }
+
+  async findCommonAll(where?: Prisma.TagWhereInput) {
+    const tags = await prisma.tag.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return tags;
   }
 
   async create(createTagInput: CreateTagInput, userId: number) {
@@ -238,9 +236,13 @@ class TagService {
     const tag = await this.findOne(id);
 
     // Delete tag
-    await prisma.tag.delete({
+    await prisma.tag.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

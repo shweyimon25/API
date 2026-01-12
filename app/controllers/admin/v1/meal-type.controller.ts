@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { MealTypeCollection } from "../../../resources/admin/v1/meal-type/meal-type.collection";
 import { MealTypeResource } from "../../../resources/admin/v1/meal-type/meal-type.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class MealTypeController {
   private mealTypeService: MealTypeService;
@@ -18,22 +19,22 @@ class MealTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.MealTypeWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const mealTypes = await this.mealTypeService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const mealTypes = await this.mealTypeService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Meal type list successfully",
@@ -41,9 +42,7 @@ class MealTypeController {
       );
     }
 
-    const mealTypes = await this.mealTypeService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const mealTypes = await this.mealTypeService.findAll(where);
     return successResponse(
       res,
       "Meal type list successfully",
@@ -93,12 +92,8 @@ class MealTypeController {
   }
 
   async destroy(req: Request, res: Response) {
-    const mealType = await this.mealTypeService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Meal type deleted successfully",
-      MealTypeResource.toResource(mealType)
-    );
+    await this.mealTypeService.destroy(+req.params.id);
+    return successResponse(res, "Meal type deleted successfully");
   }
 }
 

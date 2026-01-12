@@ -3,18 +3,13 @@ import { Gender, Status } from "@prisma/client";
 
 export const createMemberSchema = z
   .object({
-    name: z.string({
-      message: "Name is required",
-    }),
-    email: z.string({
-      message: "Email is required",
-    }).email({
+    name: z.string().min(1, { message: "Name is required" }),
+    email: z.string().min(1, { message: "Email is required" }).email({
       message: "Invalid email address",
     }),
     phone: z
-      .string({
-        message: "Phone is required",
-      })
+      .string()
+      .min(1, { message: "Phone is required" })
       .min(9, {
         message: "Phone must be at least 9 digits long",
       })
@@ -29,9 +24,8 @@ export const createMemberSchema = z
     age: z.coerce.number().optional(),
     status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
     password: z
-      .string({
-        message: "Password is required",
-      })
+      .string()
+      .min(1, { message: "Password is required" })
       .regex(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
         {
@@ -39,9 +33,7 @@ export const createMemberSchema = z
             "Password must include uppercase, lowercase, number, and special character",
         }
       ),
-    passwordConfirm: z.string({
-      message: "Password confirmation is required",
-    }),
+    passwordConfirm: z.string().min(1, { message: "Password confirmation is required" }),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Passwords don't match",

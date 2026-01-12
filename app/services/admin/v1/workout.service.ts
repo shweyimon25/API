@@ -1,77 +1,124 @@
 import {
-    BadRequestException,
     NotFoundException,
     ValidationException,
 } from "../../../helpers/exceptions";
 import { CreateWorkoutInput, UpdateWorkoutInput } from "../../../schemas/admin/v1/workout.schema";
 import prisma from "../../../../prisma/client";
-import { Status } from "@prisma/client";
-
-interface WorkoutFilters {
-    status?: Status;
-    search?: string;
-    categoryId?: number;
-    bodyGoalId?: number;
-    placeId?: number;
-    memberPlanId?: number;
-}
+import { Prisma, Status } from "@prisma/client";
+import { upload } from "../../../helpers/media-upload";
 
 class WorkoutService {
-    private where(filters?: WorkoutFilters) {
-        const where: any = {};
-
-        if (filters?.status) {
-            where.status = filters.status;
-        }
-
-        if (filters?.search) {
-            where.name = {
-                contains: filters.search,
-            };
-        }
-
-        if (filters?.categoryId) {
-            where.categoryId = filters.categoryId;
-        }
-
-        if (filters?.bodyGoalId) {
-            where.bodyGoalId = filters.bodyGoalId;
-        }
-
-        if (filters?.placeId) {
-            where.placeId = filters.placeId;
-        }
-
-        if (filters?.memberPlanId) {
-            where.memberPlanId = filters.memberPlanId;
-        }
-
-        return where;
-    }
-
-    async findAll(filters?: WorkoutFilters) {
+    async findAll(where: Prisma.WorkoutWhereInput) {
         const workouts = await prisma.workout.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },
+            include: {
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                bodyGoal: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                proficientLevel: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                place: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                memberPlan: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                updatedBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            }
         });
 
         return workouts;
     }
 
-    async findByPaginate(page: number, perPage: number, filters?: WorkoutFilters) {
+    async findByPaginate(page: number, perPage: number, where: Prisma.WorkoutWhereInput) {
         const workouts = await prisma.workout.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },
             skip: (page - 1) * perPage,
             take: perPage,
+            include: {
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                bodyGoal: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                proficientLevel: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                place: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                memberPlan: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                updatedBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            }
         });
 
         const totalWorkouts = await prisma.workout.count({
-            where: this.where(filters),
+            where,
         });
 
         return {
@@ -90,10 +137,55 @@ class WorkoutService {
     }
 
     async findOne(id: number) {
-        const workout = await prisma.workout.findUnique({
+        const workout = await prisma.workout.findFirst({
             where: {
                 id,
+                deletedAt: null,
             },
+            include: {
+                category: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                bodyGoal: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                proficientLevel: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                place: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                memberPlan: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                updatedBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            }
         });
 
         if (!workout) {
@@ -103,7 +195,26 @@ class WorkoutService {
         return workout;
     }
 
-    async create(createWorkoutInput: CreateWorkoutInput, userId: number) {
+    async findCommonAll(where: Prisma.WorkoutWhereInput) {
+        const workouts = await prisma.workout.findMany({
+            orderBy: {
+                id: "desc",
+            },
+            where: {
+                ...where,
+                status: Status.ACTIVE,
+                deletedAt: null,
+            },
+            select: {
+                id: true,
+                name: true,
+            },
+        });
+
+        return workouts;
+    }
+
+    async create(createWorkoutInput: CreateWorkoutInput, files: Express.Multer.File[], userId: number) {
         const {
             name,
             gender,
@@ -118,9 +229,11 @@ class WorkoutService {
             status
         } = createWorkoutInput;
 
-        const category = await prisma.category.findUnique({
+        const category = await prisma.category.findFirst({
             where: {
-                id: +categoryId
+                id: +categoryId,
+                deletedAt: null,
+                status: Status.ACTIVE,
             },
         });
 
@@ -133,9 +246,11 @@ class WorkoutService {
             ]);
         }
 
-        const bodyGoal = await prisma.bodyGoal.findUnique({
+        const bodyGoal = await prisma.bodyGoal.findFirst({
             where: {
                 id: +bodyGoalId,
+                deletedAt: null,
+                status: Status.ACTIVE,
             },
         });
 
@@ -148,10 +263,12 @@ class WorkoutService {
             ]);
         }
 
-        const proficientLevel = await prisma.proficientLevel.findUnique({
+        const proficientLevel = await prisma.proficientLevel.findFirst({
             where: {
-                id: +proficientLevelId
-            }
+                id: +proficientLevelId,
+                status: Status.ACTIVE,
+                deletedAt: null,
+            },
         });
 
         if (!proficientLevel) {
@@ -163,9 +280,11 @@ class WorkoutService {
             ]);
         }
 
-        const place = await prisma.place.findUnique({
+        const place = await prisma.place.findFirst({
             where: {
                 id: +placeId,
+                deletedAt: null,
+                status: Status.ACTIVE,
             },
         });
 
@@ -178,9 +297,11 @@ class WorkoutService {
             ]);
         }
 
-        const memberPlan = await prisma.memberPlan.findUnique({
+        const memberPlan = await prisma.memberPlan.findFirst({
             where: {
                 id: +memberPlanId,
+                deletedAt: null,
+                status: Status.ACTIVE,
             },
         });
 
@@ -192,6 +313,21 @@ class WorkoutService {
                 },
             ]);
         }
+
+        const videoFile = files.find((file: Express.Multer.File) => file.fieldname === "video");
+        const thumbnailFile = files.find((file: Express.Multer.File) => file.fieldname === "thumbnail");
+
+        if (!videoFile) {
+            throw new ValidationException("Failed to create workout", [
+                {
+                    field: "video",
+                    issue: "Video file is required",
+                },
+            ]);
+        }
+
+        const { fileUrl: videoUrl } = await upload(videoFile, "workout-videos");
+        const { fileUrl: thumbnailUrl } = await upload(thumbnailFile, "workout-thumbnails");
 
         const workout = await prisma.workout.create({
             data: {
@@ -222,36 +358,53 @@ class WorkoutService {
                         id: memberPlanId
                     }
                 },
-                video: "https://",
+                video: videoUrl,
+                thumbnail: thumbnailUrl,
                 workoutDay,
                 videoDuration: 12121,
                 sets,
                 reps,
-                status: createWorkoutInput.status ?? Status.ACTIVE,
+                status: status ?? Status.ACTIVE,
+                createdBy: {
+                    connect: {
+                        id: userId
+                    }
+                },
             },
         });
 
         return this.findOne(workout.id);
     }
 
-    async update(id: number, updateWorkoutInput: UpdateWorkoutInput, userId: number) {
-        // Check workout exists
-        const existingWorkout = await prisma.workout.findUnique({
+    async update(id: number, updateWorkoutInput: UpdateWorkoutInput, files: Express.Multer.File[], userId: number) {
+        const {
+            name,
+            gender,
+            categoryId,
+            bodyGoalId,
+            proficientLevelId,
+            placeId,
+            memberPlanId,
+            workoutDay,
+            sets,
+            reps,
+            status
+        } = updateWorkoutInput;
+
+        const existingWorkout = await prisma.workout.findFirst({
             where: {
                 id,
+                deletedAt: null,
             },
         });
 
         if (!existingWorkout) {
-            throw new BadRequestException("Workout not found");
+            throw new NotFoundException("Workout not found");
         }
 
-        // Validate referenced entities only when ids are provided
-        const { categoryId, bodyGoalId, proficientLevelId, placeId, memberPlanId } = updateWorkoutInput;
-
         if (categoryId && categoryId !== existingWorkout.categoryId) {
-            const category = await prisma.category.findUnique({
-                where: { id: categoryId },
+            const category = await prisma.category.findFirst({
+                where: { id: +categoryId, deletedAt: null, status: Status.ACTIVE },
             });
             if (!category) {
                 throw new ValidationException("Failed to update workout", [
@@ -264,9 +417,10 @@ class WorkoutService {
         }
 
         if (bodyGoalId && bodyGoalId !== existingWorkout.bodyGoalId) {
-            const bodyGoal = await prisma.bodyGoal.findUnique({
-                where: { id: bodyGoalId },
+            const bodyGoal = await prisma.bodyGoal.findFirst({
+                where: { id: +bodyGoalId, deletedAt: null, status: Status.ACTIVE },
             });
+
             if (!bodyGoal) {
                 throw new ValidationException("Failed to update workout", [
                     {
@@ -278,8 +432,8 @@ class WorkoutService {
         }
 
         if (proficientLevelId && proficientLevelId !== existingWorkout.proficientLevelId) {
-            const proficientLevel = await prisma.proficientLevel.findUnique({
-                where: { id: proficientLevelId },
+            const proficientLevel = await prisma.proficientLevel.findFirst({
+                where: { id: +proficientLevelId, deletedAt: null, status: Status.ACTIVE },
             });
             if (!proficientLevel) {
                 throw new ValidationException("Failed to update workout", [
@@ -292,8 +446,8 @@ class WorkoutService {
         }
 
         if (placeId && placeId !== existingWorkout.placeId) {
-            const place = await prisma.place.findUnique({
-                where: { id: placeId },
+            const place = await prisma.place.findFirst({
+                where: { id: +placeId, deletedAt: null, status: Status.ACTIVE },
             });
             if (!place) {
                 throw new ValidationException("Failed to update workout", [
@@ -306,8 +460,8 @@ class WorkoutService {
         }
 
         if (memberPlanId && memberPlanId !== existingWorkout.memberPlanId) {
-            const memberPlan = await prisma.memberPlan.findUnique({
-                where: { id: memberPlanId },
+            const memberPlan = await prisma.memberPlan.findFirst({
+                where: { id: +memberPlanId, deletedAt: null, status: Status.ACTIVE },
             });
             if (!memberPlan) {
                 throw new ValidationException("Failed to update workout", [
@@ -319,38 +473,78 @@ class WorkoutService {
             }
         }
 
-        // Build partial update payload to avoid overwriting with undefined
-        const data: Record<string, unknown> = {};
-        if (updateWorkoutInput.name !== undefined) data.name = updateWorkoutInput.name;
-        if (updateWorkoutInput.gender !== undefined) data.gender = updateWorkoutInput.gender;
-        if (updateWorkoutInput.categoryId !== undefined) data.categoryId = updateWorkoutInput.categoryId;
-        if (updateWorkoutInput.bodyGoalId !== undefined) data.bodyGoalId = updateWorkoutInput.bodyGoalId;
-        if (updateWorkoutInput.proficientLevelId !== undefined) data.proficientLevelId = updateWorkoutInput.proficientLevelId;
-        if (updateWorkoutInput.placeId !== undefined) data.placeId = updateWorkoutInput.placeId;
-        if (updateWorkoutInput.memberPlanId !== undefined) data.memberPlanId = updateWorkoutInput.memberPlanId;
-        if (updateWorkoutInput.workoutDay !== undefined) data.workoutDay = updateWorkoutInput.workoutDay;
-        if (updateWorkoutInput.sets !== undefined) data.sets = updateWorkoutInput.sets;
-        if (updateWorkoutInput.reps !== undefined) data.reps = updateWorkoutInput.reps;
-        if (updateWorkoutInput.status !== undefined) data.status = updateWorkoutInput.status;
+        const videoFile = files.find((file: Express.Multer.File) => file.fieldname === "video");
+        const thumbnailFile = files.find((file: Express.Multer.File) => file.fieldname === "thumbnail");
+
+        if (videoFile) {
+            const { fileUrl: videoUrl } = await upload(videoFile, "workout-videos");
+            existingWorkout.video = videoUrl;
+        }
+
+        if (thumbnailFile) {
+            const { fileUrl: thumbnailUrl } = await upload(thumbnailFile, "workout-thumbnails");
+            existingWorkout.thumbnail = thumbnailUrl;
+        }
 
         await prisma.workout.update({
             where: {
                 id,
             },
-            data,
+            data: {
+                name: name ?? existingWorkout.name,
+                gender: gender ?? existingWorkout.gender,
+                category: {
+                    connect: {
+                        id: categoryId ?? existingWorkout.categoryId
+                    }
+                },
+                bodyGoal: {
+                    connect: {
+                        id: bodyGoalId ?? existingWorkout.bodyGoalId
+                    }
+                },
+                proficientLevel: {
+                    connect: {
+                        id: proficientLevelId ?? existingWorkout.proficientLevelId
+                    }
+                },
+                place: {
+                    connect: {
+                        id: placeId ?? existingWorkout.placeId
+                    }
+                },
+                memberPlan: {
+                    connect: {
+                        id: memberPlanId ?? existingWorkout.memberPlanId
+                    }
+                },
+                workoutDay: workoutDay ?? existingWorkout.workoutDay,
+                sets: sets ?? existingWorkout.sets,
+                reps: reps ?? existingWorkout.reps,
+                video: existingWorkout.video,
+                thumbnail: existingWorkout.thumbnail,
+                videoDuration: 12121,
+                status: status ?? existingWorkout.status,
+                updatedBy: {
+                    connect: {
+                        id: userId
+                    }
+                },
+            },
         });
 
         return this.findOne(id);
     }
 
     async destroy(id: number) {
-        // Find workout
         const workout = await this.findOne(id);
-
-        // Delete workout
-        await prisma.workout.delete({
+        await prisma.workout.update({
             where: {
                 id,
+            },
+            data: {
+                status: Status.DELETE,
+                deletedAt: new Date(),
             },
         });
 

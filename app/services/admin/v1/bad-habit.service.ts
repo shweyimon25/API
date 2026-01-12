@@ -8,33 +8,12 @@ import {
   CreateBadHabitInput,
   UpdateBadHabitInput,
 } from "../../../schemas/admin/v1/bad-habit.schema";
-import { Status } from "@prisma/client";
-
-interface BadHabitFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class BadHabitService {
-  private where(filters?: BadHabitFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.description = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: BadHabitFilters) {
+  async findAll(where?: Prisma.BadHabitWhereInput) {
     const badHabits = await prisma.badHabit.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -64,10 +43,10 @@ class BadHabitService {
   async findByPaginate(
     page: number,
     perPage: number,
-    filters?: BadHabitFilters
+    where?: Prisma.BadHabitWhereInput
   ) {
     const badHabits = await prisma.badHabit.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -94,7 +73,7 @@ class BadHabitService {
     });
 
     const totalCount = await prisma.badHabit.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -142,6 +121,25 @@ class BadHabitService {
     }
 
     return badHabit;
+  }
+
+  async findCommonAll(where?: Prisma.BadHabitWhereInput) {
+    const badHabits = await prisma.badHabit.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return badHabits;
   }
 
   async create(
@@ -227,9 +225,13 @@ class BadHabitService {
   async destroy(id: number) {
     const badHabit = await this.findOne(id);
 
-    await prisma.badHabit.delete({
+    await prisma.badHabit.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

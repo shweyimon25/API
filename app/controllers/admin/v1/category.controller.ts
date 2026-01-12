@@ -9,6 +9,7 @@ import {
 } from "../../../schemas/admin/v1/category.schema";
 import { CategoryCollection } from "../../../resources/admin/v1/category/category.collection";
 import { CategoryResource } from "../../../resources/admin/v1/category/category.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class CategoryController {
   private categoryService: CategoryService;
@@ -18,22 +19,22 @@ class CategoryController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.CategoryWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const categories = await this.categoryService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const categories = await this.categoryService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Category successfully",
@@ -41,9 +42,7 @@ class CategoryController {
       );
     }
 
-    const categories = await this.categoryService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const categories = await this.categoryService.findAll(where);
 
     return successResponse(
       res,

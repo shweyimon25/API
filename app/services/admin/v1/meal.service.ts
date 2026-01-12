@@ -7,38 +7,12 @@ import {
   CreateMealInput,
   UpdateMealInput,
 } from "../../../schemas/admin/v1/meal.schema";
-import { Status } from "@prisma/client";
-
-interface MealFilters {
-  status?: Status;
-  search?: string;
-  mealTypeId?: number;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class MealService {
-  private where(filters?: MealFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.mealTypeId) {
-      where.mealTypeId = filters.mealTypeId;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: MealFilters) {
+  async findAll(where?: Prisma.MealWhereInput) {
     const meals = await prisma.meal.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -71,9 +45,9 @@ class MealService {
     return meals;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: MealFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.MealWhereInput) {
     const meals = await prisma.meal.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -106,7 +80,7 @@ class MealService {
     });
 
     const totalCount = await prisma.meal.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -160,6 +134,25 @@ class MealService {
     }
 
     return meal;
+  }
+
+  async findCommonAll(where?: Prisma.MealWhereInput) {
+    const meals = await prisma.meal.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return meals;
   }
 
   async create(createMealInput: CreateMealInput, userId: number) {
@@ -261,9 +254,13 @@ class MealService {
   async destroy(id: number) {
     const meal = await this.findOne(id);
 
-    await prisma.meal.delete({
+    await prisma.meal.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

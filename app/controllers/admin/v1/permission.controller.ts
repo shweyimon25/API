@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { successResponse } from "../../../helpers/response";
 import PermissionService from "../../../services/admin/v1/permission.service";
+import { Prisma } from "@prisma/client";
 
 class PermissionController {
   private permissionService: PermissionService;
@@ -10,39 +11,37 @@ class PermissionController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search } = req.query;
+    const { page, perPage, name } = req.query;
 
-    const filters: any = {};
+    let where: Prisma.PermissionWhereInput = {};
 
-    if (search) {
-      filters.search = search as string;
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
 
     if (page && perPage) {
-      const permissions = await this.permissionService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const permissions = await this.permissionService.findByPaginate(+page, +perPage, where);
       return successResponse(res, "Permission list successfully", permissions);
     }
 
-    const permissions = await this.permissionService.findAll(Object.keys(filters).length > 0 ? filters : undefined);
+    const permissions = await this.permissionService.findAll(where);
     return successResponse(res, "Permission list successfully", permissions);
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
+    const { name } = req.query;
 
-    const filters: any = {};
+    let where: Prisma.PermissionWhereInput = {};
 
-    if (search) {
-      filters.search = search as string;
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
 
-    const permissions = await this.permissionService.findCommonAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const permissions = await this.permissionService.findCommonAll(where);
 
     return successResponse(res, "Common Permission list successfully", permissions);
   }

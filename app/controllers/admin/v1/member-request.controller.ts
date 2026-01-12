@@ -1,4 +1,4 @@
-import { MemberRequestStatus, User } from "@prisma/client";
+import { MemberRequestStatus, Prisma, User } from "@prisma/client";
 import { successResponse } from "../../../helpers/response";
 import { Request, Response } from "express";
 import { MemberRequestCollection } from "../../../resources/admin/v1/member-request/member-request.collection";
@@ -16,23 +16,58 @@ class MemberRequestController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, search, status } = req.query;
+        const { page, perPage, name, email, phone, status, memberTypeId, memberPlanId } = req.query;
 
-        const filters: any = {};
+        let where: Prisma.MemberRequestWhereInput = {};
 
-        if (search) {
-            filters.search = search as string
+        if (name || email || phone) {
+            where.OR = [];
+            if (name) {
+                where.OR.push({
+                    member: {
+                        name: {
+                            contains: name as string,
+                        },
+                    },
+                });
+            }
+            if (email) {
+                where.OR.push({
+                    member: {
+                        email: {
+                            contains: email as string,
+                        },
+                    },
+                });
+            }
+            if (phone) {
+                where.OR.push({
+                    member: {
+                        phone: {
+                            contains: phone as string,
+                        },
+                    },
+                });
+            }
         }
 
         if (status) {
-            filters.status = status as MemberRequestStatus
+            where.status = status as MemberRequestStatus;
         }
+
+        if (memberTypeId) {
+            where.memberTypeId = +memberTypeId;
+        }
+
+        // if (memberPlanId) {
+        //     where.memberPlanId = +memberPlanId;
+        // }
 
         if (page && perPage) {
             const memberRequests = await this.memberRequestService.findByPaginate(
                 +page,
                 +perPage,
-                filters
+                where
             );
             return successResponse(
                 res,
@@ -41,7 +76,7 @@ class MemberRequestController {
             );
         }
 
-        const memberRequests = await this.memberRequestService.findAll(filters);
+        const memberRequests = await this.memberRequestService.findAll(where);
 
         return successResponse(
             res,

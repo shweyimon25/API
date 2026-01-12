@@ -9,6 +9,7 @@ import {
   createRoleSchema,
   updateRoleSchema,
 } from "../../../schemas/admin/v1/role.schema";
+import { Prisma, Status } from "@prisma/client";
 
 class RoleController {
   private roleService: RoleService;
@@ -18,22 +19,34 @@ class RoleController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, description, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.RoleWhereInput = {};
+
+    if (name || description) {
+      where.OR = [];
+      if (name) {
+        where.OR.push({
+          name: {
+            contains: name as string,
+          },
+        });
+      }
+      if (description) {
+        where.OR.push({
+          description: {
+            contains: description as string,
+          },
+        });
+      }
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const roles = await this.roleService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const roles = await this.roleService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Role list successfully",
@@ -41,9 +54,7 @@ class RoleController {
       );
     }
 
-    const roles = await this.roleService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const roles = await this.roleService.findAll(where);
 
     return successResponse(
       res,
@@ -53,14 +64,29 @@ class RoleController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
+    const { name, description } = req.query;
 
-    const filters: any = {};
-    if (search) {
-      filters.search = search as string;
+    let where: Prisma.RoleWhereInput = {};
+
+    if (name || description) {
+      where.OR = [];
+      if (name) {
+        where.OR.push({
+          name: {
+            contains: name as string,
+          },
+        });
+      }
+      if (description) {
+        where.OR.push({
+          description: {
+            contains: description as string,
+          },
+        });
+      }
     }
 
-    const roles = await this.roleService.findCommonAll(filters);
+    const roles = await this.roleService.findCommonAll(where);
 
     return successResponse(
       res,

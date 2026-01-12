@@ -3,26 +3,10 @@ import { NotFoundException } from "../../../helpers/exceptions";
 import { PaymentStatus, Prisma } from "@prisma/client";
 import { UpdatePaymentStatusInput } from "../../../schemas/admin/v1/payment.schema";
 
-interface PaymentFilters {
-    status?: PaymentStatus;
-    search?: string;
-}
-
 class PaymentService {
-
-    private where(filters?: PaymentFilters) {
-        const where: any = {};
-
-        if (filters?.status) {
-            where.status = filters.status;
-        }
-
-        return where;
-    }
-
-    async findByPaginate(page: number, perPage: number, filters?: PaymentFilters) {
+    async findByPaginate(page: number, perPage: number, where?: Prisma.PaymentWhereInput) {
         const payments = await prisma.payment.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },
@@ -31,7 +15,7 @@ class PaymentService {
         });
 
         const totalPayments = await prisma.payment.count({
-            where: this.where(filters),
+            where,
         });
 
         return {
@@ -49,9 +33,9 @@ class PaymentService {
         };
     }
 
-    async findAll(filters?: PaymentFilters) {
+    async findAll(where?: Prisma.PaymentWhereInput) {
         const payments = await prisma.payment.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },

@@ -9,6 +9,7 @@ import {
   createProficientLevelSchema,
   updateProficientLevelSchema,
 } from "../../../schemas/admin/v1/proficient-level.schema";
+import { Prisma, Status } from "@prisma/client";
 
 class ProficientLevelController {
   private proficientLevelService: ProficientLevelService;
@@ -18,22 +19,22 @@ class ProficientLevelController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.ProficientLevelWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const proficientLevels = await this.proficientLevelService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const proficientLevels = await this.proficientLevelService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Proficient level successfully",
@@ -41,9 +42,7 @@ class ProficientLevelController {
       );
     }
 
-    const porficientLevel = await this.proficientLevelService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const porficientLevel = await this.proficientLevelService.findAll(where);
     return successResponse(
       res,
       "Proficient level successfully",

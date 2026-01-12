@@ -16,6 +16,9 @@ import categorySeeder from "./category.seeder";
 import memberPlanSeeder from "./member-plan.seeder";
 import bankInformationSeeder from "./bank-information.seeder";
 import shopLevelSeeder from "./shop-level.seeder";
+import bodyGoalSeeder from "./body-goal.seeder";
+import proficientLevelSeeder from "./proficient-level.seeder";
+import placeSeeder from "./place.seeder";
 
 dotenv.config();
 
@@ -34,7 +37,10 @@ const main = async () => {
     await physicalLimitaionSeeder();
     await dietTypeSeeder();
     await bodyAttentionAreaSeeder();
+    await proficientLevelSeeder();
+    await placeSeeder();
     await badHabitSeeder();
+    await bodyGoalSeeder();
     await categorySeeder();
     await memberPlanSeeder();
   } catch (error) {

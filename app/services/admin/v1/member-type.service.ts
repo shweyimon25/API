@@ -2,11 +2,6 @@ import { Prisma, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
 
-interface MemberTypeFilters {
-  search?: string;
-  status?: Status
-}
-
 class MemberTypeService {
   async findAll(where?: Prisma.MemberTypeWhereInput) {
     const memberTypes = await prisma.memberType.findMany({

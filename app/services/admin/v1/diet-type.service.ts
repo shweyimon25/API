@@ -8,42 +8,12 @@ import {
   CreateDietTypeInput,
   UpdateDietTypeInput,
 } from "../../../schemas/admin/v1/diet-type.schema";
-import { Status } from "@prisma/client";
-
-interface DietTypeFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class DietTypeService {
-  private where(filters?: DietTypeFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        {
-          name: {
-            contains: filters.search,
-          },
-        },
-        {
-          description: {
-            contains: filters.search,
-          },
-        },
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: DietTypeFilters) {
+  async findAll(where?: Prisma.DietTypeWhereInput) {
     const dietTypes = await prisma.dietType.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -73,10 +43,10 @@ class DietTypeService {
   async findByPaginate(
     page: number,
     perPage: number,
-    filters?: DietTypeFilters
+    where?: Prisma.DietTypeWhereInput
   ) {
     const dietTypes = await prisma.dietType.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -103,7 +73,7 @@ class DietTypeService {
     });
 
     const totalCount = await prisma.dietType.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -151,6 +121,25 @@ class DietTypeService {
     }
 
     return dietType;
+  }
+
+  async findCommonAll(where?: Prisma.DietTypeWhereInput) {
+    const dietTypes = await prisma.dietType.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return dietTypes;
   }
 
   async create(
@@ -266,9 +255,13 @@ class DietTypeService {
   async destroy(id: number) {
     const dietType = await this.findOne(id);
 
-    await prisma.dietType.delete({
+    await prisma.dietType.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

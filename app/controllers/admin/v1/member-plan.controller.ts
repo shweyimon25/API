@@ -72,7 +72,7 @@ class MemberPlanController {
       );
     }
 
-    const memberPlans = await this.memberPlanService.findAll();
+    const memberPlans = await this.memberPlanService.findAll(where);
     return successResponse(
       res,
       "Member plan list successfully",

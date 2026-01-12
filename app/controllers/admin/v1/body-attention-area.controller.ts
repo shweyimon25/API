@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BodyAttentionAreaCollection } from "../../../resources/admin/v1/body-attention-area/body-attention-area.collection";
 import { BodyAttentionAreaResource } from "../../../resources/admin/v1/body-attention-area/body-attention-area.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class BodyAttentionAreaController {
   private bodyAttentionAreaService: BodyAttentionAreaService;
@@ -18,23 +19,23 @@ class BodyAttentionAreaController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.BodyAttentionAreaWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
       const bodyAttentionAreas =
-        await this.bodyAttentionAreaService.findByPaginate(
-          +page,
-          +perPage,
-          Object.keys(filters).length > 0 ? filters : undefined
-        );
+        await this.bodyAttentionAreaService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Body attention area list successfully",
@@ -42,9 +43,7 @@ class BodyAttentionAreaController {
       );
     }
 
-    const bodyAttentionAreas = await this.bodyAttentionAreaService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const bodyAttentionAreas = await this.bodyAttentionAreaService.findAll(where);
     return successResponse(
       res,
       "Body attention area list successfully",
@@ -115,14 +114,8 @@ class BodyAttentionAreaController {
   }
 
   async destroy(req: Request, res: Response) {
-    const bodyAttentionArea = await this.bodyAttentionAreaService.destroy(
-      +req.params.id
-    );
-    return successResponse(
-      res,
-      "Body attention area deleted successfully",
-      BodyAttentionAreaResource.toResource(bodyAttentionArea)
-    );
+    await this.bodyAttentionAreaService.destroy(+req.params.id);
+    return successResponse(res, "Body attention area deleted successfully");
   }
 }
 

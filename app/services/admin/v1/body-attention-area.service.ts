@@ -7,33 +7,12 @@ import {
   CreateBodyAttentionAreaInput,
   UpdateBodyAttentionAreaInput,
 } from "../../../schemas/admin/v1/body-attention-area.schema";
-import { Status } from "@prisma/client";
-
-interface BodyAttentionAreaFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class BodyAttentionAreaService {
-  private where(filters?: BodyAttentionAreaFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: BodyAttentionAreaFilters) {
+  async findAll(where?: Prisma.BodyAttentionAreaWhereInput) {
     const bodyAttentionAreas = await prisma.bodyAttentionArea.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -63,10 +42,10 @@ class BodyAttentionAreaService {
   async findByPaginate(
     page: number,
     perPage: number,
-    filters?: BodyAttentionAreaFilters
+    where?: Prisma.BodyAttentionAreaWhereInput
   ) {
     const bodyAttentionAreas = await prisma.bodyAttentionArea.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -93,7 +72,7 @@ class BodyAttentionAreaService {
     });
 
     const totalCount = await prisma.bodyAttentionArea.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -141,6 +120,25 @@ class BodyAttentionAreaService {
     }
 
     return bodyAttentionArea;
+  }
+
+  async findCommonAll(where?: Prisma.BodyAttentionAreaWhereInput) {
+    const bodyAttentionAreas = await prisma.bodyAttentionArea.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return bodyAttentionAreas;
   }
 
   async create(
@@ -221,9 +219,13 @@ class BodyAttentionAreaService {
   async destroy(id: number) {
     const bodyAttentionArea = await this.findOne(id);
 
-    await prisma.bodyAttentionArea.delete({
+    await prisma.bodyAttentionArea.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

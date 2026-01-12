@@ -6,7 +6,7 @@ export const createRoleSchema = z.object({
   permissions: z.array(
     z.coerce.number().min(1, { message: "Permissions is required" })
   ),
-  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export const updateRoleSchema = z.object({
@@ -14,7 +14,7 @@ export const updateRoleSchema = z.object({
     .string()
     .optional(),
   permissions: z.array(z.coerce.number()).optional(),
-  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export type CreateRoleInput = z.infer<typeof createRoleSchema>;

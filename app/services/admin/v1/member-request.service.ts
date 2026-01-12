@@ -4,49 +4,16 @@ import { BadRequestException, NotFoundException } from "../../../helpers/excepti
 import { UpdateMemberRequestInput } from "../../../schemas/admin/v1/member-request.schema";
 import MemberService from "./member.service";
 
-interface MemberRequestFilters {
-    memberTypeId?: number;
-    memberPlanId?: number;
-    search?: string;
-    status?: MemberRequestStatus
-}
-
 class MemberRequestService {
     private memberService: MemberService; 
 
     constructor() {
         this.memberService = new MemberService();
     }
-    
-    private where(filters?: MemberRequestFilters) {
-        const where: any = {};
 
-        if (filters?.status) {
-            where.status = filters.status;
-        }
-
-        if (filters?.memberTypeId) {
-            where.memberTypeId = filters.memberTypeId;
-        }
-
-        if (filters?.search) {
-            where.OR = [
-                { member: { name: { contains: filters.search } } },
-                { member: { email: { contains: filters.search } } },
-                { member: { phone: { contains: filters.search } } },
-            ];
-        }
-
-        if (filters?.memberPlanId) {
-            where.memberPlanId = filters.memberPlanId;
-        }
-
-        return where;
-    }
-
-    async findAll(filters?: MemberRequestFilters) {
+    async findAll(where?: Prisma.MemberRequestWhereInput) {
         const memberRequests = await prisma.memberRequest.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },
@@ -55,9 +22,9 @@ class MemberRequestService {
         return memberRequests;
     }
 
-    async findByPaginate(page: number, perPage: number, filters: MemberRequestFilters) {
+    async findByPaginate(page: number, perPage: number, where: Prisma.MemberRequestWhereInput) {
         const memberRequests = await prisma.memberRequest.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },
@@ -66,7 +33,7 @@ class MemberRequestService {
         });
 
         const totalMemberRequests = await prisma.memberRequest.count({
-            where: this.where(filters)
+            where
         });
 
         return {

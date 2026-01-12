@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { PhysicalLimitationCollection } from "../../../resources/admin/v1/physical-limitation/physical-limitation.collection";
 import { PhysicalLimitationResource } from "../../../resources/admin/v1/physical-limitation/physical-limitation.resource";
-import { User } from "@prisma/client";
+import { Prisma, Status, User } from "@prisma/client";
 
 class PhysicalLimitationController {
   private physicalLimitationService: PhysicalLimitationService;
@@ -19,23 +19,35 @@ class PhysicalLimitationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, description, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.PhysicalLimitationWhereInput = {};
+
+    if (name || description) {
+      where.OR = [];
+      if (name) {
+        where.OR.push({
+          name: {
+            contains: name as string,
+          },
+        });
+      }
+      if (description) {
+        where.OR.push({
+          description: {
+            contains: description as string,
+          },
+        });
+      }
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
       const physicalLimitations =
-        await this.physicalLimitationService.findByPaginate(
-          +page,
-          +perPage,
-          Object.keys(filters).length > 0 ? filters : undefined
-        );
+        await this.physicalLimitationService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Physical limitation list successfully",
@@ -43,9 +55,7 @@ class PhysicalLimitationController {
       );
     }
 
-    const physicalLimitations = await this.physicalLimitationService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const physicalLimitations = await this.physicalLimitationService.findAll(where);
     return successResponse(
       res,
       "Physical limitation list successfully",
@@ -118,14 +128,8 @@ class PhysicalLimitationController {
   }
 
   async destroy(req: Request, res: Response) {
-    const physicalLimitation = await this.physicalLimitationService.destroy(
-      +req.params.id
-    );
-    return successResponse(
-      res,
-      "Physical limitation deleted successfully",
-      PhysicalLimitationResource.toResource(physicalLimitation)
-    );
+    await this.physicalLimitationService.destroy(+req.params.id);
+    return successResponse(res, "Physical limitation deleted successfully");
   }
 }
 

@@ -7,33 +7,12 @@ import {
   CreateRoleInput,
   UpdateRoleInput,
 } from "../../../schemas/admin/v1/role.schema";
-import { Status } from "@prisma/client";
-
-interface RoleFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class RoleService {
-  private where(filters?: RoleFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: RoleFilters) {
+  async findAll(where?: Prisma.RoleWhereInput) {
     const roles = await prisma.role.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -56,10 +35,10 @@ class RoleService {
     return roles;
   }
 
-  async findCommonAll(filters?: RoleFilters) {
+  async findCommonAll(where?: Prisma.RoleWhereInput) {
     const roles = await prisma.role.findMany({
       where: {
-        ...this.where(filters),
+        ...where,
         status: Status.ACTIVE,
       },
       orderBy: {
@@ -84,9 +63,9 @@ class RoleService {
     return roles;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: RoleFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.RoleWhereInput) {
     const roles = await prisma.role.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -109,7 +88,7 @@ class RoleService {
     });
 
     const totalRoles = await prisma.role.count({
-      where: this.where(filters),
+      where,
     });
 
     return {

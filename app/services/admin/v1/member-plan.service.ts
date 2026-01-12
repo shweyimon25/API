@@ -446,7 +446,7 @@ class MemberPlanService {
   }
 
   async destroy(memberPlanId: number, userId: number) {
-    await this.findOne(memberPlanId);
+    const memberPlan = await this.findOne(memberPlanId);
 
     await prisma.memberPlan.update({
       where: {
@@ -455,11 +455,10 @@ class MemberPlanService {
       data: {
         status: Status.DELETE,
         deletedAt: new Date(),
-        deletedBy: {
-          connect: { id: userId }
-        }
       },
     });
+
+    return memberPlan;
   }
 }
 

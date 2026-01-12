@@ -7,33 +7,12 @@ import {
   CreateMealTypeInput,
   UpdateMealTypeInput,
 } from "../../../schemas/admin/v1/meal-type.schema";
-import { Status } from "@prisma/client";
-
-interface MealTypeFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class MealTypeService {
-  private where(filters?: MealTypeFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: MealTypeFilters) {
+  async findAll(where?: Prisma.MealTypeWhereInput) {
     const mealTypes = await prisma.mealType.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -63,10 +42,10 @@ class MealTypeService {
   async findByPaginate(
     page: number,
     perPage: number,
-    filters?: MealTypeFilters
+    where?: Prisma.MealTypeWhereInput
   ) {
     const mealTypes = await prisma.mealType.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -93,7 +72,7 @@ class MealTypeService {
     });
 
     const totalCount = await prisma.mealType.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -141,6 +120,25 @@ class MealTypeService {
     }
 
     return mealType;
+  }
+
+  async findCommonAll(where?: Prisma.MealTypeWhereInput) {
+    const mealTypes = await prisma.mealType.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return mealTypes;
   }
 
   async create(createMealTypeInput: CreateMealTypeInput, userId: number) {
@@ -216,9 +214,13 @@ class MealTypeService {
   async destroy(id: number) {
     const mealType = await this.findOne(id);
 
-    await prisma.mealType.delete({
+    await prisma.mealType.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

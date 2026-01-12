@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ShopCollection } from "../../../resources/admin/v1/shop/shop.collection";
 import { ShopResource } from "../../../resources/admin/v1/shop/shop.resource";
-import { Prisma } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 
 class ShopController {
   private shopService: ShopService;
@@ -19,10 +19,41 @@ class ShopController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage } = req.query;
+    const { page, perPage, name, status, shopLevelId, memberId } = req.query;
+
+    let where: Prisma.ShopWhereInput = {};
+
+    if (name) {
+      where.OR = [
+        {
+          name: {
+            contains: name as string,
+          },
+        },
+        {
+          member: {
+            name: {
+              contains: name as string,
+            },
+          },
+        },
+      ];
+    }
+
+    if (status) {
+      where.status = status as Status;
+    }
+
+    if (shopLevelId) {
+      where.shopLevelId = +shopLevelId;
+    }
+
+    if (memberId) {
+      where.memberId = +memberId;
+    }
 
     if (page && perPage) {
-      const shops = await this.shopService.findByPaginate(+page, +perPage);
+      const shops = await this.shopService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Shop list successfully",
@@ -30,7 +61,7 @@ class ShopController {
       );
     }
 
-    const shops = await this.shopService.findAll();
+    const shops = await this.shopService.findAll(where);
     return successResponse(
       res,
       "Shop list successfully",
@@ -48,18 +79,17 @@ class ShopController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
+    const { name } = req.query;
 
-    const where: Prisma.ShopWhereInput = {};
+    let where: Prisma.ShopWhereInput = {};
 
-    if (search) {
+    if (name) {
       where.name = {
-        contains: search as string,
-        mode: "insensitive"
+        contains: name as string,
       };
     }
 
-    const shops = await this.shopService.findCommonAll();
+    const shops = await this.shopService.findCommonAll(where);
 
     return successResponse(
       res,
@@ -99,12 +129,8 @@ class ShopController {
   }
 
   async destroy(req: Request, res: Response) {
-    const shop = await this.shopService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Shop deleted successfully",
-      ShopResource.toResource(shop)
-    );
+    await this.shopService.destroy(+req.params.id);
+    return successResponse(res, "Shop deleted successfully");
   }
 }
 

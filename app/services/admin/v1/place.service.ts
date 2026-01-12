@@ -4,33 +4,12 @@ import {
 } from "./../../../schemas/admin/v1/place.schema";
 import prisma from "../../../../prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
-import { Status } from "@prisma/client";
-
-interface PlaceFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class PlaceService {
-  private where(filters?: PlaceFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: PlaceFilters) {
+  async findAll(where?: Prisma.PlaceWhereInput) {
     const places = await prisma.place.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -39,9 +18,9 @@ class PlaceService {
     return places;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: PlaceFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.PlaceWhereInput) {
     const places = await prisma.place.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -50,7 +29,7 @@ class PlaceService {
     });
 
     const totalPlaces = await prisma.place.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -80,6 +59,25 @@ class PlaceService {
     }
 
     return place;
+  }
+
+  async findCommonAll(where?: Prisma.PlaceWhereInput) {
+    const places = await prisma.place.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return places;
   }
 
   async create(createPlaceInput: CreatePlaceInput) {
@@ -123,9 +121,13 @@ class PlaceService {
   async destroy(id: number) {
     const place = await this.findOne(id);
 
-    await prisma.place.delete({
+    await prisma.place.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

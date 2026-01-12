@@ -9,16 +9,19 @@ export const requestOtpSchema = z
   .refine((data) => {
     if (data.providerType === ProviderType.EMAIL) {
       return z
-        .string()
+        .string({
+          message: "Email is required"
+        })
         .email({
           message: "Invalid email address",
         })
-        .min(1, { message: "Email is required" });
     }
 
     if (data.providerType === ProviderType.PHONE) {
       return z
-        .string()
+        .string({
+          message: "Phone number is required"
+        })
         .min(6, { message: "Phone number is required" })
         .max(15, { message: "Phone number is too long" });
     }

@@ -2,9 +2,7 @@ import { z } from "zod";
 import { Status } from "@prisma/client";
 
 export const createMemberPlanSchema = z.object({
-  name: z.string({
-    message: "Name is required",
-  }),
+  name: z.string().min(1, { message: "Name is required" }),
   memberTypeId: z.coerce.number({
     message: "Member type is required",
   }),

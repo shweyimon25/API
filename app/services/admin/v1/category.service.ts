@@ -4,33 +4,12 @@ import {
   CreateCategoryInput,
   UpdateCategoryInput,
 } from "../../../schemas/admin/v1/category.schema";
-import { Status } from "@prisma/client";
-
-interface CategoryFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class CategoryService {
-  private where(filters?: CategoryFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: CategoryFilters) {
+  async findAll(where?: Prisma.CategoryWhereInput) {
     const categories = await prisma.category.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -39,9 +18,9 @@ class CategoryService {
     return categories;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: CategoryFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.CategoryWhereInput) {
     const categories = await prisma.category.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -50,7 +29,7 @@ class CategoryService {
     });
 
     const totalCategory = await prisma.category.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -80,6 +59,25 @@ class CategoryService {
     }
 
     return category;
+  }
+
+  async findCommonAll(where?: Prisma.CategoryWhereInput) {
+    const categories = await prisma.category.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return categories;
   }
 
   async create(createCategoryInput: CreateCategoryInput) {
@@ -124,9 +122,13 @@ class CategoryService {
   async destroy(id: number) {
     const category = await this.findOne(id);
 
-    await prisma.category.delete({
+    await prisma.category.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BankInformationCollection } from "../../../resources/admin/v1/bank-information/bank-information.collection";
 import { BankInformationResource } from "../../../resources/admin/v1/bank-information/bank-information.resource";
+import { PaymentTypes, Prisma, Status } from "@prisma/client";
 
 class BankInformationController {
   private bankInformationService: BankInformationService;
@@ -18,25 +19,45 @@ class BankInformationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search, paymentTypes } = req.query;
+    const { page, perPage, bankAccountHolder, bankAccountNumber, phone, paymentTypes, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.BankInformationWhereInput = {};
+
+    if (bankAccountHolder || bankAccountNumber || phone) {
+      where.OR = [];
+      if (bankAccountHolder) {
+        where.OR.push({
+          bankAccountHolder: {
+            contains: bankAccountHolder as string,
+          },
+        });
+      }
+      if (bankAccountNumber) {
+        where.OR.push({
+          bankAccountNumber: {
+            contains: bankAccountNumber as string,
+          },
+        });
+      }
+      if (phone) {
+        where.OR.push({
+          phone: {
+            contains: phone as string,
+          },
+        });
+      }
     }
-    if (search) {
-      filters.search = search as string;
-    }
+
     if (paymentTypes) {
-      filters.paymentTypes = paymentTypes;
+      where.paymentTypes = paymentTypes as PaymentTypes;
+    }
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const bankInformations = await this.bankInformationService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const bankInformations = await this.bankInformationService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Bank information list successfully",
@@ -44,9 +65,7 @@ class BankInformationController {
       );
     }
 
-    const bankInformations = await this.bankInformationService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const bankInformations = await this.bankInformationService.findAll(where);
     return successResponse(
       res,
       "Bank information list successfully",
@@ -111,14 +130,8 @@ class BankInformationController {
   }
 
   async destroy(req: Request, res: Response) {
-    const bankInformation = await this.bankInformationService.destroy(
-      +req.params.id
-    );
-    return successResponse(
-      res,
-      "Bank information deleted successfully",
-      BankInformationResource.toResource(bankInformation)
-    );
+    await this.bankInformationService.destroy(+req.params.id);
+    return successResponse(res, "Bank information deleted successfully");
   }
 }
 

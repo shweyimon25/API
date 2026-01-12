@@ -25,6 +25,7 @@ import adminBadHabitRoute from "./admin/v1/bad-habit.route";
 import adminWaterTrackerRoute from "./admin/v1/water-tracker.route";
 import adminMemberRequestRoute from "./admin/v1/member-request.route";
 import adminPaymentRoute from "./admin/v1/payment.route";
+import adminBodyGoalRoute from "./admin/v1/body-goal.route";
 
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
@@ -61,6 +62,7 @@ router.use("/admin/v1/body-attention-areas", adminBodyAttentionAreaRoute);
 router.use("/admin/v1/meal-types", adminMealTypeRoute);
 router.use("/admin/v1/meals", adminMealRoute);
 router.use("/admin/v1/bad-habits", adminBadHabitRoute);
+router.use("/admin/v1/body-goals", adminBodyGoalRoute);
 router.use("/admin/v1/water-trackers", adminWaterTrackerRoute);
 router.use("/admin/v1/member-requests", adminMemberRequestRoute);
 router.use("/admin/v1/payments", adminPaymentRoute);

@@ -4,30 +4,12 @@ import {
   CreateWaterTrackerInput,
   UpdateWaterTrackerInput,
 } from "../../../schemas/admin/v1/water-tracker.schema";
-
-interface WaterTrackerFilters {
-  memberId?: number;
-  date?: string;
-}
+import { Prisma } from "@prisma/client";
 
 class WaterTrackerService {
-  private where(filters?: WaterTrackerFilters) {
-    const where: any = {};
-
-    if (filters?.memberId) {
-      where.memberId = filters.memberId;
-    }
-
-    if (filters?.date) {
-      where.date = filters.date;
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: WaterTrackerFilters) {
+  async findAll(where?: Prisma.WaterTrackerWhereInput) {
     const waterTrackers = await prisma.waterTracker.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -49,10 +31,10 @@ class WaterTrackerService {
   async findByPaginate(
     page: number,
     perPage: number,
-    filters?: WaterTrackerFilters
+    where?: Prisma.WaterTrackerWhereInput
   ) {
     const waterTrackers = await prisma.waterTracker.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -71,7 +53,7 @@ class WaterTrackerService {
     });
 
     const totalCount = await prisma.waterTracker.count({
-      where: this.where(filters),
+      where,
     });
 
     return {

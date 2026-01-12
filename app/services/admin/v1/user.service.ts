@@ -1,5 +1,5 @@
 import prisma from "../../../../prisma/client";
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import {
   NotFoundException,
   ValidationException,
@@ -10,54 +10,10 @@ import {
   UpdateUserInput,
 } from "../../../schemas/admin/v1/user.schema";
 
-interface UserFilters {
-  status?: Status;
-  search?: string;
-  roleId?: number;
-}
-
 class UserService {
-  private where(filters?: UserFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.roleId) {
-      where.roles = {
-        some: {
-          roleId: filters.roleId,
-        },
-      };
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        {
-          name: {
-            contains: filters.search,
-          },
-        },
-        {
-          email: {
-            contains: filters.search,
-          },
-        },
-        {
-          username: {
-            contains: filters.search,
-          },
-        },
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: UserFilters) {
+  async findAll(where?: Prisma.UserWhereInput) {
     const users = await prisma.user.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -96,10 +52,10 @@ class UserService {
     return users;
   }
 
-  async findCommonAll(filters?: UserFilters) {
+  async findCommonAll(where?: Prisma.UserWhereInput) {
     const users = await prisma.user.findMany({
       where: {
-        ...filters,
+        ...where,
         status: Status.ACTIVE,
       },
       orderBy: {
@@ -116,9 +72,9 @@ class UserService {
     return users;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: UserFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.UserWhereInput) {
     const users = await prisma.user.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -157,7 +113,7 @@ class UserService {
     });
 
     const totalUsers = await prisma.user.count({
-      where: this.where(filters),
+      where,
     });
 
     return {

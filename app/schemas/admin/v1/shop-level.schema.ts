@@ -2,9 +2,7 @@ import z from "zod";
 import { Status } from "@prisma/client";
 
 export const createShopLevelSchema = z.object({
-  name: z.string({
-    message: "Name is required",
-  }),
+  name: z.string().min(1, { message: "Name is required" }),
   price: z.coerce.number({
     message: "Price is required",
   }),

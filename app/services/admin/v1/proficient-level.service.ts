@@ -7,33 +7,12 @@ import {
   CreateProficientLevelInput,
   UpdateProficientLevelInput,
 } from "../../../schemas/admin/v1/proficient-level.schema";
-import { Status } from "@prisma/client";
-
-interface ProficientLevelFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class ProficientLevelService {
-  private where(filters?: ProficientLevelFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: ProficientLevelFilters) {
+  async findAll(where?: Prisma.ProficientLevelWhereInput) {
     const proficientLevels = await prisma.proficientLevel.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -42,9 +21,9 @@ class ProficientLevelService {
     return proficientLevels;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: ProficientLevelFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.ProficientLevelWhereInput) {
     const proficientLevel = await prisma.proficientLevel.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -53,7 +32,7 @@ class ProficientLevelService {
     });
 
     const totalProficientLevel = await prisma.proficientLevel.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -84,6 +63,25 @@ class ProficientLevelService {
     }
 
     return proficientLevel;
+  }
+
+  async findCommonAll(where?: Prisma.ProficientLevelWhereInput) {
+    const proficientLevels = await prisma.proficientLevel.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return proficientLevels;
   }
 
   async create(createProficientLevelInput: CreateProficientLevelInput) {
@@ -127,9 +125,13 @@ class ProficientLevelService {
   async destroy(id: number) {
     const proficientLevel = await this.findOne(id);
 
-    await prisma.proficientLevel.delete({
+    await prisma.proficientLevel.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

@@ -1,12 +1,21 @@
+import { WorkoutResource } from "./workout.resource";
+
 export class WorkoutCollection {
-  static toCollection(res: any[]) {
-    return res;
+  static toCollection(workouts: any[]) {
+    return workouts.map((workout) => WorkoutResource.toResource(workout));
   }
 
-  static withPagination(res: { data: any[]; meta: any }) {
+  static toCommonCollection(workouts: any[]) {
+    return workouts.map((workout) => ({
+      id: workout.id,
+      name: workout.name,
+    }));
+  }
+
+  static withPagination(workouts: { data: any[]; meta: any }) {
     return {
-      data: this.toCollection(res.data),
-      meta: res.meta,
+      data: this.toCollection(workouts.data),
+      meta: workouts.meta,
     };
   }
 }

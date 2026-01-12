@@ -9,14 +9,14 @@ export const createShopSchema = z.object({
     .number()
     .min(1, { message: "Shop level is required" })
     .optional(),
-  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export const updateShopSchema = z.object({
   name: z.string().optional(),
   memberId: z.coerce.number().optional(),
   shopLevelId: z.coerce.number().optional(),
-  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export type CreateShopInput = z.infer<typeof createShopSchema>;

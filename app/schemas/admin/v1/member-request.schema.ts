@@ -2,7 +2,7 @@ import { z } from "zod";
 import { MemberRequestStatus } from "@prisma/client";
 
 export const updateMemberRequestSchema = z.object({
-    status: z.nativeEnum(MemberRequestStatus, { message: "Status must be PENDING | APPROVED | REJECTED" }).optional(),
+    status: z.enum([MemberRequestStatus.PENDING, MemberRequestStatus.APPROVED, MemberRequestStatus.REJECTED], { message: "Status must be PENDING or APPROVED or REJECTED" }).optional(),
     rejectedReason: z.string().optional(),
 }).refine((data) => {
     if (data.status === MemberRequestStatus.REJECTED) {

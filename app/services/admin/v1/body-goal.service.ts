@@ -6,33 +6,12 @@ import {
     CreateBodyGoalInput,
     UpdateBodyGoalInput,
 } from "../../../schemas/admin/v1/body-goal.schema";
-import { Status } from "@prisma/client";
-
-interface BodyGoalFilters {
-    status?: Status;
-    search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class BodyGoalService {
-    private where(filters?: BodyGoalFilters) {
-        const where: any = {};
-
-        if (filters?.status) {
-            where.status = filters.status;
-        }
-
-        if (filters?.search) {
-            where.name = {
-                contains: filters.search,
-            };
-        }
-
-        return where;
-    }
-
-    async findAll(filters?: BodyGoalFilters) {
+    async findAll(where?: Prisma.BodyGoalWhereInput) {
         const bodyGoals = await prisma.bodyGoal.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },
@@ -41,9 +20,9 @@ class BodyGoalService {
         return bodyGoals;
     }
 
-    async findByPaginate(page: number, perPage: number, filters?: BodyGoalFilters) {
+    async findByPaginate(page: number, perPage: number, where?: Prisma.BodyGoalWhereInput) {
         const bodyGoals = await prisma.bodyGoal.findMany({
-            where: this.where(filters),
+            where,
             orderBy: {
                 id: "desc",
             },
@@ -52,7 +31,7 @@ class BodyGoalService {
         });
 
         const totalBodyGoals = await prisma.bodyGoal.count({
-            where: this.where(filters),
+            where,
         });
 
         return {
@@ -70,19 +49,39 @@ class BodyGoalService {
         };
     }
 
-    async findOne(id: number) {
-        const bodyGoal = await prisma.bodyGoal.findUnique({
-            where: {
-                id,
-            },
-        });
+  async findOne(id: number) {
+    const bodyGoal = await prisma.bodyGoal.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
 
-        if (!bodyGoal) {
-            throw new BadRequestException("Body goal not found");
-        }
-
-        return bodyGoal;
+    if (!bodyGoal) {
+      throw new BadRequestException("Body goal not found");
     }
+
+    return bodyGoal;
+  }
+
+  async findCommonAll(where?: Prisma.BodyGoalWhereInput) {
+    const bodyGoals = await prisma.bodyGoal.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return bodyGoals;
+  }
 
     async create(createBodyGoalInput: CreateBodyGoalInput) {
         const { name, status } = createBodyGoalInput;
@@ -100,9 +99,10 @@ class BodyGoalService {
     async update(id: number, updateBodyGoalInput: UpdateBodyGoalInput) {
         const { name, status } = updateBodyGoalInput;
 
-        const existingBodyGoal = await prisma.bodyGoal.findUnique({
+        const existingBodyGoal = await prisma.bodyGoal.findFirst({
             where: {
                 id,
+                deletedAt: null,
             },
         });
 
@@ -126,9 +126,13 @@ class BodyGoalService {
     async destroy(id: number) {
         const bodyGoal = await this.findOne(id);
 
-        await prisma.bodyGoal.delete({
+        await prisma.bodyGoal.update({
             where: {
                 id,
+            },
+            data: {
+                status: Status.DELETE,
+                deletedAt: new Date(),
             },
         });
 

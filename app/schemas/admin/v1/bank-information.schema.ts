@@ -13,7 +13,7 @@ export const createBankInformationSchema = z.object({
       message: "Phone must be at most 15 characters",
     }),
   paymentTypes: z.nativeEnum(PaymentTypes).optional(),
-  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export const updateBankInformationSchema = z.object({
@@ -33,7 +33,7 @@ export const updateBankInformationSchema = z.object({
     })
     .optional(),
   paymentTypes: z.nativeEnum(PaymentTypes).optional(),
-  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export type CreateBankInformationInput = z.infer<

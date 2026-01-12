@@ -1,26 +1,11 @@
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
-
-interface PermissionFilters {
-  search?: string;
-}
+import { Prisma } from "@prisma/client";
 
 class PermissionService {
-  private where(filters?: PermissionFilters) {
-    const where: any = {};
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: PermissionFilters) {
+  async findAll(where?: Prisma.PermissionWhereInput) {
     const permissions = await prisma.permission.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       }
@@ -29,9 +14,9 @@ class PermissionService {
     return permissions;
   }
 
-  async findCommonAll(filters?: PermissionFilters) {
+  async findCommonAll(where?: Prisma.PermissionWhereInput) {
     const permissions = await prisma.permission.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -44,9 +29,9 @@ class PermissionService {
     return permissions;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: PermissionFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.PermissionWhereInput) {
     const permissions = await prisma.permission.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -55,7 +40,7 @@ class PermissionService {
     });
 
     const totalPermissions = await prisma.permission.count({
-      where: this.where(filters)
+      where
     });
 
     return {

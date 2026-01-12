@@ -9,6 +9,7 @@ import {
   createPlaceSchema,
   updatePlaceSchema,
 } from "../../../schemas/admin/v1/place.schema";
+import { Prisma, Status } from "@prisma/client";
 
 class PlaceController {
   private placeService: PlaceService;
@@ -18,22 +19,22 @@ class PlaceController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.PlaceWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const places = await this.placeService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const places = await this.placeService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Place list successfully",
@@ -41,9 +42,7 @@ class PlaceController {
       );
     }
 
-    const places = await this.placeService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const places = await this.placeService.findAll(where);
 
     return successResponse(
       res,

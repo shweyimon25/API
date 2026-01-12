@@ -6,7 +6,7 @@ export const updatePaymentStatusSchema = z.object({
         PaymentStatus.CONFIRMED,
         PaymentStatus.CANCELLED,
         PaymentStatus.PAID,
-    ], { message: "Status must be CONFIRMED | CANCELLED | PAID" }),
+    ], { message: "Status must be CONFIRMED or CANCELLED or PAID" }),
     cancelledReason: z.string().optional(),
 }).refine(data => {
     if (data.status === PaymentStatus.CANCELLED) {

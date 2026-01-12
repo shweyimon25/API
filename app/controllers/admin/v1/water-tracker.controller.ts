@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { WaterTrackerCollection } from "../../../resources/admin/v1/water-tracker/water-tracker.collection";
 import { WaterTrackerResource } from "../../../resources/admin/v1/water-tracker/water-tracker.resource";
+import { Prisma } from "@prisma/client";
 
 class WaterTrackerController {
   private waterTrackerService: WaterTrackerService;
@@ -20,20 +21,18 @@ class WaterTrackerController {
   async findAll(req: Request, res: Response) {
     const { page, perPage, memberId, date } = req.query;
 
-    const filters: any = {};
+    let where: Prisma.WaterTrackerWhereInput = {};
+
     if (memberId) {
-      filters.memberId = +memberId;
+      where.memberId = +memberId;
     }
+
     if (date) {
-      filters.date = date as string;
+      where.date = date as string;
     }
 
     if (page && perPage) {
-      const waterTrackers = await this.waterTrackerService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const waterTrackers = await this.waterTrackerService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Water tracker list successfully",
@@ -41,9 +40,7 @@ class WaterTrackerController {
       );
     }
 
-    const waterTrackers = await this.waterTrackerService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const waterTrackers = await this.waterTrackerService.findAll(where);
     return successResponse(
       res,
       "Water tracker list successfully",
@@ -94,12 +91,8 @@ class WaterTrackerController {
   }
 
   async destroy(req: Request, res: Response) {
-    const waterTracker = await this.waterTrackerService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Water tracker deleted successfully",
-      WaterTrackerResource.toResource(waterTracker)
-    );
+    await this.waterTrackerService.destroy(+req.params.id);
+    return successResponse(res, "Water tracker deleted successfully");
   }
 }
 

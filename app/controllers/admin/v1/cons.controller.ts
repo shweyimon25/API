@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ConsCollection } from "../../../resources/admin/v1/cons/cons.collection";
 import { ConsResource } from "../../../resources/admin/v1/cons/cons.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class ConsController {
   private consService: ConsService;
@@ -18,22 +19,28 @@ class ConsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, guard, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.ConsWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (guard) {
+      where.guard = {
+        contains: guard as string,
+      };
+    }
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const cons = await this.consService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const cons = await this.consService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Cons list successfully",
@@ -41,9 +48,7 @@ class ConsController {
       );
     }
 
-    const cons = await this.consService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const cons = await this.consService.findAll(where);
     return successResponse(
       res,
       "Cons list successfully",
@@ -52,14 +57,23 @@ class ConsController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
+    const { name, guard } = req.query;
 
-    const filters: any = {};
-    if (search) {
-      filters.search = search as string;
+    let where: Prisma.ConsWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
 
-    const cons = await this.consService.findCommonAll(filters);
+    if (guard) {
+      where.guard = {
+        contains: guard as string,
+      };
+    }
+
+    const cons = await this.consService.findCommonAll(where);
 
     return successResponse(
       res,

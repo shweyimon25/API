@@ -8,34 +8,12 @@ import {
   CreateConsInput,
   UpdateConsInput,
 } from "../../../schemas/admin/v1/cons.schema";
-import { Status } from "@prisma/client";
-
-interface ConsFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class ConsService {
-  private where(filters?: ConsFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        { name: { contains: filters.search } },
-        { guard: { contains: filters.search } }
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: ConsFilters) {
+  async findAll(where?: Prisma.ConsWhereInput) {
     const cons = await prisma.cons.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -58,10 +36,10 @@ class ConsService {
     return cons;
   }
 
-  async findCommonAll(filters?: ConsFilters) {
+  async findCommonAll(where?: Prisma.ConsWhereInput) {
     const cons = await prisma.cons.findMany({
       where: {
-        ...this.where(filters),
+        ...where,
         status: Status.ACTIVE
       },
       orderBy: {
@@ -72,9 +50,9 @@ class ConsService {
     return cons;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: ConsFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.ConsWhereInput) {
     const cons = await prisma.cons.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -97,7 +75,7 @@ class ConsService {
     });
 
     const totalCons = await prisma.cons.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -199,9 +177,13 @@ class ConsService {
   async destroy(id: number) {
     const cons = await this.findOne(id);
 
-    await prisma.cons.delete({
+    await prisma.cons.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

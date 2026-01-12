@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { DietTypeCollection } from "../../../resources/admin/v1/diet-type/diet-type.collection";
 import { DietTypeResource } from "../../../resources/admin/v1/diet-type/diet-type.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class DietTypeController {
   private dietTypeService: DietTypeService;
@@ -18,22 +19,34 @@ class DietTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, description, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.DietTypeWhereInput = {};
+
+    if (name || description) {
+      where.OR = [];
+      if (name) {
+        where.OR.push({
+          name: {
+            contains: name as string,
+          },
+        });
+      }
+      if (description) {
+        where.OR.push({
+          description: {
+            contains: description as string,
+          },
+        });
+      }
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const dietTypes = await this.dietTypeService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const dietTypes = await this.dietTypeService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Diet type list successfully",
@@ -41,9 +54,7 @@ class DietTypeController {
       );
     }
 
-    const dietTypes = await this.dietTypeService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const dietTypes = await this.dietTypeService.findAll(where);
     return successResponse(
       res,
       "Diet type list successfully",
@@ -94,12 +105,8 @@ class DietTypeController {
   }
 
   async destroy(req: Request, res: Response) {
-    const dietType = await this.dietTypeService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Diet type deleted successfully",
-      DietTypeResource.toResource(dietType)
-    );
+    await this.dietTypeService.destroy(+req.params.id);
+    return successResponse(res, "Diet type deleted successfully");
   }
 }
 

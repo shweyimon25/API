@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BadHabitCollection } from "../../../resources/admin/v1/bad-habit/bad-habit.collection";
 import { BadHabitResource } from "../../../resources/admin/v1/bad-habit/bad-habit.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class BadHabitController {
   private badHabitService: BadHabitService;
@@ -18,22 +19,34 @@ class BadHabitController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, description, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.BadHabitWhereInput = {};
+
+    if (name || description) {
+      where.OR = [];
+      if (name) {
+        where.OR.push({
+          name: {
+            contains: name as string,
+          },
+        });
+      }
+      if (description) {
+        where.OR.push({
+          description: {
+            contains: description as string,
+          },
+        });
+      }
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const badHabits = await this.badHabitService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const badHabits = await this.badHabitService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Bad habit list successfully",
@@ -41,9 +54,7 @@ class BadHabitController {
       );
     }
 
-    const badHabits = await this.badHabitService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const badHabits = await this.badHabitService.findAll(where);
     return successResponse(
       res,
       "Bad habit list successfully",
@@ -98,12 +109,8 @@ class BadHabitController {
   }
 
   async destroy(req: Request, res: Response) {
-    const badHabit = await this.badHabitService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Bad habit deleted successfully",
-      BadHabitResource.toResource(badHabit)
-    );
+    await this.badHabitService.destroy(+req.params.id);
+    return successResponse(res, "Bad habit deleted successfully");
   }
 }
 

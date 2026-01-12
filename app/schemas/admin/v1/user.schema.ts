@@ -12,7 +12,7 @@ export const createUserSchema = z
       .min(1, { message: "Username is required" })
       .refine((val) => !val.includes(" "), { message: "Username must not contain spaces" }),
     roleId: z.coerce.number().min(1, { message: "Role is required" }),
-    status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+    status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
     password: z
       .string()
       .regex(
@@ -40,7 +40,7 @@ export const updateUserSchema = z
       .email({ message: "Invalid email address" })
       .optional(),
     roleId: z.coerce.number().optional(),
-    status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+    status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
     password: z
       .string()
       .regex(

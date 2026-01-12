@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { TagCollection } from "../../../resources/admin/v1/tag/tag.collection";
 import { TagResource } from "../../../resources/admin/v1/tag/tag.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class TagController {
   private tagService: TagService;
@@ -18,22 +19,22 @@ class TagController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, status } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
+    let where: Prisma.TagWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
-    if (search) {
-      filters.search = search as string;
+
+    if (status) {
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const tags = await this.tagService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const tags = await this.tagService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Tag list successfully",
@@ -41,9 +42,7 @@ class TagController {
       );
     }
 
-    const tags = await this.tagService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const tags = await this.tagService.findAll(where);
     return successResponse(
       res,
       "Tag list successfully",
@@ -93,12 +92,8 @@ class TagController {
   }
 
   async destroy(req: Request, res: Response) {
-    const tag = await this.tagService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Tag deleted successfully",
-      TagResource.toResource(tag)
-    );
+    await this.tagService.destroy(+req.params.id);
+    return successResponse(res, "Tag deleted successfully");
   }
 }
 

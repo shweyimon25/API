@@ -6,7 +6,7 @@ import { successResponse } from "../../../helpers/response";
 import PaymentService from "../../../services/admin/v1/paymet.service";
 import { PaymentCollection } from "../../../resources/member/v1/payment/payment.collection";
 import { PaymentResource } from "../../../resources/member/v1/payment/payment.resource";
-import { Member } from "@prisma/client";
+import { Member, PaymentStatus, Prisma } from "@prisma/client";
 
 class PaymentController {
     private paymentService: PaymentService;
@@ -16,22 +16,44 @@ class PaymentController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, status, search } = req.query;
+        const { page, perPage, status, memberId, memberPlanId, memberTypeId, minAmount, maxAmount } = req.query;
 
-        const filters: any = {};
+        let where: Prisma.PaymentWhereInput = {};
+
         if (status) {
-            filters.status = status;
+            where.status = status as PaymentStatus;
         }
-        if (search) {
-            filters.search = search as string;
+
+        if (memberId) {
+            where.memberId = +memberId;
+        }
+
+        if (memberPlanId) {
+            where.memberPlanId = +memberPlanId;
+        }
+
+        if (memberTypeId) {
+            where.memberTypeId = +memberTypeId;
+        }
+
+        if (minAmount) {
+            where.amount = {
+                gte: +minAmount,
+            };
+        }
+
+        if (maxAmount) {
+            where.amount = {
+                lte: +maxAmount,
+            };
         }
 
         if (page && perPage) {
-            const payments = await this.paymentService.findByPaginate(+page, +perPage, Object.keys(filters).length > 0 ? filters : undefined);
+            const payments = await this.paymentService.findByPaginate(+page, +perPage, where);
             return successResponse(res, "Payment list successfully", PaymentCollection.withPagination(payments));
         }
 
-        const payments = await this.paymentService.findAll(Object.keys(filters).length > 0 ? filters : undefined);
+        const payments = await this.paymentService.findAll(where);
         return successResponse(res, "Payment list successfully", PaymentCollection.toCollection(payments));
     }
 

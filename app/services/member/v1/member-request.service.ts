@@ -136,7 +136,7 @@ class MemberRequestService {
             }
         });
 
-        if(existingTrainerMemberRequest) {
+        if (existingTrainerMemberRequest) {
             throw new BadRequestException("You have already requested")
         }
 
@@ -144,6 +144,7 @@ class MemberRequestService {
             data: {
                 memberId: userId,
                 memberTypeId: 2,
+                memberPlanId,
                 age,
                 gender,
                 yearOfExp,

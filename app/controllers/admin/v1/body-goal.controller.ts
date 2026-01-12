@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BodyGoalCollection } from "../../../resources/admin/v1/body-goal/body-goal.collection";
 import { BodyGoalResource } from "../../../resources/admin/v1/body-goal/body-goal.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class BodyGoalController {
     private bodyGoalService: BodyGoalService;
@@ -18,22 +19,22 @@ class BodyGoalController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, status, search } = req.query;
+        const { page, perPage, name, status } = req.query;
 
-        const filters: any = {};
-        if (status) {
-            filters.status = status;
+        let where: Prisma.BodyGoalWhereInput = {};
+
+        if (name) {
+            where.name = {
+                contains: name as string,
+            };
         }
-        if (search) {
-            filters.search = search as string;
+
+        if (status) {
+            where.status = status as Status;
         }
 
         if (page && perPage) {
-            const cons = await this.bodyGoalService.findByPaginate(
-                +page,
-                +perPage,
-                Object.keys(filters).length > 0 ? filters : undefined
-            );
+            const cons = await this.bodyGoalService.findByPaginate(+page, +perPage, where);
             return successResponse(
                 res,
                 "Body goal list successfully",
@@ -41,9 +42,7 @@ class BodyGoalController {
             );
         }
 
-        const cons = await this.bodyGoalService.findAll(
-            Object.keys(filters).length > 0 ? filters : undefined
-        );
+        const cons = await this.bodyGoalService.findAll(where);
         return successResponse(
             res,
             "Body goal list successfully",

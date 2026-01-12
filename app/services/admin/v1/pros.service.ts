@@ -8,34 +8,12 @@ import {
   CreateProsInput,
   UpdateProsInput,
 } from "../../../schemas/admin/v1/pros.schema";
-import { Status } from "@prisma/client";
-
-interface ProsFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class ProsService {
-  private where(filters?: ProsFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        { name: { contains: filters.search } },
-        { guard: { contains: filters.search } }
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: ProsFilters) {
+  async findAll(where?: Prisma.ProsWhereInput) {
     const pros = await prisma.pros.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -58,10 +36,10 @@ class ProsService {
     return pros;
   }
 
-  async findCommonAll(filters?: ProsFilters) {
+  async findCommonAll(where?: Prisma.ProsWhereInput) {
     const pros = await prisma.pros.findMany({
       where: {
-        ...this.where(filters),
+        ...where,
         status: Status.ACTIVE,
       },
       orderBy: {
@@ -77,9 +55,9 @@ class ProsService {
     return pros;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: ProsFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.ProsWhereInput) {
     const pros = await prisma.pros.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -102,7 +80,7 @@ class ProsService {
     });
 
     const totalPros = await prisma.pros.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -232,14 +210,17 @@ class ProsService {
   }
 
   async destroy(id: number) {
-    await this.findOne(id);
+    const pros = await this.findOne(id);
 
     await prisma.pros.update({
       where: { id },
       data: {
-        deletedAt: new Date()
-      }
+        status: Status.DELETE,
+        deletedAt: new Date(),
+      },
     });
+
+    return pros;
   }
 }
 

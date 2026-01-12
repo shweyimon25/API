@@ -8,42 +8,12 @@ import {
   CreatePhysicalLimitationInput,
   UpdatePhysicalLimitationInput,
 } from "../../../schemas/admin/v1/physical-limitation.schema";
-import { Status } from "@prisma/client";
-
-interface PhysicalLimitationFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class PhysicalLimitationService {
-  private where(filters?: PhysicalLimitationFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        {
-          name: {
-            contains: filters.search,
-          },
-        },
-        {
-          description: {
-            contains: filters.search,
-          },
-        },
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: PhysicalLimitationFilters) {
+  async findAll(where?: Prisma.PhysicalLimitationWhereInput) {
     const physicalLimitations = await prisma.physicalLimitation.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -73,10 +43,10 @@ class PhysicalLimitationService {
   async findByPaginate(
     page: number,
     perPage: number,
-    filters?: PhysicalLimitationFilters
+    where?: Prisma.PhysicalLimitationWhereInput
   ) {
     const physicalLimitations = await prisma.physicalLimitation.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -103,7 +73,7 @@ class PhysicalLimitationService {
     });
 
     const totalCount = await prisma.physicalLimitation.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -151,6 +121,25 @@ class PhysicalLimitationService {
     }
 
     return physicalLimitation;
+  }
+
+  async findCommonAll(where?: Prisma.PhysicalLimitationWhereInput) {
+    const physicalLimitations = await prisma.physicalLimitation.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return physicalLimitations;
   }
 
   async create(
@@ -269,9 +258,13 @@ class PhysicalLimitationService {
   async destroy(id: number) {
     const physicalLimitation = await this.findOne(id);
 
-    await prisma.physicalLimitation.delete({
+    await prisma.physicalLimitation.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

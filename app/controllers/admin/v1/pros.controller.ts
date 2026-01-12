@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ProsCollection } from "../../../resources/admin/v1/pros/pros.collection";
 import { ProsResource } from "../../../resources/admin/v1/pros/pros.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class ProsController {
   private prosService: ProsService;
@@ -18,23 +19,28 @@ class ProsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, name, guard, status } = req.query;
 
-    const filters: any = {};
+    let where: Prisma.ProsWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
+    if (guard) {
+      where.guard = {
+        contains: guard as string,
+      };
+    }
 
     if (status) {
-      filters.status = status;
-    }
-    if (search) {
-      filters.search = search as string;
+      where.status = status as Status;
     }
 
     if (page && perPage) {
-      const pros = await this.prosService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const pros = await this.prosService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Pros list successfully",
@@ -42,9 +48,7 @@ class ProsController {
       );
     }
 
-    const pros = await this.prosService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const pros = await this.prosService.findAll(where);
 
     return successResponse(
       res,
@@ -54,17 +58,23 @@ class ProsController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
+    const { name, guard } = req.query;
 
-    const filters: any = {};
+    let where: Prisma.ProsWhereInput = {};
 
-    if (search) {
-      filters.search = search as string;
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
 
-    const pros = await this.prosService.findCommonAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    if (guard) {
+      where.guard = {
+        contains: guard as string,
+      };
+    }
+
+    const pros = await this.prosService.findCommonAll(where);
 
     return successResponse(
       res,

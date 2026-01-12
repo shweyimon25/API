@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { MealCollection } from "../../../resources/admin/v1/meal/meal.collection";
 import { MealResource } from "../../../resources/admin/v1/meal/meal.resource";
+import { Prisma, Status } from "@prisma/client";
 
 class MealController {
   private mealService: MealService;
@@ -18,25 +19,26 @@ class MealController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search, mealTypeId } = req.query;
+    const { page, perPage, name, status, mealTypeId } = req.query;
 
-    const filters: any = {};
+    let where: Prisma.MealWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
     if (status) {
-      filters.status = status;
+      where.status = status as Status;
     }
-    if (search) {
-      filters.search = search as string;
-    }
+
     if (mealTypeId) {
-      filters.mealTypeId = +mealTypeId;
+      where.mealTypeId = +mealTypeId;
     }
 
     if (page && perPage) {
-      const meals = await this.mealService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const meals = await this.mealService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Meal list successfully",
@@ -44,9 +46,7 @@ class MealController {
       );
     }
 
-    const meals = await this.mealService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const meals = await this.mealService.findAll(where);
     return successResponse(
       res,
       "Meal list successfully",
@@ -96,12 +96,8 @@ class MealController {
   }
 
   async destroy(req: Request, res: Response) {
-    const meal = await this.mealService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Meal deleted successfully",
-      MealResource.toResource(meal)
-    );
+    await this.mealService.destroy(+req.params.id);
+    return successResponse(res, "Meal deleted successfully");
   }
 }
 

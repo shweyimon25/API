@@ -17,12 +17,12 @@ export const createPermissionSchema = z.object({
         message: "Name is already exist",
       }
     ),
-  status: z.nativeEnum(Status).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export const updatePermissionSchema = z.object({
   name: z.string().optional(),
-  status: z.nativeEnum(Status).optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export type CreatePermissionInput = z.infer<typeof createPermissionSchema>;

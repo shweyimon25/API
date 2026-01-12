@@ -38,13 +38,11 @@ model User {
   rolesUpdated               Role[]               @relation("RoleUpdatedBy")
   memberPlansCreated         MemberPlan[]         @relation("MemberPlanCreatedBy")
   memberPlansUpdated         MemberPlan[]         @relation("MemberPlanUpdatedBy")
-  memberPlansDeleted         MemberPlan[]         @relation("MemberPlanDeletedBy")
   prosCreated                Pros[]               @relation("ProsCreatedBy")
   prosUpdated                Pros[]               @relation("ProsUpdatedBy")
   consCreated                Cons[]               @relation("ConsCreatedBy")
   consUpdated                Cons[]               @relation("ConsUpdatedBy")
   memberCreated              Member[]             @relation("MemberCreatedBy")
-  memberDeleted              Member[]             @relation("MemberDeletedBy")
   memberUpdated              Member[]             @relation("MemberUpdatedBy")
   bodyGoalsCreated           BodyGoal[]           @relation("BodyGoalCreatedBy")
   bodyGoalsUpdated           BodyGoal[]           @relation("BodyGoalUpdatedBy")
@@ -60,7 +58,6 @@ model User {
   bankInformationUpdated     BankInformation[]    @relation("BankInformationUpdatedBy")
   shopLevelsCreated          ShopLevel[]          @relation("ShopLevelCreatedBy")
   shopLevelsUpdated          ShopLevel[]          @relation("ShopLevelUpdatedBy")
-  shopLevelsDeleted          ShopLevel[]          @relation("ShopLevelDeletedBy")
   shopsCreated               Shop[]               @relation("ShopCreatedBy")
   shopsUpdated               Shop[]               @relation("ShopUpdatedBy")
   physicalLimitationsCreated PhysicalLimitation[] @relation("PhysicalLimitationCreatedBy")
@@ -159,17 +156,16 @@ model MemberPlan {
   isVideoGroup Boolean    @default(false)
   status       Status     @default(ACTIVE)
 
-  deletedAt   DateTime?
-  createdById Int?
-  updatedById Int?
-  deletedById Int?
-  createdBy   User?     @relation("MemberPlanCreatedBy", fields: [createdById], references: [id])
-  deletedBy   User?     @relation("MemberPlanDeletedBy", fields: [deletedById], references: [id])
-  updatedBy   User?     @relation("MemberPlanUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  payments    Payment[]
-  workouts    Workout[]
+  deletedAt      DateTime?
+  createdById    Int?
+  updatedById    Int?
+  createdBy      User?           @relation("MemberPlanCreatedBy", fields: [createdById], references: [id])
+  updatedBy      User?           @relation("MemberPlanUpdatedBy", fields: [updatedById], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  payments       Payment[]
+  workouts       Workout[]
+  memberRequests MemberRequest[]
 }
 
 model Pros {
@@ -207,11 +203,16 @@ model Cons {
 }
 
 model MemberRequest {
-  id           Int        @id @default(autoincrement())
-  memberId     Int
-  member       Member     @relation(fields: [memberId], references: [id])
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
   memberTypeId Int
   memberType   MemberType @relation(fields: [memberTypeId], references: [id])
+
+  memberPlanId Int
+  memberPlan   MemberPlan @relation(fields: [memberPlanId], references: [id])
 
   age          Int?
   gender       Gender?
@@ -250,11 +251,9 @@ model Member {
   status   Status   @default(ACTIVE)
 
   deletedAt   DateTime?
-  deletedById Int?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("MemberCreatedBy", fields: [createdById], references: [id])
-  deletedBy   User?     @relation("MemberDeletedBy", fields: [deletedById], references: [id])
   updatedBy   User?     @relation("MemberUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -374,10 +373,8 @@ model ShopLevel {
   status      Status  @default(ACTIVE)
 
   deletedAt   DateTime?
-  deletedById Int?
   createdById Int?
   updatedById Int?
-  deletedBy   User?     @relation("ShopLevelDeletedBy", fields: [deletedById], references: [id])
   createdBy   User?     @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
   updatedBy   User?     @relation("ShopLevelUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime  @default(now())

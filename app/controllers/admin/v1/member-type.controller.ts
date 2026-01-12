@@ -34,7 +34,7 @@ class MemberTypeController {
         +perPage,
         where
       );
-      
+
       return successResponse(
         res,
         "Member type list successfully",

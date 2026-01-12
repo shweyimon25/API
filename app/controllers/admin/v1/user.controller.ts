@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
-import { User } from "@prisma/client";
+import { Prisma, Status, User } from "@prisma/client";
 
 class UserController {
   private userService: UserService;
@@ -19,26 +19,49 @@ class UserController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search, roleId } = req.query;
+    const { page, perPage, name, email, username, status, roleId } = req.query;
 
-    // Build filters object
-    const filters: any = {};
+    let where: Prisma.UserWhereInput = {};
+
+    if (name || email || username) {
+      where.OR = [];
+      if (name) {
+        where.OR.push({
+          name: {
+            contains: name as string,
+          },
+        });
+      }
+      if (email) {
+        where.OR.push({
+          email: {
+            contains: email as string,
+          },
+        });
+      }
+      if (username) {
+        where.OR.push({
+          username: {
+            contains: username as string,
+          },
+        });
+      }
+    }
+
     if (status) {
-      filters.status = status;
+      where.status = status as Status;
     }
-    if (search) {
-      filters.search = search as string;
-    }
+
     if (roleId) {
-      filters.roleId = +roleId;
+      where.roles = {
+        some: {
+          roleId: +roleId,
+        },
+      };
     }
 
     if (page && perPage) {
-      const users = await this.userService.findByPaginate(
-        +page,
-        +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
-      );
+      const users = await this.userService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "User list successfully",
@@ -46,9 +69,7 @@ class UserController {
       );
     }
 
-    const users = await this.userService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const users = await this.userService.findAll(where);
     return successResponse(
       res,
       "User list successfully",
@@ -57,20 +78,44 @@ class UserController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search, roleId } = req.query;
+    const { name, email, username, roleId } = req.query;
 
-    // Build filters object
-    const filters: any = {};
-    if (search) {
-      filters.search = search as string;
+    let where: Prisma.UserWhereInput = {};
+
+    if (name || email || username) {
+      where.OR = [];
+      if (name) {
+        where.OR.push({
+          name: {
+            contains: name as string,
+          },
+        });
+      }
+      if (email) {
+        where.OR.push({
+          email: {
+            contains: email as string,
+          },
+        });
+      }
+      if (username) {
+        where.OR.push({
+          username: {
+            contains: username as string,
+          },
+        });
+      }
     }
+
     if (roleId) {
-      filters.roleId = +roleId;
+      where.roles = {
+        some: {
+          roleId: +roleId,
+        },
+      };
     }
 
-    const users = await this.userService.findCommonAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const users = await this.userService.findCommonAll(where);
     return successResponse(
       res,
       "Common User list successfully",

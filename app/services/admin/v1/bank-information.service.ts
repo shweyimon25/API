@@ -3,56 +3,16 @@ import {
   UpdateBankInformationInput,
 } from "../../../schemas/admin/v1/bank-information.schema";
 import prisma from "../../../../prisma/client";
-import { PaymentTypes, Status } from "@prisma/client";
+import { PaymentTypes, Prisma, Status } from "@prisma/client";
 import {
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
 
-interface BankInformationFilters {
-  status?: Status;
-  search?: string;
-  paymentTypes?: PaymentTypes;
-}
-
 class BankInformationService {
-  private where(filters?: BankInformationFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.paymentTypes) {
-      where.paymentTypes = filters.paymentTypes;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        {
-          bankAccountHolder: {
-            contains: filters.search,
-          },
-        },
-        {
-          bankAccountNumber: {
-            contains: filters.search,
-          },
-        },
-        {
-          phone: {
-            contains: filters.search,
-          },
-        },
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: BankInformationFilters) {
+  async findAll(where?: Prisma.BankInformationWhereInput) {
     const bankInformations = await prisma.bankInformation.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -79,9 +39,9 @@ class BankInformationService {
     return bankInformations;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: BankInformationFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.BankInformationWhereInput) {
     const bankInformations = await prisma.bankInformation.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -108,7 +68,7 @@ class BankInformationService {
     });
 
     const totalBankInformations = await prisma.bankInformation.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -157,6 +117,26 @@ class BankInformationService {
     }
 
     return bankInformation;
+  }
+
+  async findCommonAll(where?: Prisma.BankInformationWhereInput) {
+    const bankInformations = await prisma.bankInformation.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        bankAccountHolder: true,
+        bankAccountNumber: true,
+      },
+    });
+
+    return bankInformations;
   }
 
   async create(
@@ -275,9 +255,13 @@ class BankInformationService {
     const bankInformation = await this.findOne(id);
 
     // Delete bank information
-    await prisma.bankInformation.delete({
+    await prisma.bankInformation.update({
       where: {
         id,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
       },
     });
 

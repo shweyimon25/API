@@ -3,58 +3,16 @@ import {
   UpdateShopInput,
 } from "./../../../schemas/admin/v1/shop.schema";
 import prisma from "../../../../prisma/client";
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import {
   BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
 
-interface ShopFilters {
-  status?: Status;
-  search?: string;
-  shopLevelId?: number;
-  memberId?: number;
-}
-
 class ShopService {
-  private where(filters?: ShopFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.shopLevelId) {
-      where.shopLevelId = filters.shopLevelId;
-    }
-
-    if (filters?.memberId) {
-      where.memberId = filters.memberId;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        {
-          name: {
-            contains: filters.search,
-          },
-        },
-        {
-          member: {
-            name: {
-              contains: filters.search,
-            },
-          },
-        },
-      ];
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: ShopFilters) {
+  async findAll(where?: Prisma.ShopWhereInput) {
     const shops = await prisma.shop.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -80,9 +38,9 @@ class ShopService {
     return shops;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: ShopFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.ShopWhereInput) {
     const shops = await prisma.shop.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -108,7 +66,7 @@ class ShopService {
     });
 
     const totalShops = await prisma.shop.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -157,9 +115,9 @@ class ShopService {
     return shop;
   }
 
-  async findCommonAll(filters?: ShopFilters) {
+  async findCommonAll(where?: Prisma.ShopWhereInput) {
     const shops = await prisma.shop.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -327,10 +285,14 @@ class ShopService {
     const shop = await this.findOne(id);
 
     // Delete shop
-    await prisma.shop.delete({
+    await prisma.shop.update({
       where: {
         id,
       },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
+      }
     });
 
     return shop;
