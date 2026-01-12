@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ShopLevelCollection } from "../../../resources/admin/v1/shop-level/shop-level.collection";
 import { ShopLevelResource } from "../../../resources/admin/v1/shop-level/shop-level.resource";
+import { Prisma, Status, User } from "@prisma/client";
 
 class ShopLevelController {
   private shopLevelService: ShopLevelService;
@@ -18,22 +19,45 @@ class ShopLevelController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, status, search, duration, postLimit, name, minPrice, maxPrice } = req.query;
 
-    const filters: any = {};
+    const where: Prisma.ShopLevelWhereInput = {};
+
     if (status) {
-      filters.status = status;
+      where.status = status as Status;
     }
+
+    if (duration) {
+      where.duration = { equals: +duration as number };
+    }
+
+    if (postLimit) {
+      where.postLimit = { equals: +postLimit as number };
+    }
+
     if (search) {
-      filters.search = search as string;
+      where.name = { contains: search as string, mode: "insensitive" };
+    }
+
+    if (name) {
+      where.name = { equals: name as string };
+    }
+
+    if (minPrice) {
+      where.price = { gte: +minPrice as number };
+    }
+
+    if (maxPrice) {
+      where.price = { lte: +maxPrice as number };
     }
 
     if (page && perPage) {
       const shopLevels = await this.shopLevelService.findByPaginate(
         +page,
         +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
+        where
       );
+
       return successResponse(
         res,
         "Shop level list successfully",
@@ -41,9 +65,8 @@ class ShopLevelController {
       );
     }
 
-    const shopLevels = await this.shopLevelService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const shopLevels = await this.shopLevelService.findAll(where);
+
     return successResponse(
       res,
       "Shop level list successfully",
@@ -53,6 +76,7 @@ class ShopLevelController {
 
   async findOne(req: Request, res: Response) {
     const shopLevel = await this.shopLevelService.findOne(+req.params.id);
+
     return successResponse(
       res,
       "Shop level details successfully",
@@ -60,14 +84,35 @@ class ShopLevelController {
     );
   }
 
-  async create(req: Request, res: Response) {
-    const { data, error } = await validater(createShopLevelSchema, req.body);
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
 
-    if (error) {
+    const where: Prisma.ShopLevelWhereInput = {};
+
+    if (search) {
+      where.name = { contains: search as string, mode: "insensitive" };
+    }
+
+    const shopLevels = await this.shopLevelService.findCommonAll(where);
+
+    return successResponse(
+      res,
+      "Shop level list successfully",
+      ShopLevelCollection.toCollection(shopLevels)
+    );
+  }
+
+  async create(req: Request, res: Response) {
+    const { data, success, error } = await validater(createShopLevelSchema, req.body);
+
+    if (!success) {
       throw new ValidationException("Failed to create shop level", error);
     }
 
-    const shopLevel = await this.shopLevelService.create(data);
+    const userId = (req.user as User)?.id;
+
+    const shopLevel = await this.shopLevelService.create(data, +userId);
+
     return successResponse(
       res,
       "Shop level created successfully",
@@ -82,7 +127,10 @@ class ShopLevelController {
       throw new ValidationException("Failed to update shop level", error);
     }
 
-    const shopLevel = await this.shopLevelService.update(+req.params.id, data);
+    const { id } = req.params;
+    const userId = (req.user as User)?.id;
+    const shopLevel = await this.shopLevelService.update(+id, data, +userId);
+
     return successResponse(
       res,
       "Shop level updated successfully",
@@ -91,11 +139,12 @@ class ShopLevelController {
   }
 
   async destory(req: Request, res: Response) {
-    const shopLevel = await this.shopLevelService.destroy(+req.params.id);
+    const { id } = req.params;
+    const userId = (req.user as User)?.id;
+    await this.shopLevelService.destroy(+id, userId);
     return successResponse(
       res,
-      "Shop level deleted successfully",
-      ShopLevelResource.toResource(shopLevel)
+      "Shop level deleted successfully"
     );
   }
 }

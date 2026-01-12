@@ -1,3 +1,5 @@
+import { Role } from "@prisma/client";
+
 export class UserResource {
   static toResource(user: any) {
     return {
@@ -6,11 +8,8 @@ export class UserResource {
       email: user.email,
       username: user.username,
       status: user.status,
-      roles: user.roles.map((role: any) => {
-        return {
-          id: role.id,
-          name: role.name,
-        };
+      roles: user.roles?.map((role: any) => {
+        return role?.role
       }),
       createdBy: user.createdBy,
       updatedBy: user.updatedBy,

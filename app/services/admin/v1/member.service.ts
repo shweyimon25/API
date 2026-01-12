@@ -394,6 +394,7 @@ class MemberService {
         id,
       },
       data: {
+        status: Status.DELETE,
         deletedAt: new Date(),
         deletedBy: {
           connect: { id: userId }

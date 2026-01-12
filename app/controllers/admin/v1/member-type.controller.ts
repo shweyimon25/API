@@ -1,4 +1,4 @@
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import { successResponse } from "../../../helpers/response";
 import { MemberTypeCollection } from "../../../resources/admin/v1/member-type/member-type.collection";
 import { MemberTypeResource } from "../../../resources/admin/v1/member-type/member-type.resource";
@@ -15,22 +15,26 @@ class MemberTypeController {
   async findAll(req: Request, res: Response) {
     const { page, perPage, search, status } = req.query;
 
-    const filters: any = {};
+    const where: Prisma.MemberTypeWhereInput = {};
 
     if (search) {
-      filters.search = search as string
+      where.name = {
+        contains: search as string,
+        mode: "insensitive"
+      };
     }
 
     if (status) {
-      filters.status = status as Status
+      where.status = status as Status;
     }
 
     if (page && perPage) {
       const memberTypes = await this.memberTypeService.findByPaginate(
         +page,
         +perPage,
-        filters
+        where
       );
+      
       return successResponse(
         res,
         "Member type list successfully",
@@ -38,7 +42,7 @@ class MemberTypeController {
       );
     }
 
-    const memberTypes = await this.memberTypeService.findAll(filters);
+    const memberTypes = await this.memberTypeService.findAll(where);
 
     return successResponse(
       res,
@@ -50,24 +54,28 @@ class MemberTypeController {
   async findCommonAll(req: Request, res: Response) {
     const { search } = req.query;
 
-    const filters: any = {};
+    const where: Prisma.MemberTypeWhereInput = {};
+
     if (search) {
-      filters.search = search as string;
+      where.name = {
+        contains: search as string,
+        mode: "insensitive"
+      };
     }
 
-    const memberTypes = await this.memberTypeService.findCommonAll(filters);
+    const memberTypes = await this.memberTypeService.findCommonAll(where);
 
-    console.log(memberTypes);
-    // return successResponse(
-    //   res,
-    //   "Common Role list successfully",
-    //   MemberTypeCollection.toCommonCollection(memberTypes)
-    // );
+    return successResponse(
+      res,
+      "Common member type list successfully",
+      MemberTypeCollection.toCommonCollection(memberTypes)
+    );
   }
 
   async findOne(req: Request, res: Response) {
     const { id } = req.params;
     const memberType = await this.memberTypeService.findOne(+id);
+
     return successResponse(
       res,
       "Member type detail successfully",

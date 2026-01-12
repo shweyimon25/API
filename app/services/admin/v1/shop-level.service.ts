@@ -7,53 +7,60 @@ import {
   BadRequestException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { Status } from "@prisma/client";
-
-interface ShopLevelFilters {
-  status?: Status;
-  search?: string;
-}
+import { Prisma, Status } from "@prisma/client";
 
 class ShopLevelService {
-  private where(filters?: ShopLevelFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: ShopLevelFilters) {
+  async findAll(where?: Prisma.ShopLevelWhereInput) {
     const shopLevels = await prisma.shopLevel.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     return shopLevels;
   }
 
-  async findByPaginate(page: number, perPage: number, filters?: ShopLevelFilters) {
+  async findByPaginate(page: number, perPage: number, where: Prisma.ShopLevelWhereInput) {
     const shopLevels = await prisma.shopLevel.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
       skip: (page - 1) * perPage,
       take: perPage,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     const totalShopLevels = await prisma.shopLevel.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -76,6 +83,20 @@ class ShopLevelService {
       where: {
         id,
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!shopLevel) {
@@ -85,10 +106,28 @@ class ShopLevelService {
     return shopLevel;
   }
 
-  async create(createShopLevelInput: CreateShopLevelInput) {
-    const { name, price, duration, description, status } = createShopLevelInput;
+  async findCommonAll(where?: Prisma.ShopLevelWhereInput) {
+    const shopLevels = await prisma.shopLevel.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
 
-    // Check shop level name unique
+    return shopLevels;
+  }
+
+  async create(createShopLevelInput: CreateShopLevelInput, userId: number) {
+    const { name, price, duration, description, status, postLimit } = createShopLevelInput;
+
     const shopLevelName = await prisma.shopLevel.findFirst({
       where: {
         name,
@@ -104,24 +143,28 @@ class ShopLevelService {
       ]);
     }
 
-    // Create new shop level
     const shopLevel = await prisma.shopLevel.create({
       data: {
         name,
         price,
         duration,
         description,
+        postLimit,
         status: status ?? Status.ACTIVE,
+        createdBy: {
+          connect: {
+            id: userId
+          }
+        }
       },
     });
 
     return this.findOne(shopLevel.id);
   }
 
-  async update(id: number, updateShopLevelInput: UpdateShopLevelInput) {
-    const { name, price, duration, description, status } = updateShopLevelInput;
+  async update(id: number, updateShopLevelInput: UpdateShopLevelInput, userId: number) {
+    const { name, price, duration, description, status, postLimit } = updateShopLevelInput;
 
-    // Check shop level exists
     const existingShopLevel = await prisma.shopLevel.findUnique({
       where: {
         id,
@@ -132,7 +175,6 @@ class ShopLevelService {
       throw new BadRequestException("Shop level not found");
     }
 
-    // Check shop level name unique if name is being updated
     if (name && name !== existingShopLevel.name) {
       const shopLevelName = await prisma.shopLevel.findFirst({
         where: {
@@ -160,32 +202,41 @@ class ShopLevelService {
       },
       data: {
         name: name ?? existingShopLevel.name,
-        price: price !== undefined ? price : existingShopLevel.price,
-        duration:
-          duration !== undefined ? duration : existingShopLevel.duration,
+        price: price ?? existingShopLevel.price,
+        duration: duration ?? existingShopLevel.duration,
         description:
-          description !== undefined
-            ? description
-            : existingShopLevel.description,
+          description ??
+          existingShopLevel.description,
+        postLimit: postLimit ?? existingShopLevel.postLimit,
         status: status ?? existingShopLevel.status,
+        updatedBy: {
+          connect: {
+            id: userId
+          }
+        }
       },
     });
 
     return this.findOne(id);
   }
 
-  async destroy(id: number) {
-    // Find shop level
-    const shopLevel = await this.findOne(id);
+  async destroy(id: number, userId: number) {
+    await this.findOne(id);
 
-    // Delete shop level
-    await prisma.shopLevel.delete({
+    await prisma.shopLevel.update({
       where: {
-        id,
+        id
       },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
+        deletedBy: {
+          connect: {
+            id: userId
+          }
+        }
+      }
     });
-
-    return shopLevel;
   }
 }
 

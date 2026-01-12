@@ -157,6 +157,20 @@ class ShopService {
     return shop;
   }
 
+  async findCommonAll(filters?: ShopFilters) {
+    const shops = await prisma.shop.findMany({
+      where: this.where(filters),
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+      }
+    });
+    return shops;
+  }
+
   async create(createShopInput: CreateShopInput) {
     const { name, memberId, shopLevelId, status } = createShopInput;
 

@@ -1,12 +1,19 @@
 export class ShopCollection {
-  static toCollection(res: any[]) {
-    return res;
+  static toCollection(shops: any[]) {
+    return shops;
   }
 
-  static withPagination(res: { data: any[]; meta: any }) {
+  static toCommonCollection(shops: any[]) {
+    return shops.map((shop: any) => ({
+      id: shop.id,
+      name: shop.name,
+    }));
+  }
+
+  static withPagination(shops: { data: any[]; meta: any }) {
     return {
-      data: this.toCollection(res.data),
-      meta: res.meta,
+      data: this.toCollection(shops.data),
+      meta: shops.meta,
     };
   }
 }

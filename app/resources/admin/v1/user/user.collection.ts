@@ -6,11 +6,8 @@ export class UserCollection {
       email: user.email,
       username: user.username,
       status: user.status,
-      roles: user.roles.map((r: any) => {
-        return {
-          id: r.role.id,
-          name: r.role.name,
-        };
+      roles: user.roles?.map((role: any) => {
+        return role?.role
       }),
       createdBy: user.createdBy,
       updatedBy: user.updatedBy,

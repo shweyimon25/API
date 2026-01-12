@@ -15,6 +15,7 @@ import badHabitSeeder from "./bad-habit.seeder";
 import categorySeeder from "./category.seeder";
 import memberPlanSeeder from "./member-plan.seeder";
 import bankInformationSeeder from "./bank-information.seeder";
+import shopLevelSeeder from "./shop-level.seeder";
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ const main = async () => {
     await bankInformationSeeder();
     await adminUserSeeder();
     await memberTypeSeeder();
+    await shopLevelSeeder();
     await proSeeder();
     await conSeeder();
     await tagSeeder();

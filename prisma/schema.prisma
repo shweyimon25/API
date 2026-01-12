@@ -36,10 +36,9 @@ model User {
   usersUpdated               User[]               @relation("UserUpdatedBy")
   rolesCreated               Role[]               @relation("RoleCreatedBy")
   rolesUpdated               Role[]               @relation("RoleUpdatedBy")
-  memberTypesCreated         MemberType[]         @relation("MemberTypeCreatedBy")
-  memberTypesUpdated         MemberType[]         @relation("MemberTypeUpdatedBy")
   memberPlansCreated         MemberPlan[]         @relation("MemberPlanCreatedBy")
   memberPlansUpdated         MemberPlan[]         @relation("MemberPlanUpdatedBy")
+  memberPlansDeleted         MemberPlan[]         @relation("MemberPlanDeletedBy")
   prosCreated                Pros[]               @relation("ProsCreatedBy")
   prosUpdated                Pros[]               @relation("ProsUpdatedBy")
   consCreated                Cons[]               @relation("ConsCreatedBy")
@@ -61,6 +60,7 @@ model User {
   bankInformationUpdated     BankInformation[]    @relation("BankInformationUpdatedBy")
   shopLevelsCreated          ShopLevel[]          @relation("ShopLevelCreatedBy")
   shopLevelsUpdated          ShopLevel[]          @relation("ShopLevelUpdatedBy")
+  shopLevelsDeleted          ShopLevel[]          @relation("ShopLevelDeletedBy")
   shopsCreated               Shop[]               @relation("ShopCreatedBy")
   shopsUpdated               Shop[]               @relation("ShopUpdatedBy")
   physicalLimitationsCreated PhysicalLimitation[] @relation("PhysicalLimitationCreatedBy")
@@ -139,11 +139,6 @@ model MemberType {
   members Member[]
   status  Status   @default(ACTIVE)
 
-  deletedAt      DateTime?
-  createdById    Int?
-  updatedById    Int?
-  createdBy      User?           @relation("MemberTypeCreatedBy", fields: [createdById], references: [id])
-  updatedBy      User?           @relation("MemberTypeUpdatedBy", fields: [updatedById], references: [id])
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   memberPlans    MemberPlan[]
@@ -167,7 +162,9 @@ model MemberPlan {
   deletedAt   DateTime?
   createdById Int?
   updatedById Int?
+  deletedById Int?
   createdBy   User?     @relation("MemberPlanCreatedBy", fields: [createdById], references: [id])
+  deletedBy   User?     @relation("MemberPlanDeletedBy", fields: [deletedById], references: [id])
   updatedBy   User?     @relation("MemberPlanUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -369,7 +366,7 @@ enum Theme {
 
 model ShopLevel {
   id          Int     @id @default(autoincrement())
-  name        String  @unique
+  name        String
   price       Int     @default(0)
   duration    Int     @default(0)
   description String? @db.Text()
@@ -377,8 +374,10 @@ model ShopLevel {
   status      Status  @default(ACTIVE)
 
   deletedAt   DateTime?
+  deletedById Int?
   createdById Int?
   updatedById Int?
+  deletedBy   User?     @relation("ShopLevelDeletedBy", fields: [deletedById], references: [id])
   createdBy   User?     @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
   updatedBy   User?     @relation("ShopLevelUpdatedBy", fields: [updatedById], references: [id])
   createdAt   DateTime  @default(now())

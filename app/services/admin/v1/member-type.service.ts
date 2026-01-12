@@ -1,4 +1,4 @@
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
 
@@ -8,66 +8,38 @@ interface MemberTypeFilters {
 }
 
 class MemberTypeService {
-  private where(filters?: MemberTypeFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.search) {
-      where.OR = [
-        { name: { contains: filters.search } },
-      ];
-    }
-
-    return where;
-  }
-
-
-  async findAll(filters?: MemberTypeFilters) {
+  async findAll(where?: Prisma.MemberTypeWhereInput) {
     const memberTypes = await prisma.memberType.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
       }
     });
 
     return memberTypes;
   }
 
-  async findCommonAll(filters?: MemberTypeFilters) {
-    return 'con';
+  async findCommonAll(where?: Prisma.MemberTypeWhereInput) {
     const memberTypes = await prisma.memberType.findMany({
       where: {
-        ...this.where(filters),
+        ...where,
         status: Status.ACTIVE
       },
       orderBy: {
         id: "desc"
       },
+      select: {
+        id: true,
+        name: true
+      }
     });
 
     return memberTypes;
   }
 
-  async findByPaginate(page: number, perPage: number, filters: MemberTypeFilters) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.MemberTypeWhereInput) {
     const memberTypes = await prisma.memberType.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
@@ -76,7 +48,7 @@ class MemberTypeService {
     });
 
     const totalMemberTypes = await prisma.memberType.count({
-      where: this.where(filters)
+      where,
     });
 
     return {

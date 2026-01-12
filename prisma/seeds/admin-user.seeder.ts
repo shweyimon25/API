@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import { hashPassword } from "../../app/helpers/helper";
 import prisma from "../client";
 
@@ -19,28 +20,17 @@ const adminUserSeeder = async () => {
     throw new Error("SuperAdmin role not found. Please run role seeder first.");
   }
 
-  await prisma.user.upsert({
+  const existingAdmin = await prisma.user.findUnique({
     where: { email: adminData.email },
-    update: {
+  });
+
+  await prisma.user.create({
+    data: {
       name: adminData.name,
+      email: adminData.email,
       password: adminData.password,
-      roles: {
-        upsert: {
-          where: {
-            userId_roleId: {
-              userId: 0,
-              roleId: superAdminRole.id,
-            },
-          },
-          create: {
-            role: { connect: { id: superAdminRole.id } },
-          },
-          update: {},
-        },
-      },
-    },
-    create: {
-      ...adminData,
+      username: adminData.username,
+      status: Status.ACTIVE,
       roles: {
         create: {
           role: { connect: { id: superAdminRole.id } },

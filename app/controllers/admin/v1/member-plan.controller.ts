@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { MemberPlanCollection } from "../../../resources/admin/v1/member-plan/member-plan.collection";
 import { MemberPlanResource } from "../../../resources/admin/v1/member-plan/member-plan.resource";
+import { Prisma, Status, User } from "@prisma/client";
 
 class MemberPlanController {
   private memberPlanService: MemberPlanService;
@@ -18,22 +19,52 @@ class MemberPlanController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search } = req.query;
+    const { page, perPage, status, search, memberTypeId, minPrice, maxPrice, duration, isVideoGroup } = req.query;
 
-    const filters: any = {};
-    if (status) {
-      filters.status = status;
-    }
+    const where: Prisma.MemberPlanWhereInput = {};
+
     if (search) {
-      filters.search = search as string;
+      where.OR = [
+        { name: { contains: search as string, mode: "insensitive" } },
+        { memberType: { name: { contains: search as string, mode: "insensitive" } } },
+      ];
+    }
+
+    if (status) {
+      where.status = status as Status;
+    }
+
+    if (memberTypeId) {
+      where.memberTypeId = +memberTypeId as number;
+    }
+
+    if (minPrice) {
+      where.price = {
+        gte: +minPrice as number,
+      };
+    }
+
+    if (maxPrice) {
+      where.price = {
+        lte: +maxPrice as number,
+      };
+    }
+
+    if (duration) {
+      where.duration = +duration as number;
+    }
+
+    if (isVideoGroup) {
+      where.isVideoGroup = isVideoGroup === "true" ? true : false;
     }
 
     if (page && perPage) {
       const memberPlans = await this.memberPlanService.findByPaginate(
         +page,
         +perPage,
-        Object.keys(filters).length > 0 ? filters : undefined
+        where
       );
+
       return successResponse(
         res,
         "Member plan list successfully",
@@ -58,14 +89,37 @@ class MemberPlanController {
     );
   }
 
-  async create(req: Request, res: Response) {
-    const { data, error } = await validater(createMemberPlanSchema, req.body);
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
 
-    if (error) {
+    const where: Prisma.MemberPlanWhereInput = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: "insensitive" } },
+        { memberType: { name: { contains: search as string, mode: "insensitive" } } },
+      ];
+    }
+
+    const memberPlans = await this.memberPlanService.findCommonAll(where);
+
+    return successResponse(
+      res,
+      "Common member plan list successfully",
+      MemberPlanCollection.toCommonCollection(memberPlans)
+    );
+  }
+
+  async create(req: Request, res: Response) {
+    const { data, success, error } = await validater(createMemberPlanSchema, req.body);
+
+    if (!success) {
       throw new ValidationException("Failed to created member plan", error);
     }
 
-    const memberPlan = await this.memberPlanService.create(data);
+    const userId = (req.user as User)?.id;
+    const memberPlan = await this.memberPlanService.create(data, +userId);
+
     return successResponse(
       res,
       "Member plan created successfully",
@@ -74,13 +128,16 @@ class MemberPlanController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateMemberPlanSchema, req.body);
+    const { id } = req.params;
+    const { data, success, error } = await validater(updateMemberPlanSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to updated member plan", error);
     }
 
-    const memberPlan = await this.memberPlanService.create(data);
+    const userId = (req.user as User)?.id;
+    const memberPlan = await this.memberPlanService.update(+id, data, +userId);
+
     return successResponse(
       res,
       "Member plan updated successfully",
@@ -89,12 +146,9 @@ class MemberPlanController {
   }
 
   async destory(req: Request, res: Response) {
-    const memberPlan = await this.memberPlanService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Member plan deleted successfully",
-      MemberPlanResource.toResource(memberPlan)
-    );
+    const userId = (req.user as User)?.id;
+    await this.memberPlanService.destroy(+req.params.id, +userId);
+    return successResponse(res, "Member plan deleted successfully");
   }
 }
 

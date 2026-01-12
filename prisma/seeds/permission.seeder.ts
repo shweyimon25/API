@@ -94,6 +94,28 @@ const permissionSeeder = async () => {
       description: "Update a member request",
     },
 
+    // Member Plan
+    {
+      name: "member-plan:list",
+      description: "Show all member plans",
+    },
+    {
+      name: "member-plan:read",
+      description: "Show member plan details",
+    },
+    {
+      name: "member-plan:create",
+      description: "Create new member plan",
+    },
+    {
+      name: "member-plan:update",
+      description: "Update a member plan",
+    },
+    {
+      name: "member-plan:delete",
+      description: "Delete a member plan",
+    },
+
     // Member Type
     {
       name: "member-type:list",
@@ -420,6 +442,28 @@ const permissionSeeder = async () => {
     {
       name: "shop-level:delete",
       description: "Delete a shop level",
+    },
+
+    // Shop 
+    {
+      name: "shop:list",
+      description: "Show all shop",
+    },
+    {
+      name: "shop:read",
+      description: "Show shop",
+    },
+    {
+      name: "shop:create",
+      description: "Create new shop",
+    },
+    {
+      name: "shop:update",
+      description: "Update a shop",
+    },
+    {
+      name: "shop:delete",
+      description: "Delete a shop",
     },
 
     // Tag 

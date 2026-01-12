@@ -9,6 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ShopCollection } from "../../../resources/admin/v1/shop/shop.collection";
 import { ShopResource } from "../../../resources/admin/v1/shop/shop.resource";
+import { Prisma } from "@prisma/client";
 
 class ShopController {
   private shopService: ShopService;
@@ -43,6 +44,27 @@ class ShopController {
       res,
       "Shop details successfully",
       ShopResource.toResource(shop)
+    );
+  }
+
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    const where: Prisma.ShopWhereInput = {};
+
+    if (search) {
+      where.name = {
+        contains: search as string,
+        mode: "insensitive"
+      };
+    }
+
+    const shops = await this.shopService.findCommonAll();
+
+    return successResponse(
+      res,
+      "Shop list successfully",
+      ShopCollection.toCommonCollection(shops)
     );
   }
 

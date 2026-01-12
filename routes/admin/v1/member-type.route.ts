@@ -20,7 +20,11 @@ router
 
 router.route('/common').get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['member'])
+  hasPermission(['member-type:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await memberTypeController.findCommonAll(req, res)
+  ),
 ]);
 
 router

@@ -3,7 +3,6 @@ import { Prisma, PrismaClient } from "@prisma/client";
 const SOFT_DELETE_MODELS = new Set([
     Prisma.ModelName.User,
     Prisma.ModelName.Role,
-    Prisma.ModelName.MemberType,
     Prisma.ModelName.MemberPlan,
     Prisma.ModelName.Pros,
     Prisma.ModelName.Cons,

@@ -26,6 +26,15 @@ router
     ),
   ]);
 
+router.route('/common').get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['shop:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await shopController.findCommonAll(req, res)
+  ),
+]);
+
 router
   .route("/:id")
   .get([

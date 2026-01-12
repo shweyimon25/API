@@ -2,16 +2,28 @@ import { z } from "zod";
 import { Status } from "@prisma/client";
 
 export const createMemberPlanSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  memberTypeId: z.coerce.number().min(1, { message: "Member type is required" }),
-  price: z.coerce.number().min(1, { message: "Price is required" }),
+  name: z.string({
+    message: "Name is required",
+  }),
+  memberTypeId: z.coerce.number({
+    message: "Member type is required",
+  }),
+  price: z.coerce.number({
+    message: "Price is required",
+  }),
   duration: z.coerce
-    .number().min(1, { message: "Duration is required" })
+    .number({
+      message: "Duration is required",
+    })
     .default(1),
-  proIds: z.array(z.coerce.number()).optional(),
-  conIds: z.array(z.coerce.number()).optional(),
-  isVideoGroup: z.boolean().optional(),
-  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  proIds: z.array(z.coerce.number({
+    message: "Pros are required",
+  })),
+  conIds: z.array(z.coerce.number({
+    message: "Cons are required",
+  })),
+  isVideoGroup: z.coerce.boolean().optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export const updateMemberPlanSchema = z.object({
@@ -21,8 +33,8 @@ export const updateMemberPlanSchema = z.object({
   duration: z.coerce.number().optional(),
   proIds: z.array(z.coerce.number()).optional(),
   conIds: z.array(z.coerce.number()).optional(),
-  isVideoGroup: z.boolean().optional(),
-  status: z.nativeEnum(Status, { message: "Status must be ACTIVE | INACTIVE" }).optional(),
+  isVideoGroup: z.coerce.boolean().optional(),
+  status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
 export type CreateMemberPlanInput = z.infer<typeof createMemberPlanSchema>;

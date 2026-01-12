@@ -3,19 +3,12 @@ import {
   UpdateMemberPlanInput,
 } from "./../../../schemas/admin/v1/member-plan.schema";
 import prisma from "../../../../prisma/client";
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 import {
-  BadRequestException,
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
 import MemberTypeService from "./member-type.service";
-
-interface MemberPlanFilters {
-  status?: Status;
-  search?: string;
-  memberTypeId?: number;
-}
 
 class MemberPlanService {
   private memberTypeService: MemberTypeService;
@@ -24,31 +17,31 @@ class MemberPlanService {
     this.memberTypeService = new MemberTypeService();
   }
 
-  private where(filters?: MemberPlanFilters) {
-    const where: any = {};
-
-    if (filters?.status) {
-      where.status = filters.status;
-    }
-
-    if (filters?.memberTypeId) {
-      where.memberTypeId = filters.memberTypeId;
-    }
-
-    if (filters?.search) {
-      where.name = {
-        contains: filters.search,
-      };
-    }
-
-    return where;
-  }
-
-  async findAll(filters?: MemberPlanFilters) {
+  async findAll(where?: Prisma.MemberPlanWhereInput) {
     const memberPlans = await prisma.memberPlan.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
+      },
+      include: {
+        memberType: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -58,19 +51,39 @@ class MemberPlanService {
   async findByPaginate(
     page: number,
     perPage: number,
-    filters?: MemberPlanFilters
+    where?: Prisma.MemberPlanWhereInput
   ) {
     const memberPlans = await prisma.memberPlan.findMany({
-      where: this.where(filters),
+      where,
       orderBy: {
         id: "desc",
       },
       skip: (page - 1) * perPage,
       take: perPage,
+      include: {
+        memberType: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     const totalMemberPlans = await prisma.memberPlan.count({
-      where: this.where(filters),
+      where,
     });
 
     return {
@@ -89,26 +102,80 @@ class MemberPlanService {
     };
   }
 
+  async findCommonAll(where?: Prisma.MemberPlanWhereInput) {
+    const memberPlans = await prisma.memberPlan.findMany({
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+        memberType: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return memberPlans;
+  }
+
   async findOne(memberPlanId: number) {
     const memberPlan = await prisma.memberPlan.findUnique({
       where: {
         id: memberPlanId,
       },
       include: {
-        pros: true,
-        cons: true,
+        pros: {
+          select: {
+            id: true,
+            name: true,
+            guard: true
+          }
+        },
+        cons: {
+          select: {
+            id: true,
+            name: true,
+            guard: true
+          }
+        },
+        memberType: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     if (!memberPlan) {
-      throw new BadRequestException("Member plan not found");
+      throw new NotFoundException("Member plan not found");
     }
 
     return memberPlan;
   }
 
-  async create(createMemberPlanInput: CreateMemberPlanInput) {
-    // Check member plan name unique
+  async create(createMemberPlanInput: CreateMemberPlanInput, userId: number) {
     const existingMemberPlanName = await prisma.memberPlan.findFirst({
       where: {
         name: createMemberPlanInput.name,
@@ -124,7 +191,6 @@ class MemberPlanService {
       ]);
     }
 
-    // Check member type existed
     const existingMemberType = await this.memberTypeService.findOne(
       createMemberPlanInput.memberTypeId
     );
@@ -138,7 +204,6 @@ class MemberPlanService {
       ]);
     }
 
-    // Check pros existed
     if (
       createMemberPlanInput.proIds &&
       createMemberPlanInput.proIds.length > 0
@@ -165,7 +230,6 @@ class MemberPlanService {
       }
     }
 
-    // Check consultants existed
     if (
       createMemberPlanInput.conIds &&
       createMemberPlanInput.conIds.length > 0
@@ -192,7 +256,6 @@ class MemberPlanService {
       }
     }
 
-    // Create new member plan
     const memberPlan = await prisma.memberPlan.create({
       data: {
         name: createMemberPlanInput.name,
@@ -204,23 +267,26 @@ class MemberPlanService {
             id: existingMemberType.id,
           },
         },
+        createdBy: {
+          connect: { id: userId }
+        },
         pros:
           createMemberPlanInput.proIds &&
-          createMemberPlanInput.proIds.length > 0
+            createMemberPlanInput.proIds.length > 0
             ? {
-                connect: createMemberPlanInput.proIds.map((proId: number) => ({
-                  id: proId,
-                })),
-              }
+              connect: createMemberPlanInput.proIds.map((proId: number) => ({
+                id: proId,
+              })),
+            }
             : undefined,
         cons:
           createMemberPlanInput.conIds &&
-          createMemberPlanInput.conIds.length > 0
+            createMemberPlanInput.conIds.length > 0
             ? {
-                connect: createMemberPlanInput.conIds.map((conId: number) => ({
-                  id: conId,
-                })),
-              }
+              connect: createMemberPlanInput.conIds.map((conId: number) => ({
+                id: conId,
+              })),
+            }
             : undefined,
       },
     });
@@ -230,7 +296,8 @@ class MemberPlanService {
 
   async update(
     memberPlanId: number,
-    updateMemberPlanInput: UpdateMemberPlanInput
+    updateMemberPlanInput: UpdateMemberPlanInput,
+    userId: number
   ) {
     // Find old member plan
     const existingMemberPlan = await prisma.memberPlan.findFirst({
@@ -335,34 +402,42 @@ class MemberPlanService {
       }
     }
 
-    // Update member plan
-    const memberPlan = await prisma.memberPlan.create({
+    const memberPlan = await prisma.memberPlan.update({
+      where: {
+        id: memberPlanId,
+      },
       data: {
         name: updateMemberPlanInput.name ?? existingMemberPlan.name,
-        memberTypeId:
-          updateMemberPlanInput.memberTypeId ?? existingMemberPlan.memberTypeId,
+        memberType: {
+          connect: {
+            id: updateMemberPlanInput.memberTypeId ?? existingMemberType.id,
+          },
+        },
         price: updateMemberPlanInput.price ?? existingMemberPlan.price,
         duration: updateMemberPlanInput.duration ?? existingMemberPlan.duration,
         isVideoGroup:
           updateMemberPlanInput.isVideoGroup ?? existingMemberPlan.isVideoGroup,
         status: updateMemberPlanInput.status ?? existingMemberPlan.status,
+        updatedBy: {
+          connect: { id: userId }
+        },
         pros:
           updateMemberPlanInput.proIds &&
-          updateMemberPlanInput.proIds.length > 0
+            updateMemberPlanInput.proIds.length > 0
             ? {
-                connect: updateMemberPlanInput.proIds.map((proId: number) => ({
-                  id: proId,
-                })),
-              }
+              connect: updateMemberPlanInput.proIds.map((proId: number) => ({
+                id: proId,
+              })),
+            }
             : undefined,
         cons:
           updateMemberPlanInput.conIds &&
-          updateMemberPlanInput.conIds.length > 0
+            updateMemberPlanInput.conIds.length > 0
             ? {
-                connect: updateMemberPlanInput.conIds.map((conId: number) => ({
-                  id: conId,
-                })),
-              }
+              connect: updateMemberPlanInput.conIds.map((conId: number) => ({
+                id: conId,
+              })),
+            }
             : undefined,
       },
     });
@@ -370,14 +445,19 @@ class MemberPlanService {
     return this.findOne(memberPlan.id);
   }
 
-  async destroy(memberPlanId: number) {
-    // Find member plan
+  async destroy(memberPlanId: number, userId: number) {
     await this.findOne(memberPlanId);
 
-    // Delete member plan
-    await prisma.memberPlan.delete({
+    await prisma.memberPlan.update({
       where: {
         id: memberPlanId,
+      },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
+        deletedBy: {
+          connect: { id: userId }
+        }
       },
     });
   }

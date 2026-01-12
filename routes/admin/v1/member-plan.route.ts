@@ -26,6 +26,15 @@ router
     ),
   ]);
 
+router.route("/common").get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['member-plan:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await memberPlanController.findCommonAll(req, res)
+  ),
+]);
+
 router
   .route("/:id")
   .get([
