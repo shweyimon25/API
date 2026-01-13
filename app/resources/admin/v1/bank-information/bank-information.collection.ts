@@ -11,6 +11,7 @@ export class BankInformationCollection {
     return bankInformations.map((bankInformation) => ({
       id: bankInformation.id,
       bankAccountHolder: bankInformation.bankAccountHolder,
+      bankAccountNumber: bankInformation.bankAccountNumber
     }));
   }
 

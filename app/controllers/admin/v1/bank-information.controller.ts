@@ -19,9 +19,26 @@ class BankInformationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, bankAccountHolder, bankAccountNumber, phone, paymentTypes, status } = req.query;
+    const { page, perPage, search, bankAccountHolder, bankAccountNumber, phone, paymentTypes, status } = req.query;
 
     let where: Prisma.BankInformationWhereInput = {};
+
+    if (search) {
+      where.OR = [{
+        bankAccountHolder: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+        bankAccountNumber: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+        phone: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
+    }
 
     if (bankAccountHolder || bankAccountNumber || phone) {
       where.OR = [];
@@ -85,7 +102,7 @@ class BankInformationController {
     }
 
     const bankInformations = await this.bankInformationService.findCommonAll(where);
-    
+
     return successResponse(
       res,
       "Bank information list successfully",
@@ -105,20 +122,22 @@ class BankInformationController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(
+    const { data, success, error } = await validater(
       createBankInformationSchema,
       req.body
     );
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to create bank information", error);
     }
 
     const userId = (req.user as any)?.id;
     const bankInformation = await this.bankInformationService.create(
       data,
-      userId
+      userId,
+      req.files as Express.Multer.File[]
     );
+
     return successResponse(
       res,
       "Bank information created successfully",
@@ -127,12 +146,12 @@ class BankInformationController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(
+    const { data, success, error } = await validater(
       updateBankInformationSchema,
       req.body
     );
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update bank information", error);
     }
 
@@ -140,8 +159,10 @@ class BankInformationController {
     const bankInformation = await this.bankInformationService.update(
       +req.params.id,
       data,
-      userId
+      userId,
+      req.files as Express.Multer.File[]
     );
+
     return successResponse(
       res,
       "Bank information updated successfully",

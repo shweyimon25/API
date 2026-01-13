@@ -5,6 +5,7 @@ import {
 import prisma from "../../../../prisma/client";
 import {
   BadRequestException,
+  NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
 import { Prisma, Status } from "@prisma/client";
@@ -69,11 +70,6 @@ class TagService {
             username: true,
           },
         },
-        _count: {
-          select: {
-            posts: true,
-          },
-        },
       },
     });
 
@@ -117,17 +113,12 @@ class TagService {
             email: true,
             username: true,
           },
-        },
-        _count: {
-          select: {
-            posts: true,
-          },
-        },
+        }
       },
     });
 
     if (!tag) {
-      throw new BadRequestException("Tag not found");
+      throw new NotFoundException("Tag not found");
     }
 
     return tag;

@@ -8,6 +8,7 @@ import {
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
+import { upload } from "../../../helpers/media-upload";
 
 class BankInformationService {
   async findAll(where?: Prisma.BankInformationWhereInput) {
@@ -141,7 +142,8 @@ class BankInformationService {
 
   async create(
     createBankInformationInput: CreateBankInformationInput,
-    userId: number
+    userId: number,
+    files: Express.Multer.File[]
   ) {
     const {
       bankAccountHolder,
@@ -155,6 +157,8 @@ class BankInformationService {
     const existingBankAccountNumber = await prisma.bankInformation.findFirst({
       where: {
         bankAccountNumber,
+        status: Status.ACTIVE,
+        deletedAt: null,
       },
     });
 
@@ -167,9 +171,47 @@ class BankInformationService {
       ]);
     }
 
+    if (phone) {
+      const existingPhone = await prisma.bankInformation.findFirst({
+        where: {
+          phone,
+          status: Status.ACTIVE,
+          deletedAt: null,
+        },
+      });
+
+      if (existingPhone) {
+        throw new ValidationException("Failed to create bank information", [
+          {
+            field: "phone",
+            issue: "Phone already exists",
+          },
+        ]);
+      }
+    }
+
+    let coverPhoto: string | null = null;
+
+    const coverPhotoFile = files.find((file: Express.Multer.File) => file.fieldname === "coverPhoto");
+
+    if (coverPhotoFile) {
+      const { fileUrl } = await upload(coverPhotoFile, "bank-information");
+      coverPhoto = fileUrl;
+    }
+
+    if (!coverPhoto) {
+      throw new ValidationException("Failed to create bank information", [
+        {
+          field: "coverPhoto",
+          issue: "Cover photo is required",
+        },
+      ]);
+    }
+
     // Create new bank information
     const bankInformation = await prisma.bankInformation.create({
       data: {
+        coverPhoto,
         bankAccountHolder,
         bankAccountNumber,
         phone,
@@ -185,7 +227,8 @@ class BankInformationService {
   async update(
     id: number,
     updateBankInformationInput: UpdateBankInformationInput,
-    userId: number
+    userId: number,
+    files: Express.Multer.File[]
   ) {
     const {
       bankAccountHolder,
@@ -199,6 +242,8 @@ class BankInformationService {
     const existingBankInformation = await prisma.bankInformation.findFirst({
       where: {
         id,
+        status: Status.ACTIVE,
+        deletedAt: null,
       },
     });
 
@@ -215,6 +260,11 @@ class BankInformationService {
         {
           where: {
             bankAccountNumber,
+            status: Status.ACTIVE,
+            deletedAt: null,
+            NOT: {
+              id,
+            },
           },
         }
       );
@@ -229,12 +279,42 @@ class BankInformationService {
       }
     }
 
-    // Update bank information
+    if (phone) {
+      const existingPhone = await prisma.bankInformation.findFirst({
+        where: {
+          phone,
+          status: Status.ACTIVE,
+          deletedAt: null,
+          NOT: {
+            id,
+          },
+        },
+      });
+
+      if (existingPhone) {
+        throw new ValidationException("Failed to update bank information", [
+          {
+            field: "phone",
+            issue: "Phone already exists",
+          },
+        ]);
+      }
+    }
+
+    let coverPhoto: string | null = null;
+    const coverPhotoFile = files.find((file: Express.Multer.File) => file.fieldname === "coverPhoto");
+
+    if (coverPhotoFile) {
+      const { fileUrl } = await upload(coverPhotoFile, "bank-information");
+      coverPhoto = fileUrl;
+    }
+
     await prisma.bankInformation.update({
       where: {
         id,
       },
       data: {
+        coverPhoto: coverPhoto ?? existingBankInformation.coverPhoto,
         bankAccountHolder:
           bankAccountHolder ?? existingBankInformation.bankAccountHolder,
         bankAccountNumber:
