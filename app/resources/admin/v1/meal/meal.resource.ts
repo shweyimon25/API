@@ -14,22 +14,8 @@ export class MealResource {
           }
         : null,
       status: meal.status,
-      createdBy: meal.createdBy
-        ? {
-            id: meal.createdBy.id,
-            name: meal.createdBy.name,
-            email: meal.createdBy.email,
-            username: meal.createdBy.username,
-          }
-        : null,
-      updatedBy: meal.updatedBy
-        ? {
-            id: meal.updatedBy.id,
-            name: meal.updatedBy.name,
-            email: meal.updatedBy.email,
-            username: meal.updatedBy.username,
-          }
-        : null,
+      createdBy: meal.createdBy,
+      updatedBy: meal.updatedBy,
       createdAt: meal.createdAt,
       updatedAt: meal.updatedAt,
     };

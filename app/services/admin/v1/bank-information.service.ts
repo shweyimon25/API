@@ -152,7 +152,7 @@ class BankInformationService {
     } = createBankInformationInput;
 
     // Check if bank account number already exists
-    const existingBankAccountNumber = await prisma.bankInformation.findUnique({
+    const existingBankAccountNumber = await prisma.bankInformation.findFirst({
       where: {
         bankAccountNumber,
       },
@@ -176,7 +176,6 @@ class BankInformationService {
         paymentTypes: paymentTypes ?? PaymentTypes.BANK_ACCOUNT,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 
@@ -197,7 +196,7 @@ class BankInformationService {
     } = updateBankInformationInput;
 
     // Check bank information exists
-    const existingBankInformation = await prisma.bankInformation.findUnique({
+    const existingBankInformation = await prisma.bankInformation.findFirst({
       where: {
         id,
       },
@@ -212,7 +211,7 @@ class BankInformationService {
       bankAccountNumber &&
       bankAccountNumber !== existingBankInformation.bankAccountNumber
     ) {
-      const existingBankAccountNumber = await prisma.bankInformation.findUnique(
+      const existingBankAccountNumber = await prisma.bankInformation.findFirst(
         {
           where: {
             bankAccountNumber,

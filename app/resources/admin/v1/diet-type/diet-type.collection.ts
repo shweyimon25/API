@@ -5,6 +5,13 @@ export class DietTypeCollection {
     return res.map((dietType) => DietTypeResource.toResource(dietType));
   }
 
+  static toCommonCollection(dietTypes: any[]) {
+    return dietTypes.map((dietType) => ({
+      id: dietType.id,
+      name: dietType.name,
+    }));
+  }
+
   static withPagination(res: { data: any[]; meta: any }) {
     return {
       data: this.toCollection(res.data),

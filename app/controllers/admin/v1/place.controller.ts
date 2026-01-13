@@ -51,6 +51,26 @@ class PlaceController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { name } = req.query;
+
+    let where: Prisma.PlaceWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
+    const places = await this.placeService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Place list successfully",
+      PlaceCollection.toCommonCollection(places)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const place = await this.placeService.findOne(+req.params.id);
 

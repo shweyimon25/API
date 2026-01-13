@@ -19,26 +19,23 @@ class DietTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, description, status } = req.query;
+    const { page, perPage, search, status } = req.query;
 
     let where: Prisma.DietTypeWhereInput = {};
 
-    if (name || description) {
-      where.OR = [];
-      if (name) {
-        where.OR.push({
-          name: {
-            contains: name as string,
-          },
-        });
-      }
-      if (description) {
-        where.OR.push({
-          description: {
-            contains: description as string,
-          },
-        });
-      }
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      },
+      {
+        description: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
     }
 
     if (status) {
@@ -62,6 +59,35 @@ class DietTypeController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    let where: Prisma.DietTypeWhereInput = {};
+
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      },
+      {
+        description: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
+    }
+
+    const dietTypes = await this.dietTypeService.findCommonAll(where);
+
+    return successResponse(
+      res,
+      "Diet type list successfully",
+      DietTypeCollection.toCommonCollection(dietTypes)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const dietType = await this.dietTypeService.findOne(+req.params.id);
     return successResponse(
@@ -72,9 +98,9 @@ class DietTypeController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(createDietTypeSchema, req.body);
+    const { data, success, error } = await validater(createDietTypeSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to create diet type", error);
     }
 
@@ -88,14 +114,14 @@ class DietTypeController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateDietTypeSchema, req.body);
+    const { data, success, error } = await validater(updateDietTypeSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update diet type", error);
     }
 
     const userId = (req.user as any)?.id;
-    
+
     const dietType = await this.dietTypeService.update(+req.params.id, data, userId, req.files as Express.Multer.File[]);
     return successResponse(
       res,

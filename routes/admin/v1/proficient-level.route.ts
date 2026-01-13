@@ -26,6 +26,15 @@ router
     ),
   ]);
 
+router.route("/common").get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['proficient-level:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await proficientLevelController.findCommonAll(req, res)
+  ),
+]);
+
 router
   .route("/:id")
   .get([

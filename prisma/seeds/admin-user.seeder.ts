@@ -12,32 +12,40 @@ const adminUserSeeder = async () => {
     password: hashPassword("admin"),
   };
 
-  const superAdminRole = await prisma.role.findUnique({
-    where: { name: "SuperAdmin" },
-  });
-
-  if (!superAdminRole) {
-    throw new Error("SuperAdmin role not found. Please run role seeder first.");
-  }
-
-  const existingAdmin = await prisma.user.findUnique({
+  // Check if admin user already exists
+  const existingUser = await prisma.user.findFirst({
     where: { email: adminData.email },
   });
 
-  await prisma.user.create({
+  if (existingUser) {
+    console.log("Admin User already exists, skipping...");
+    return;
+  }
+
+  // Create admin user first without role (role will be assigned later)
+  const adminUser = await prisma.user.create({
     data: {
       name: adminData.name,
       email: adminData.email,
       password: adminData.password,
       username: adminData.username,
       status: Status.ACTIVE,
-      roles: {
-        create: {
-          role: { connect: { id: superAdminRole.id } },
-        },
-      },
     },
   });
+
+  // Assign SuperAdmin role if it exists
+  const superAdminRole = await prisma.role.findFirst({
+    where: { name: "SuperAdmin" },
+  });
+
+  if (superAdminRole) {
+    await prisma.userRole.create({
+      data: {
+        userId: adminUser.id,
+        roleId: superAdminRole.id,
+      },
+    });
+  }
 
   console.log("Admin User seeded successfully");
 };

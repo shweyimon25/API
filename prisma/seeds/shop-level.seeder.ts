@@ -30,7 +30,10 @@ const ShopLevelSeeder = async () => {
 
     for (const shopLevel of shopLevels) {
         await prisma.shopLevel.create({
-            data: shopLevel,
+            data: {
+                ...shopLevel,
+                createdById: 1,
+            },
         });
     }
 

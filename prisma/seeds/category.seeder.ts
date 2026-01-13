@@ -12,13 +12,10 @@ const CategorySeeder = async () => {
     ];
 
     for (const category of categories) {
-        await prisma.category.upsert({
-            where: { name: category },
-            update: {
+        await prisma.category.create({
+            data: {
                 name: category,
-            },
-            create: {
-                name: category,
+                createdById: 1,
             },
         });
     }

@@ -22,12 +22,45 @@ import placeSeeder from "./place.seeder";
 
 dotenv.config();
 
+const assignAdminRole = async () => {
+  const adminUser = await prisma.user.findFirst({
+    where: { email: "admin@admin.com" },
+  });
+
+  const superAdminRole = await prisma.role.findFirst({
+    where: { name: "SuperAdmin" },
+  });
+
+  if (adminUser && superAdminRole) {
+    // Check if role is already assigned
+    const existingUserRole = await prisma.userRole.findFirst({
+      where: {
+        userId: adminUser.id,
+        roleId: superAdminRole.id,
+      },
+    });
+
+    if (!existingUserRole) {
+      await prisma.userRole.create({
+        data: {
+          userId: adminUser.id,
+          roleId: superAdminRole.id,
+        },
+      });
+      console.log("SuperAdmin role assigned to admin user");
+    }
+  }
+};
+
 const main = async () => {
   try {
     await permissionSeeder();
-    await roleSeeder();
-    await bankInformationSeeder();
+    // Create admin user first (without role) so we can use it as createdBy
     await adminUserSeeder();
+    await roleSeeder();
+    // Assign SuperAdmin role to admin user after roles are created
+    await assignAdminRole();
+    await bankInformationSeeder();
     await memberTypeSeeder();
     await shopLevelSeeder();
     await proSeeder();

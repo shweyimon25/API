@@ -13,13 +13,10 @@ const BodyAttentionAreaSeeder = async () => {
     ];
 
     for (const bodyAttentionArea of bodyAttentionAreas) {
-        await prisma.bodyAttentionArea.upsert({
-            where: { name: bodyAttentionArea },
-            update: {
+        await prisma.bodyAttentionArea.create({
+            data: {
                 name: bodyAttentionArea,
-            },
-            create: {
-                name: bodyAttentionArea,
+                createdById: 1,
             },
         });
     }

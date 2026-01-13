@@ -17,13 +17,10 @@ const BodyGoalSeeder = async () => {
     ];
 
     for (const bodyGoal of bodyGoals) {
-        await prisma.bodyGoal.upsert({
-            where: { name: bodyGoal },
-            update: {
+        await prisma.bodyGoal.create({
+            data: {
                 name: bodyGoal,
-            },
-            create: {
-                name: bodyGoal,
+                createdById: 1,
             },
         });
     }

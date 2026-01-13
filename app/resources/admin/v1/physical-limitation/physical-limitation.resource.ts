@@ -6,22 +6,8 @@ export class PhysicalLimitationResource {
       photo: physicalLimitation.photo,
       description: physicalLimitation.description,
       status: physicalLimitation.status,
-      createdBy: physicalLimitation.createdBy
-        ? {
-            id: physicalLimitation.createdBy.id,
-            name: physicalLimitation.createdBy.name,
-            email: physicalLimitation.createdBy.email,
-            username: physicalLimitation.createdBy.username,
-          }
-        : null,
-      updatedBy: physicalLimitation.updatedBy
-        ? {
-            id: physicalLimitation.updatedBy.id,
-            name: physicalLimitation.updatedBy.name,
-            email: physicalLimitation.updatedBy.email,
-            username: physicalLimitation.updatedBy.username,
-          }
-        : null,
+      createdBy: physicalLimitation.createdBy,
+      updatedBy: physicalLimitation.updatedBy,
       createdAt: physicalLimitation.createdAt,
       updatedAt: physicalLimitation.updatedAt,
     };

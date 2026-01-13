@@ -91,7 +91,7 @@ class MealTypeService {
   }
 
   async findOne(id: number) {
-    const mealType = await prisma.mealType.findUnique({
+    const mealType = await prisma.mealType.findFirst({
       where: {
         id,
       },
@@ -144,19 +144,23 @@ class MealTypeService {
   async create(createMealTypeInput: CreateMealTypeInput, userId: number) {
     const { name, status } = createMealTypeInput;
 
-    const existing = await prisma.mealType.findUnique({
-      where: {
-        name,
-      },
-    });
-
-    if (existing) {
-      throw new ValidationException("Failed to create meal type", [
-        {
-          field: "name",
-          issue: "Name already exists",
+    if (name) {
+      const existingName = await prisma.mealType.findFirst({
+        where: {
+          name,
+          status: Status.ACTIVE,
+          deletedAt: null,
         },
-      ]);
+      });
+
+      if (existingName) {
+        throw new ValidationException("Failed to create meal type", [
+          {
+            field: "name",
+            issue: "Name already exists",
+          },
+        ]);
+      }
     }
 
     const mealType = await prisma.mealType.create({
@@ -164,7 +168,6 @@ class MealTypeService {
         name,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 
@@ -181,13 +184,18 @@ class MealTypeService {
     const existing = await this.findOne(id);
 
     if (name && name !== existing.name) {
-      const nameExists = await prisma.mealType.findUnique({
+      const existingName = await prisma.mealType.findFirst({
         where: {
           name,
+          status: Status.ACTIVE,
+          deletedAt: null,
+          NOT: {
+            id,
+          },
         },
       });
 
-      if (nameExists) {
+      if (existingName) {
         throw new ValidationException("Failed to update meal type", [
           {
             field: "name",

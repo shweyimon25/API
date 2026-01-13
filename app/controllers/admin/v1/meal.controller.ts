@@ -54,6 +54,26 @@ class MealController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { name } = req.query;
+
+    let where: Prisma.MealWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
+    const meals = await this.mealService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Meal list successfully",
+      MealCollection.toCommonCollection(meals)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const meal = await this.mealService.findOne(+req.params.id);
     return successResponse(

@@ -26,6 +26,15 @@ router
     ),
   ]);
 
+router.route("/common").get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['diet-type:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await dietTypeController.findCommonAll(req, res)
+  ),
+]);
+
 router
   .route("/:id")
   .get([

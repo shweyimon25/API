@@ -201,7 +201,6 @@ class MealService {
         mealTypeId,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 

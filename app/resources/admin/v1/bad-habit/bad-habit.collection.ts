@@ -1,14 +1,21 @@
 import { BadHabitResource } from "./bad-habit.resource";
 
 export class BadHabitCollection {
-  static toCollection(res: any[]) {
-    return res.map((badHabit) => BadHabitResource.toResource(badHabit));
+  static toCollection(badHabits: any[]) {
+    return badHabits.map((badHabit) => BadHabitResource.toResource(badHabit));
   }
 
-  static withPagination(res: { data: any[]; meta: any }) {
+  static toCommonCollection(badHabits: any[]) {
+    return badHabits.map((badHabit) => ({
+      id: badHabit.id,
+      name: badHabit.name,
+    }));
+  }
+
+  static withPagination(badHabits: { data: any[]; meta: any }) {
     return {
-      data: this.toCollection(res.data),
-      meta: res.meta,
+      data: this.toCollection(badHabits.data),
+      meta: badHabits.meta,
     };
   }
 }

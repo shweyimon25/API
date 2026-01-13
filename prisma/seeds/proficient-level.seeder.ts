@@ -6,13 +6,10 @@ const ProficientLevelSeeder = async () => {
     const proficientLevels = ["Beginner", "Intermediate", "Advanced"];
 
     for (const proficientLevel of proficientLevels) {
-        await prisma.proficientLevel.upsert({
-            where: { name: proficientLevel },
-            update: {
+        await prisma.proficientLevel.create({
+            data: {
                 name: proficientLevel,
-            },
-            create: {
-                name: proficientLevel,
+                createdById: 1,
             },
         });
     }

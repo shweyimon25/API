@@ -149,9 +149,8 @@ class PhysicalLimitationService {
   ) {
     const { name, description, status } = createPhysicalLimitationInput;
 
-    // Check if name already exists
     const existingPhysicalLimitation =
-      await prisma.physicalLimitation.findUnique({
+      await prisma.physicalLimitation.findFirst({
         where: {
           name,
         },
@@ -166,17 +165,14 @@ class PhysicalLimitationService {
       ]);
     }
 
-    // Upload photo
     let photo: string | null = null;
+    const photoFile = files.find((file: Express.Multer.File) => file.fieldname === "photo");
 
-    files.forEach(async (file: Express.Multer.File) => {
-      if (file.fieldname === "photo") {
-        const { fileUrl } = await upload(file, "physical-limitation");
-        photo = fileUrl;
-      }
-    });
+    if (photoFile) {
+      const { fileUrl } = await upload(photoFile, "physical-limitation");
+      photo = fileUrl;
+    }
 
-    // Check if photo is provided
     if (!photo) {
       throw new ValidationException("Failed to create physical limitation", [
         {
@@ -193,7 +189,6 @@ class PhysicalLimitationService {
         description: description || null,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 
@@ -210,9 +205,8 @@ class PhysicalLimitationService {
 
     const existingPhysicalLimitation = await this.findOne(id);
 
-    // Check if name already exists (if name is being updated)
     if (name && name !== existingPhysicalLimitation.name) {
-      const nameExists = await prisma.physicalLimitation.findUnique({
+      const nameExists = await prisma.physicalLimitation.findFirst({
         where: {
           name,
         },
@@ -229,14 +223,11 @@ class PhysicalLimitationService {
     }
 
     let photo: string | null = null;
+    const photoFile = files.find((file: Express.Multer.File) => file.fieldname === "photo");
 
-    if (files && files.length > 0) {
-      files.forEach(async (file: Express.Multer.File) => {
-        if (file.fieldname === "photo") {
-          const { fileUrl } = await upload(file, "physical-limitation");
-          photo = fileUrl;
-        }
-      });
+    if (photoFile) {
+      const { fileUrl } = await upload(photoFile, "physical-limitation");
+      photo = fileUrl;
     }
 
     await prisma.physicalLimitation.update({

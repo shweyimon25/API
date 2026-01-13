@@ -8,6 +8,13 @@ export class ProficientLevelCollection {
     }));
   }
 
+  static toCommonCollection(proficientLevels: any[]) {
+    return proficientLevels.map((proficientLevel) => ({
+      id: proficientLevel.id,
+      name: proficientLevel.name,
+    }));
+  }
+
   static withPagination(cons: { data: any[]; meta: any }) {
     return {
       data: this.toCollection(cons.data),

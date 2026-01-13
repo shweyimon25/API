@@ -13,6 +13,24 @@ class CategoryService {
       orderBy: {
         id: "desc",
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
     });
 
     return categories;
@@ -26,6 +44,24 @@ class CategoryService {
       },
       skip: (page - 1) * perPage,
       take: perPage,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
     });
 
     const totalCategory = await prisma.category.count({
@@ -51,6 +87,24 @@ class CategoryService {
     const category = await prisma.category.findUnique({
       where: {
         id,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
       },
     });
 

@@ -19,14 +19,17 @@ class MealTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, status } = req.query;
+    const { page, perPage, search, status } = req.query;
 
     let where: Prisma.MealTypeWhereInput = {};
 
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
     }
 
     if (status) {
@@ -50,6 +53,29 @@ class MealTypeController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    let where: Prisma.MealTypeWhereInput = {};
+
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
+    }
+
+    const mealTypes = await this.mealTypeService.findCommonAll(where);
+
+    return successResponse(
+      res,
+      "Common Meal type list successfully",
+      MealTypeCollection.toCommonCollection(mealTypes)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const mealType = await this.mealTypeService.findOne(+req.params.id);
     return successResponse(
@@ -60,9 +86,9 @@ class MealTypeController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(createMealTypeSchema, req.body);
+    const { data, success, error } = await validater(createMealTypeSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to create meal type", error);
     }
 
@@ -76,9 +102,9 @@ class MealTypeController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateMealTypeSchema, req.body);
+    const { data, success, error } = await validater(updateMealTypeSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update meal type", error);
     }
 

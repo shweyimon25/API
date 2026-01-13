@@ -8,6 +8,13 @@ export class PlaceCollection {
     }));
   }
 
+  static toCommonCollection(places: any[]) {
+    return places.map((place) => ({
+      id: place.id,
+      name: place.name,
+    }));
+  }
+
   static withPagination(placs: { data: any[]; meta: any }) {
     return {
       data: this.toCollection(placs.data),

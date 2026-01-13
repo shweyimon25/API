@@ -26,6 +26,15 @@ router
     ),
   ]);
 
+router.route("/common").get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['category:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await categoryController.findCommonAll(req, res)
+  ),
+]);
+
 router
   .route("/:id")
   .get([

@@ -50,6 +50,26 @@ class BodyGoalController {
         );
     }
 
+    async findCommonAll(req: Request, res: Response) {
+        const { name } = req.query;
+
+        let where: Prisma.BodyGoalWhereInput = {};
+
+        if (name) {
+            where.name = {
+                contains: name as string,
+            };
+        }
+
+        const bodyGoals = await this.bodyGoalService.findCommonAll(where);
+        
+        return successResponse(
+            res,
+            "Body goal list successfully",
+            BodyGoalCollection.toCommonCollection(bodyGoals)
+        );
+    }
+
     async findOne(req: Request, res: Response) {
         const cons = await this.bodyGoalService.findOne(+req.params.id);
         return successResponse(

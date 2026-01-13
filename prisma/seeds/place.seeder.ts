@@ -11,13 +11,10 @@ const PlaceSeeder = async () => {
     ];
 
     for (const place of places) {
-        await prisma.place.upsert({
-            where: { name: place },
-            update: {
+        await prisma.place.create({
+            data: {
                 name: place,
-            },
-            create: {
-                name: place,
+                createdById: 1,
             },
         });
     }

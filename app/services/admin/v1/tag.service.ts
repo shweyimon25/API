@@ -97,7 +97,7 @@ class TagService {
   }
 
   async findOne(id: number) {
-    const tag = await prisma.tag.findUnique({
+    const tag = await prisma.tag.findFirst({
       where: {
         id,
       },
@@ -156,7 +156,7 @@ class TagService {
     const { name, status } = createTagInput;
 
     // Check if tag name already exists
-    const existingTag = await prisma.tag.findUnique({
+    const existingTag = await prisma.tag.findFirst({
       where: {
         name,
       },
@@ -177,7 +177,6 @@ class TagService {
         name,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 
@@ -188,7 +187,7 @@ class TagService {
     const { name, status } = updateTagInput;
 
     // Check tag exists
-    const existingTag = await prisma.tag.findUnique({
+    const existingTag = await prisma.tag.findFirst({
       where: {
         id,
       },
@@ -200,7 +199,7 @@ class TagService {
 
     // Check if tag name already exists (if name is being updated)
     if (name && name !== existingTag.name) {
-      const tagWithName = await prisma.tag.findUnique({
+      const tagWithName = await prisma.tag.findFirst({
         where: {
           name,
         },

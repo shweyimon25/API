@@ -149,6 +149,25 @@ class BadHabitService {
   ) {
     const { name, description, status } = createBadHabitInput;
 
+    if (name) {
+      const existingName = await prisma.badHabit.findFirst({
+        where: {
+          name,
+          status: Status.ACTIVE,
+          deletedAt: null,
+        },
+      });
+
+      if (existingName) {
+        throw new ValidationException("Failed to create bad habit", [
+          {
+            field: "name",
+            issue: "Name already exists",
+          },
+        ]);
+      }
+    }
+
     let photo: string | null = null;
 
     if (files && files.length > 0) {
@@ -177,7 +196,6 @@ class BadHabitService {
         photo,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 
@@ -193,6 +211,28 @@ class BadHabitService {
     const { name, description, status } = updateBadHabitInput;
 
     const existingBadHabit = await this.findOne(id);
+
+    if (name) {
+      const existingName = await prisma.badHabit.findFirst({
+        where: {
+          name,
+          NOT: {
+            id,
+          },
+          status: Status.ACTIVE,
+          deletedAt: null,
+        },
+      });
+
+      if (existingName) {
+        throw new ValidationException("Failed to update bad habit", [
+          {
+            field: "name",
+            issue: "Name already exists",
+          },
+        ]);
+      }
+    }
 
     let photo: string | null = null;
 

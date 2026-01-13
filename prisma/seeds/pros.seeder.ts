@@ -27,20 +27,16 @@ const proSeeder = async () => {
   ];
 
   for (const pro of pros) {
-    await prisma.pros.upsert({
-      where: { guard: pro.guard },
-      update: {
+    await prisma.pros.create({
+      data: {
         name: pro.name,
         guard: pro.guard,
-      },
-      create: {
-        name: pro.name,
-        guard: pro.guard,
+        createdById: 1,
       },
     });
   }
 
-  console.log("Cons seeded successfully");
+  console.log("Pros seeded successfully");
 };
 
 export default proSeeder;

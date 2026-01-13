@@ -7,6 +7,13 @@ export class BankInformationCollection {
     );
   }
 
+  static toCommonCollection(bankInformations: any[]) {
+    return bankInformations.map((bankInformation) => ({
+      id: bankInformation.id,
+      bankAccountHolder: bankInformation.bankAccountHolder,
+    }));
+  }
+
   static withPagination(bankInformations: { data: any[]; meta: any }) {
     return {
       data: this.toCollection(bankInformations.data),

@@ -13,6 +13,24 @@ class PlaceService {
       orderBy: {
         id: "desc",
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
     });
 
     return places;
@@ -26,6 +44,24 @@ class PlaceService {
       },
       skip: (page - 1) * perPage,
       take: perPage,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
     });
 
     const totalPlaces = await prisma.place.count({
@@ -51,6 +87,24 @@ class PlaceService {
     const place = await prisma.place.findUnique({
       where: {
         id,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
       },
     });
 

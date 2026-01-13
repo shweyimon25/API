@@ -92,7 +92,7 @@ class DietTypeService {
   }
 
   async findOne(id: number) {
-    const dietType = await prisma.dietType.findUnique({
+    const dietType = await prisma.dietType.findFirst({
       where: {
         id,
       },
@@ -149,29 +149,31 @@ class DietTypeService {
   ) {
     const { name, description, status } = createDietTypeInput;
 
-    const existingDietType = await prisma.dietType.findUnique({
-      where: {
-        name,
-      },
-    });
-
-    if (existingDietType) {
-      throw new ValidationException("Failed to create diet type", [
-        {
-          field: "name",
-          issue: "Name already exists",
+    if (name) {
+      const existingName = await prisma.dietType.findFirst({
+        where: {
+          name,
+          status: Status.ACTIVE,
+          deletedAt: null,
         },
-      ]);
+      });
+
+      if (existingName) {
+        throw new ValidationException("Failed to create diet type", [
+          {
+            field: "name",
+            issue: "Name already exists",
+          },
+        ]);
+      }
     }
 
     let photo: string | null = null;
+    const photoFile = files.find((file: Express.Multer.File) => file.fieldname === "photo");
 
-    for (const file of files) {
-      if (file.fieldname === "photo") {
-        const { fileUrl } = await upload(file, "diet-type");
-        photo = fileUrl;
-        break;
-      }
+    if (photoFile) {
+      const { fileUrl } = await upload(photoFile, "diet-type");
+      photo = fileUrl;
     }
 
     if (!photo) {
@@ -190,7 +192,6 @@ class DietTypeService {
         description: description || null,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 
@@ -208,13 +209,18 @@ class DietTypeService {
     const existingDietType = await this.findOne(id);
 
     if (name && name !== existingDietType.name) {
-      const nameExists = await prisma.dietType.findUnique({
+      const existingName = await prisma.dietType.findFirst({
         where: {
           name,
+          status: Status.ACTIVE,
+          deletedAt: null,
+          NOT: {
+            id,
+          },
         },
       });
 
-      if (nameExists) {
+      if (existingName) {
         throw new ValidationException("Failed to update diet type", [
           {
             field: "name",
@@ -226,14 +232,10 @@ class DietTypeService {
 
     let photo: string | null = null;
 
-    if (files && files.length > 0) {
-      for (const file of files) {
-        if (file.fieldname === "photo") {
-          const { fileUrl } = await upload(file, "diet-type");
-          photo = fileUrl;
-          break;
-        }
-      }
+    const photoFile = files.find((file: Express.Multer.File) => file.fieldname === "photo");
+    if (photoFile) {
+      const { fileUrl } = await upload(photoFile, "diet-type");
+      photo = fileUrl;
     }
 
     await prisma.dietType.update({

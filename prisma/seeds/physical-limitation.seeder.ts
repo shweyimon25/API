@@ -6,13 +6,10 @@ const PhysicalLimitaionSeeder = async () => {
     const physicalLimitations = ["none", "back pain", "knee pain", "limited mobility", "other"];
 
     for (const physicalLimitation of physicalLimitations) {
-        await prisma.physicalLimitation.upsert({
-            where: { name: physicalLimitation },
-            update: {
+        await prisma.physicalLimitation.create({
+            data: {
                 name: physicalLimitation,
-            },
-            create: {
-                name: physicalLimitation,
+                createdById: 1,
             },
         });
     }

@@ -50,6 +50,26 @@ class ProficientLevelController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { name } = req.query;
+
+    let where: Prisma.ProficientLevelWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
+    const proficientLevels = await this.proficientLevelService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Proficient level list successfully",
+      ProficientLevelCollection.toCommonCollection(proficientLevels)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const proficientLevel = await this.proficientLevelService.findOne(
       +req.params.id

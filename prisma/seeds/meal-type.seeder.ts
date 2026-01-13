@@ -14,15 +14,10 @@ const mealTypeSeeder = async () => {
   ];
 
   for (const mealTypeName of mealTypes) {
-    await prisma.mealType.upsert({
-      where: { name: mealTypeName },
-      update: {
+    await prisma.mealType.create({
+      data: {
         name: mealTypeName,
-        status: Status.ACTIVE,
-      },
-      create: {
-        name: mealTypeName,
-        status: Status.ACTIVE,
+        createdById: 1,
       },
     });
   }

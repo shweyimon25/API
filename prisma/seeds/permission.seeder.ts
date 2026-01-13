@@ -228,23 +228,23 @@ const permissionSeeder = async () => {
 
     // Body Attention Area  
     {
-      name: "body-attention_area:list",
+      name: "body-attention-area:list",
       description: "Show all body attention areas",
     },
     {
-      name: "body-attention_area:read",
+      name: "body-attention-area:read",
       description: "Show body attention area details",
     },
     {
-      name: "body-attention_area:create",
+      name: "body-attention-area:create",
       description: "Create new body attention area",
     },
     {
-      name: "body-attention_area:update",
+      name: "body-attention-area:update",
       description: "Update a body attention area",
     },
     {
-      name: "body-attention_area:delete",
+      name: "body-attention-area:delete",
       description: "Delete a body attention area",
     },
 
@@ -388,6 +388,28 @@ const permissionSeeder = async () => {
     {
       name: "place:delete",
       description: "Delete a place",
+    },
+
+    // Meal 
+    {
+      name: "meal:list",
+      description: "Show all meals",
+    },
+    {
+      name: "meal:read",
+      description: "Show meal details",
+    },
+    {
+      name: "meal:create",
+      description: "Create new meal",
+    },
+    {
+      name: "meal:update",
+      description: "Update a meal",
+    },
+    {
+      name: "meal:delete",
+      description: "Delete a meal",
     },
 
     // Post 

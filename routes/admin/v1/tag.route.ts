@@ -26,6 +26,15 @@ router
     ),
   ]);
 
+router.route("/common").get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['tag:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await tagController.findCommonAll(req, res)
+  ),
+]);
+
 router
   .route("/:id")
   .get([

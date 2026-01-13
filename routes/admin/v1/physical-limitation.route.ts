@@ -26,6 +26,15 @@ router
     ),
   ]);
 
+router.route("/common").get([
+  passport.authenticate("jwt", { session: false }),
+  hasPermission(['physical-limitation:list']),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await physicalLimitationController.findCommonAll(req, res)
+  ),
+]);
+
 router
   .route("/:id")
   .get([
@@ -36,7 +45,7 @@ router
         await physicalLimitationController.findOne(req, res)
     ),
   ])
-  .put([
+  .post([
     passport.authenticate("jwt", { session: false }),
     hasPermission(['physical-limitation:update']),
     asyncHandler(

@@ -16,7 +16,7 @@ datasource db {
 model User {
   id       Int    @id @default(autoincrement())
   name     String
-  email    String @unique
+  email    String
   username String @unique
   password String
   status   Status @default(ACTIVE)
@@ -80,7 +80,7 @@ model User {
 
 model Role {
   id          Int     @id @default(autoincrement())
-  name        String  @unique
+  name        String  
   description String? @db.Text()
   status      Status  @default(ACTIVE)
 
@@ -145,7 +145,7 @@ model MemberType {
 
 model MemberPlan {
   id           Int        @id @default(autoincrement())
-  name         String     @unique
+  name         String     
   image        String?
   memberType   MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int
@@ -170,8 +170,8 @@ model MemberPlan {
 
 model Pros {
   id     Int    @id @default(autoincrement())
-  name   String @unique
-  guard  String @unique
+  name   String 
+  guard  String 
   status Status @default(ACTIVE)
 
   memberPlans MemberPlan[]
@@ -188,7 +188,7 @@ model Pros {
 model Cons {
   id     Int    @id @default(autoincrement())
   name   String
-  guard  String @unique
+  guard  String
   status Status @default(ACTIVE)
 
   memberPlans MemberPlan[]
@@ -453,7 +453,7 @@ model ShopPostComment {
 
 model Tag {
   id     Int    @id @default(autoincrement())
-  name   String @unique
+  name   String 
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -503,7 +503,7 @@ model PostComment {
 
 model BodyGoal {
   id     Int    @id @default(autoincrement())
-  name   String @unique
+  name   String
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -519,7 +519,7 @@ model BodyGoal {
 
 model ProficientLevel {
   id     Int    @id @default(autoincrement())
-  name   String @unique
+  name   String 
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -534,7 +534,7 @@ model ProficientLevel {
 
 model Category {
   id     Int    @id @default(autoincrement())
-  name   String @unique
+  name   String 
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -556,7 +556,7 @@ enum Gender {
 
 model Place {
   id     Int    @id @default(autoincrement())
-  name   String @unique
+  name   String 
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -621,7 +621,7 @@ model Workout {
 
 model PhysicalLimitation {
   id          Int     @id @default(autoincrement())
-  name        String  @unique
+  name        String
   photo       String?
   description String? @db.Text()
   status      Status  @default(ACTIVE)
@@ -637,7 +637,7 @@ model PhysicalLimitation {
 
 model DietType {
   id          Int     @id @default(autoincrement())
-  name        String  @unique
+  name        String
   photo       String?
   description String? @db.Text()
   status      Status  @default(ACTIVE)
@@ -653,7 +653,7 @@ model DietType {
 
 model BodyAttentionArea {
   id     Int    @id @default(autoincrement())
-  name   String @unique
+  name   String
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -667,7 +667,7 @@ model BodyAttentionArea {
 
 model MealType {
   id     Int    @id @default(autoincrement())
-  name   String @unique
+  name   String
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -704,7 +704,7 @@ model Meal {
 
 model BadHabit {
   id          Int     @id @default(autoincrement())
-  name        String  @unique
+  name        String
   description String? @db.Text()
   photo       String?
   status      Status  @default(ACTIVE)
@@ -733,7 +733,7 @@ model BankInformation {
   id                Int     @id @default(autoincrement())
   coverPhoto        String?
   bankAccountHolder String
-  bankAccountNumber String  @unique
+  bankAccountNumber String
   phone             String
 
   paymentTypes PaymentTypes @default(BANK_ACCOUNT)

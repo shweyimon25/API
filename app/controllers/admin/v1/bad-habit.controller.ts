@@ -19,26 +19,29 @@ class BadHabitController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, description, status } = req.query;
+    const { page, perPage, search, name, description, status } = req.query;
 
     let where: Prisma.BadHabitWhereInput = {};
 
-    if (name || description) {
-      where.OR = [];
-      if (name) {
-        where.OR.push({
+    if (search) {
+      where.OR = [
+        {
           name: {
-            contains: name as string,
+            contains: search as string,
           },
-        });
-      }
-      if (description) {
-        where.OR.push({
+        },
+        {
           description: {
-            contains: description as string,
+            contains: search as string,
           },
-        });
-      }
+        },
+      ];
+    }
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
     }
 
     if (status) {
@@ -59,6 +62,26 @@ class BadHabitController {
       res,
       "Bad habit list successfully",
       BadHabitCollection.toCollection(badHabits)
+    );
+  }
+
+  async findCommonAll(req: Request, res: Response) {
+    const { name } = req.query;
+
+    let where: Prisma.BadHabitWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
+    const badHabits = await this.badHabitService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Bad habit list successfully",
+      BadHabitCollection.toCommonCollection(badHabits)
     );
   }
 

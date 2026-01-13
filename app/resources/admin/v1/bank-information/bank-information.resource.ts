@@ -8,22 +8,8 @@ export class BankInformationResource {
       phone: bankInformation.phone,
       paymentTypes: bankInformation.paymentTypes,
       status: bankInformation.status,
-      createdBy: bankInformation.createdBy
-        ? {
-            id: bankInformation.createdBy.id,
-            name: bankInformation.createdBy.name,
-            email: bankInformation.createdBy.email,
-            username: bankInformation.createdBy.username,
-          }
-        : null,
-      updatedBy: bankInformation.updatedBy
-        ? {
-            id: bankInformation.updatedBy.id,
-            name: bankInformation.updatedBy.name,
-            email: bankInformation.updatedBy.email,
-            username: bankInformation.updatedBy.username,
-          }
-        : null,
+      createdBy: bankInformation.createdBy,
+      updatedBy: bankInformation.updatedBy,
       createdAt: bankInformation.createdAt,
       updatedAt: bankInformation.updatedAt,
     };

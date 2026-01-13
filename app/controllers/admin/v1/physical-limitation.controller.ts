@@ -19,26 +19,22 @@ class PhysicalLimitationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, description, status } = req.query;
+    const { page, perPage, search, status } = req.query;
 
     let where: Prisma.PhysicalLimitationWhereInput = {};
 
-    if (name || description) {
-      where.OR = [];
-      if (name) {
-        where.OR.push({
-          name: {
-            contains: name as string,
-          },
-        });
-      }
-      if (description) {
-        where.OR.push({
-          description: {
-            contains: description as string,
-          },
-        });
-      }
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }, {
+        description: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
     }
 
     if (status) {
@@ -46,8 +42,8 @@ class PhysicalLimitationController {
     }
 
     if (page && perPage) {
-      const physicalLimitations =
-        await this.physicalLimitationService.findByPaginate(+page, +perPage, where);
+      const physicalLimitations = await this.physicalLimitationService.findByPaginate(+page, +perPage, where);
+
       return successResponse(
         res,
         "Physical limitation list successfully",
@@ -56,10 +52,39 @@ class PhysicalLimitationController {
     }
 
     const physicalLimitations = await this.physicalLimitationService.findAll(where);
+
     return successResponse(
       res,
       "Physical limitation list successfully",
       PhysicalLimitationCollection.toCollection(physicalLimitations)
+    );
+  }
+
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    let where: Prisma.PhysicalLimitationWhereInput = {};
+
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }, {
+        description: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
+    }
+
+    const physicalLimitations = await this.physicalLimitationService.findCommonAll(where);
+
+    return successResponse(
+      res,
+      "Physical limitation list successfully",
+      PhysicalLimitationCollection.toCommonCollection(physicalLimitations)
     );
   }
 

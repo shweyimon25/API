@@ -8,34 +8,20 @@ const roleSeeder = async () => {
   const allPermissions = await prisma.permission.findMany();
 
   for (const roleName of roles) {
-    await prisma.role.upsert({
-      where: { name: roleName },
-      update: {
-        permissions: {
-          deleteMany: {},
-          create:
-            roleName === "SuperAdmin"
-              ? allPermissions.map((permission: Permission) => ({
-                  permission: { connect: { id: permission.id } },
-                }))
-              : [],
-        },
-      },
-      create: {
+    await prisma.role.create({
+      data: {
         name: roleName,
+        createdById: 1,
         permissions: {
-          create:
-            roleName === "SuperAdmin"
-              ? allPermissions.map((permission: Permission) => ({
-                  permission: { connect: { id: permission.id } },
-                }))
-              : [],
+          create: allPermissions.map((permission: Permission) => ({
+            permission: { connect: { id: permission.id } },
+          }))
         },
       },
     });
-  }
 
-  console.log("Roles seeded successfully");
+    console.log("Roles seeded successfully");
+  }
 };
 
 export default roleSeeder;

@@ -15,12 +15,11 @@ const BankInformationSeeder = async () => {
     ];
 
     for (const bankInformation of bankInformations) {
-        await prisma.bankInformation.upsert({
-            where: {
-                bankAccountNumber: bankInformation.bankAccountNumber,
+        await prisma.bankInformation.create({
+            data: {
+                ...bankInformation,
+                createdById: 1,
             },
-            update: bankInformation,
-            create: bankInformation
         });
     }
 

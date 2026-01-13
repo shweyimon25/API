@@ -50,6 +50,26 @@ class TagController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { name } = req.query;
+
+    let where: Prisma.TagWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
+    const tags = await this.tagService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Tag list successfully",
+      TagCollection.toCommonCollection(tags)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const tag = await this.tagService.findOne(+req.params.id);
     return successResponse(

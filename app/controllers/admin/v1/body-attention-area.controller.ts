@@ -19,14 +19,17 @@ class BodyAttentionAreaController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, status } = req.query;
+    const { page, perPage, search, status } = req.query;
 
     let where: Prisma.BodyAttentionAreaWhereInput = {};
 
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
     }
 
     if (status) {
@@ -48,6 +51,29 @@ class BodyAttentionAreaController {
       res,
       "Body attention area list successfully",
       BodyAttentionAreaCollection.toCollection(bodyAttentionAreas)
+    );
+  }
+
+  async findCommonAll(req: Request, res: Response) {
+    const { search } = req.query;
+
+    let where: Prisma.BodyAttentionAreaWhereInput = {};
+
+    if (search) {
+      where.OR = [{
+        name: {
+          contains: search as string,
+          mode: "insensitive",
+        },
+      }];
+    }
+
+    const bodyAttentionAreas = await this.bodyAttentionAreaService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Common Body attention area list successfully",
+      BodyAttentionAreaCollection.toCommonCollection(bodyAttentionAreas)
     );
   }
 

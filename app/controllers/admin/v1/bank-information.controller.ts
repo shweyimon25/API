@@ -73,6 +73,26 @@ class BankInformationController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { bankAccountHolder } = req.query;
+
+    let where: Prisma.BankInformationWhereInput = {};
+
+    if (bankAccountHolder) {
+      where.bankAccountHolder = {
+        contains: bankAccountHolder as string,
+      };
+    }
+
+    const bankInformations = await this.bankInformationService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Bank information list successfully",
+      BankInformationCollection.toCommonCollection(bankInformations)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const bankInformation = await this.bankInformationService.findOne(
       +req.params.id

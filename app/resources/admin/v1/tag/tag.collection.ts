@@ -5,6 +5,13 @@ export class TagCollection {
     return res.map((tag) => TagResource.toResource(tag));
   }
 
+  static toCommonCollection(tags: any[]) {
+    return tags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+    }));
+  }
+
   static withPagination(res: { data: any[]; meta: any }) {
     return {
       data: this.toCollection(res.data),

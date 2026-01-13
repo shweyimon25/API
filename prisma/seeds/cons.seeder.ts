@@ -19,15 +19,11 @@ const conSeeder = async () => {
   ];
 
   for (const con of cons) {
-    await prisma.cons.upsert({
-      where: { guard: con.guard },
-      update: {
+    await prisma.cons.create({
+      data: {
         name: con.name,
         guard: con.guard,
-      },
-      create: {
-        name: con.name,
-        guard: con.guard,
+        createdById: 1,
       },
     });
   }

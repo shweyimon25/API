@@ -12,13 +12,10 @@ const BadHabitSeeder = async () => {
     ];
 
     for (const badHabit of badHabits) {
-        await prisma.badHabit.upsert({
-            where: { name: badHabit },
-            update: {
+        await prisma.badHabit.create({
+            data: {
                 name: badHabit,
-            },
-            create: {
-                name: badHabit
+                createdById: 1
             },
         });
     }

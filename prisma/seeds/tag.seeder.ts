@@ -11,14 +11,11 @@ const tagSeeder = async () => {
     ];
 
     for (const tag of tags) {
-        await prisma.tag.upsert({
-            where: { name: tag },
-            update: {
-                name: tag
-            },
-            create: {
-                name: tag
-            },
+        await prisma.tag.create({
+            data: {
+                name: tag,
+                createdById: 1,
+            }
         });
     }
 

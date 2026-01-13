@@ -15,6 +15,24 @@ class BodyGoalService {
             orderBy: {
                 id: "desc",
             },
+            include: {
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        username: true,
+                    },
+                },
+                updatedBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        username: true,
+                    },
+                },
+            },
         });
 
         return bodyGoals;
@@ -28,6 +46,24 @@ class BodyGoalService {
             },
             skip: (page - 1) * perPage,
             take: perPage,
+            include: {
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        username: true,
+                    },
+                },
+                updatedBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        username: true,
+                    },
+                },
+            },
         });
 
         const totalBodyGoals = await prisma.bodyGoal.count({
@@ -54,6 +90,24 @@ class BodyGoalService {
       where: {
         id,
         deletedAt: null,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
       },
     });
 

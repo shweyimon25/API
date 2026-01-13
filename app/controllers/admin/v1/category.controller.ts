@@ -51,6 +51,26 @@ class CategoryController {
     );
   }
 
+  async findCommonAll(req: Request, res: Response) {
+    const { name } = req.query;
+
+    let where: Prisma.CategoryWhereInput = {};
+
+    if (name) {
+      where.name = {
+        contains: name as string,
+      };
+    }
+
+    const categories = await this.categoryService.findCommonAll(where);
+    
+    return successResponse(
+      res,
+      "Category list successfully",
+      CategoryCollection.toCommonCollection(categories)
+    );
+  }
+
   async findOne(req: Request, res: Response) {
     const category = await this.categoryService.findOne(+req.params.id);
 

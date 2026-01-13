@@ -3,6 +3,8 @@ export class CategoryResource {
     return {
       id: categories.id,
       name: categories.name,
+      createdBy: categories.createdBy,
+      updatedBy: categories.updatedBy,
       createdAt: categories.createdAt,
       updatedAt: categories.updatedAt,
     };

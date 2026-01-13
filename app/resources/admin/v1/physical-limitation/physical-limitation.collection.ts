@@ -7,6 +7,13 @@ export class PhysicalLimitationCollection {
     );
   }
 
+  static toCommonCollection(physicalLimitations: any[]) {
+    return physicalLimitations.map((physicalLimitation) => ({
+      id: physicalLimitation.id,
+      name: physicalLimitation.name,
+    }));
+  }
+
   static withPagination(res: { data: any[]; meta: any }) {
     return {
       data: this.toCollection(res.data),

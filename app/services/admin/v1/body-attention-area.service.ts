@@ -91,7 +91,7 @@ class BodyAttentionAreaService {
   }
 
   async findOne(id: number) {
-    const bodyAttentionArea = await prisma.bodyAttentionArea.findUnique({
+    const bodyAttentionArea = await prisma.bodyAttentionArea.findFirst({
       where: {
         id,
       },
@@ -147,20 +147,24 @@ class BodyAttentionAreaService {
   ) {
     const { name, status } = createBodyAttentionAreaInput;
 
-    const existingBodyAttentionAreaName =
-      await prisma.bodyAttentionArea.findUnique({
-        where: {
-          name,
-        },
-      });
+    if (name) {
+      const existingName =
+        await prisma.bodyAttentionArea.findFirst({
+          where: {
+            name,
+            status: Status.ACTIVE,
+            deletedAt: null,
+          },
+        });
 
-    if (existingBodyAttentionAreaName) {
-      throw new ValidationException("Failed to create body attention area", [
-        {
-          field: "name",
-          issue: "Name already exists",
-        },
-      ]);
+      if (existingName) {
+        throw new ValidationException("Failed to create body attention area", [
+          {
+            field: "name",
+            issue: "Name already exists",
+          },
+        ]);
+      }
     }
 
     const bodyAttentionArea = await prisma.bodyAttentionArea.create({
@@ -168,7 +172,6 @@ class BodyAttentionAreaService {
         name,
         status: status ?? Status.ACTIVE,
         createdById: userId,
-        updatedById: userId,
       },
     });
 
@@ -185,14 +188,19 @@ class BodyAttentionAreaService {
     const existingBodyAttentionArea = await this.findOne(id);
 
     if (name && name !== existingBodyAttentionArea.name) {
-      const existingBodyAttentionAreaName =
-        await prisma.bodyAttentionArea.findUnique({
+      const existingName =
+        await prisma.bodyAttentionArea.findFirst({
           where: {
             name,
+            status: Status.ACTIVE,
+            deletedAt: null,
+            NOT: {
+              id,
+            },
           },
         });
 
-      if (existingBodyAttentionAreaName) {
+      if (existingName) {
         throw new ValidationException("Failed to update body attention area", [
           {
             field: "name",

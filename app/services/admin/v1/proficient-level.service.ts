@@ -16,6 +16,24 @@ class ProficientLevelService {
       orderBy: {
         id: "desc",
       },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
     });
 
     return proficientLevels;
@@ -29,6 +47,24 @@ class ProficientLevelService {
       },
       skip: (page - 1) * perPage,
       take: perPage,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+      },
     });
 
     const totalProficientLevel = await prisma.proficientLevel.count({
@@ -55,6 +91,24 @@ class ProficientLevelService {
     const proficientLevel = await prisma.proficientLevel.findUnique({
       where: {
         id,
+      },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
+        updatedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            username: true,
+          },
+        },
       },
     });
 
