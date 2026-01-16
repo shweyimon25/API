@@ -16,14 +16,6 @@ router
       async (req: Request, res: Response) =>
         await shopController.findAll(req, res)
     ),
-  ])
-  .post([
-    passport.authenticate("jwt", { session: false }),
-    hasPermission(['shop:create']),
-    asyncHandler(
-      async (req: Request, res: Response) =>
-        await shopController.create(req, res)
-    ),
   ]);
 
 router.route('/common').get([
@@ -43,22 +35,6 @@ router
     asyncHandler(
       async (req: Request, res: Response) =>
         await shopController.findOne(req, res)
-    ),
-  ])
-  .put([
-    passport.authenticate("jwt", { session: false }),
-    hasPermission(['shop:update']),
-    asyncHandler(
-      async (req: Request, res: Response) =>
-        await shopController.update(req, res)
-    ),
-  ])
-  .delete([
-    passport.authenticate("jwt", { session: false }),
-    hasPermission(['shop:delete']),
-    asyncHandler(
-      async (req: Request, res: Response) =>
-        await shopController.destroy(req, res)
     ),
   ]);
 

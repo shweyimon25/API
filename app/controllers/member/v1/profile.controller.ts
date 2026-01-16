@@ -61,7 +61,7 @@ class ProfileController {
   async updateBodyMeasurements(req: Request, res: Response) {
     const { data, error, success } = await validater(updateBodyMeasurementsSchema, req.body);
 
-    if(!success) {
+    if (!success) {
       throw new ValidationException("Failed to update body measurement", error);
     }
 

@@ -1,15 +1,17 @@
 import { PaymentResource } from "./payment.resource";
 
-export class MemberTypeCollection {
+export class PaymentCollection {
     static toCollection(payments: any[]) {
-        return payments;
+        return payments.map((payment) => {
+            return PaymentResource.toResource(payment);
+        });
     }
 
     static toCommonCollection(payments: any[]) {
         return payments.map((payment) => {
             return {
                 id: payment.id,
-                bankInformation: payment.bankInformation.bankAccountHolder
+                bankInformation: payment.bankInformation,
             }
         })
     }

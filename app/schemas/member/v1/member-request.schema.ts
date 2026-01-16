@@ -13,7 +13,7 @@ export const trainerMemberRequestSchema = z.object({
         .string()
         .min(9, { message: "Phone must be at least 9 digits long" })
         .max(15, { message: "Phone must be at most 15 digits long" })
-        .optional(),  
+        .optional(),
     yearOfExp: z.coerce.number({
         message: "Year of experience is required"
     }),
@@ -23,4 +23,11 @@ export const trainerMemberRequestSchema = z.object({
     gender: z.enum([Gender.MALE, Gender.FEMALE, Gender.BOTH], { message: "Gender must be MALE or FEMALE or BOTH" }),
 });
 
+export const gymMemberRequestSchema = z.object({
+    memberPlanId: z.coerce.number({
+        message: "Member plan is required"
+    }),
+});
+
 export type TrainerMemberRequestInput = z.infer<typeof trainerMemberRequestSchema>;
+export type GymMemberRequestInput = z.infer<typeof gymMemberRequestSchema>;

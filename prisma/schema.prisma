@@ -29,58 +29,60 @@ model User {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  roles                      UserRole[]
-  tagsCreated                Tag[]                @relation("TagCreatedBy")
-  tagsUpdated                Tag[]                @relation("TagUpdatedBy")
-  usersCreated               User[]               @relation("UserCreatedBy")
-  usersUpdated               User[]               @relation("UserUpdatedBy")
-  rolesCreated               Role[]               @relation("RoleCreatedBy")
-  rolesUpdated               Role[]               @relation("RoleUpdatedBy")
-  memberPlansCreated         MemberPlan[]         @relation("MemberPlanCreatedBy")
-  memberPlansUpdated         MemberPlan[]         @relation("MemberPlanUpdatedBy")
-  prosCreated                Pros[]               @relation("ProsCreatedBy")
-  prosUpdated                Pros[]               @relation("ProsUpdatedBy")
-  consCreated                Cons[]               @relation("ConsCreatedBy")
-  consUpdated                Cons[]               @relation("ConsUpdatedBy")
-  memberCreated              Member[]             @relation("MemberCreatedBy")
-  memberUpdated              Member[]             @relation("MemberUpdatedBy")
-  bodyGoalsCreated           BodyGoal[]           @relation("BodyGoalCreatedBy")
-  bodyGoalsUpdated           BodyGoal[]           @relation("BodyGoalUpdatedBy")
-  proficientLevelsCreated    ProficientLevel[]    @relation("ProficientLevelCreatedBy")
-  proficientLevelsUpdated    ProficientLevel[]    @relation("ProficientLevelUpdatedBy")
-  categoriesCreated          Category[]           @relation("CategoryCreatedBy")
-  categoriesUpdated          Category[]           @relation("CategoryUpdatedBy")
-  placesCreated              Place[]              @relation("PlaceCreatedBy")
-  placesUpdated              Place[]              @relation("PlaceUpdatedBy")
-  workoutsCreated            Workout[]            @relation("WorkoutCreatedBy")
-  workoutsUpdated            Workout[]            @relation("WorkoutUpdatedBy")
-  bankInformationCreated     BankInformation[]    @relation("BankInformationCreatedBy")
-  bankInformationUpdated     BankInformation[]    @relation("BankInformationUpdatedBy")
-  shopLevelsCreated          ShopLevel[]          @relation("ShopLevelCreatedBy")
-  shopLevelsUpdated          ShopLevel[]          @relation("ShopLevelUpdatedBy")
-  shopsCreated               Shop[]               @relation("ShopCreatedBy")
-  shopsUpdated               Shop[]               @relation("ShopUpdatedBy")
-  physicalLimitationsCreated PhysicalLimitation[] @relation("PhysicalLimitationCreatedBy")
-  physicalLimitationsUpdated PhysicalLimitation[] @relation("PhysicalLimitationUpdatedBy")
-  dietTypeCreated            DietType[]           @relation("DietTypeCreatedBy")
-  dietTypeUpdated            DietType[]           @relation("DietTypeUpdatedBy")
-  bodyAttentionAreasCreated  BodyAttentionArea[]  @relation("BodyAttentionAreaCreatedBy")
-  bodyAttentionAreasUpdated  BodyAttentionArea[]  @relation("BodyAttentionAreaUpdatedBy")
-  mealTypesCreated           MealType[]           @relation("MealTypeCreatedBy")
-  mealTypesUpdated           MealType[]           @relation("MealTypeUpdatedBy")
-  mealsCreated               Meal[]               @relation("MealCreatedBy")
-  mealsUpdated               Meal[]               @relation("MealUpdatedBy")
-  badHabitsCreated           BadHabit[]           @relation("BadHabitCreatedBy")
-  badHabitsUpdated           BadHabit[]           @relation("BadHabitUpdatedBy")
-  memberRequestsApproved     MemberRequest[]      @relation("MemberRequestApprovedBy")
-  memberRequestsRejected     MemberRequest[]      @relation("MemberRequestRejectedBy")
-  paymentsCancelled          Payment[]            @relation("PaymentCancelledBy")
-  paymentsApproved           Payment[]            @relation("PaymentApprovedBy")
+  roles                       UserRole[]
+  tagsCreated                 Tag[]                @relation("TagCreatedBy")
+  tagsUpdated                 Tag[]                @relation("TagUpdatedBy")
+  usersCreated                User[]               @relation("UserCreatedBy")
+  usersUpdated                User[]               @relation("UserUpdatedBy")
+  rolesCreated                Role[]               @relation("RoleCreatedBy")
+  rolesUpdated                Role[]               @relation("RoleUpdatedBy")
+  memberPlansCreated          MemberPlan[]         @relation("MemberPlanCreatedBy")
+  memberPlansUpdated          MemberPlan[]         @relation("MemberPlanUpdatedBy")
+  prosCreated                 Pros[]               @relation("ProsCreatedBy")
+  prosUpdated                 Pros[]               @relation("ProsUpdatedBy")
+  consCreated                 Cons[]               @relation("ConsCreatedBy")
+  consUpdated                 Cons[]               @relation("ConsUpdatedBy")
+  memberCreated               Member[]             @relation("MemberCreatedBy")
+  memberUpdated               Member[]             @relation("MemberUpdatedBy")
+  bodyGoalsCreated            BodyGoal[]           @relation("BodyGoalCreatedBy")
+  bodyGoalsUpdated            BodyGoal[]           @relation("BodyGoalUpdatedBy")
+  proficientLevelsCreated     ProficientLevel[]    @relation("ProficientLevelCreatedBy")
+  proficientLevelsUpdated     ProficientLevel[]    @relation("ProficientLevelUpdatedBy")
+  categoriesCreated           Category[]           @relation("CategoryCreatedBy")
+  categoriesUpdated           Category[]           @relation("CategoryUpdatedBy")
+  placesCreated               Place[]              @relation("PlaceCreatedBy")
+  placesUpdated               Place[]              @relation("PlaceUpdatedBy")
+  workoutsCreated             Workout[]            @relation("WorkoutCreatedBy")
+  workoutsUpdated             Workout[]            @relation("WorkoutUpdatedBy")
+  bankInformationCreated      BankInformation[]    @relation("BankInformationCreatedBy")
+  bankInformationUpdated      BankInformation[]    @relation("BankInformationUpdatedBy")
+  shopLevelsCreated           ShopLevel[]          @relation("ShopLevelCreatedBy")
+  shopLevelsUpdated           ShopLevel[]          @relation("ShopLevelUpdatedBy")
+  shopsCreated                Shop[]               @relation("ShopCreatedBy")
+  shopsUpdated                Shop[]               @relation("ShopUpdatedBy")
+  physicalLimitationsCreated  PhysicalLimitation[] @relation("PhysicalLimitationCreatedBy")
+  physicalLimitationsUpdated  PhysicalLimitation[] @relation("PhysicalLimitationUpdatedBy")
+  dietTypeCreated             DietType[]           @relation("DietTypeCreatedBy")
+  dietTypeUpdated             DietType[]           @relation("DietTypeUpdatedBy")
+  bodyAttentionAreasCreated   BodyAttentionArea[]  @relation("BodyAttentionAreaCreatedBy")
+  bodyAttentionAreasUpdated   BodyAttentionArea[]  @relation("BodyAttentionAreaUpdatedBy")
+  mealTypesCreated            MealType[]           @relation("MealTypeCreatedBy")
+  mealTypesUpdated            MealType[]           @relation("MealTypeUpdatedBy")
+  mealsCreated                Meal[]               @relation("MealCreatedBy")
+  mealsUpdated                Meal[]               @relation("MealUpdatedBy")
+  badHabitsCreated            BadHabit[]           @relation("BadHabitCreatedBy")
+  badHabitsUpdated            BadHabit[]           @relation("BadHabitUpdatedBy")
+  memberRequestsApproved      MemberRequest[]      @relation("MemberRequestApprovedBy")
+  memberRequestsRejected      MemberRequest[]      @relation("MemberRequestRejectedBy")
+  paymentsCancelled           Payment[]            @relation("PaymentCancelledBy")
+  paymentsApproved            Payment[]            @relation("PaymentApprovedBy")
+  shopUpgradeRequestsApproved ShopUpgradeRequest[] @relation("ShopUpgradeRequestApprovedBy")
+  shopUpgradeRequestsRejected ShopUpgradeRequest[] @relation("ShopUpgradeRequestRejectedBy")
 }
 
 model Role {
   id          Int     @id @default(autoincrement())
-  name        String  
+  name        String
   description String? @db.Text()
   status      Status  @default(ACTIVE)
 
@@ -145,7 +147,7 @@ model MemberType {
 
 model MemberPlan {
   id           Int        @id @default(autoincrement())
-  name         String     
+  name         String
   image        String?
   memberType   MemberType @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int
@@ -170,8 +172,8 @@ model MemberPlan {
 
 model Pros {
   id     Int    @id @default(autoincrement())
-  name   String 
-  guard  String 
+  name   String
+  guard  String
   status Status @default(ACTIVE)
 
   memberPlans MemberPlan[]
@@ -258,15 +260,16 @@ model Member {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  providerTypes    MemberProviderType[]
-  postComments     PostComment[]
-  payments         Payment[]
-  shops            Shop[]
-  shopRatings      ShopRating[]
-  shopPostComments ShopPostComment[]
-  waterTrackers    WaterTracker[]
-  memberRequests   MemberRequest[]
-  bodyMeasurement  BodyMeasurement?
+  providerTypes       MemberProviderType[]
+  postComments        PostComment[]
+  payments            Payment[]
+  shops               Shop[]
+  shopRatings         ShopRating[]
+  shopPostComments    ShopPostComment[]
+  waterTrackers       WaterTracker[]
+  memberRequests      MemberRequest[]
+  bodyMeasurement     BodyMeasurement?
+  shopUpgradeRequests ShopUpgradeRequest[]
 }
 
 model OTP {
@@ -380,7 +383,9 @@ model ShopLevel {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  shops Shop[]
+  shops               Shop[]
+  shopUpgradeRequests ShopUpgradeRequest[]
+  payments            Payment[]
 }
 
 model Shop {
@@ -403,8 +408,30 @@ model Shop {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  shopRatings ShopRating[]
   shopPosts   ShopPost[]
+  shopRatings ShopRating[]
+}
+
+model ShopUpgradeRequest {
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
+  shopLevelId Int
+  shopLevel   ShopLevel @relation(fields: [shopLevelId], references: [id])
+
+  status         MemberRequestStatus @default(PENDING)
+  rejectedReason String?             @db.Text() // Only For Rejected Shop Upgrade Request
+
+  approvedById Int?
+  approvedBy   User?     @relation("ShopUpgradeRequestApprovedBy", fields: [approvedById], references: [id])
+  rejectedById Int?
+  rejectedBy   User?     @relation("ShopUpgradeRequestRejectedBy", fields: [rejectedById], references: [id])
+  approvedAt   DateTime?
+  rejectedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model ShopRating {
@@ -453,7 +480,7 @@ model ShopPostComment {
 
 model Tag {
   id     Int    @id @default(autoincrement())
-  name   String 
+  name   String
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -519,7 +546,7 @@ model BodyGoal {
 
 model ProficientLevel {
   id     Int    @id @default(autoincrement())
-  name   String 
+  name   String
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -534,7 +561,7 @@ model ProficientLevel {
 
 model Category {
   id     Int    @id @default(autoincrement())
-  name   String 
+  name   String
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -556,7 +583,7 @@ enum Gender {
 
 model Place {
   id     Int    @id @default(autoincrement())
-  name   String 
+  name   String
   status Status @default(ACTIVE)
 
   deletedAt   DateTime?
@@ -755,11 +782,16 @@ model Payment {
   memberId Int
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
-  memberPlan   MemberPlan @relation(fields: [memberPlanId], references: [id])
-  memberPlanId Int
+  requestType PaymentRequestType @default(MEMBER_PLAN_UPGRADE)
 
-  memberTypeId Int
-  memberType   MemberType @relation(fields: [memberTypeId], references: [id])
+  memberPlan   MemberPlan? @relation(fields: [memberPlanId], references: [id]) // Only for member upgrade 
+  memberPlanId Int? // Only for member upgrade 
+
+  memberTypeId Int? // Only for member upgrade 
+  memberType   MemberType? @relation(fields: [memberTypeId], references: [id]) // Only for member upgrade 
+
+  shopLevelId Int? // Only for shop level upgrade 
+  shopLevel   ShopLevel? @relation(fields: [shopLevelId], references: [id]) // // Only for shop level upgrade 
 
   bankInformationId Int
   bankInformation   BankInformation @relation(fields: [bankInformationId], references: [id])
@@ -781,6 +813,11 @@ model Payment {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum PaymentRequestType {
+  MEMBER_PLAN_UPGRADE
+  SHOP_LEVEL_UPGRADE
 }
 
 enum PaymentTypes {

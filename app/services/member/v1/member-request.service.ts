@@ -1,6 +1,6 @@
 import { MemberRequestStatus, ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-import { TrainerMemberRequestInput } from "../../../schemas/member/v1/member-request.schema";
+import { GymMemberRequestInput, TrainerMemberRequestInput } from "../../../schemas/member/v1/member-request.schema";
 import { BadRequestException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
 
@@ -169,8 +169,66 @@ class MemberRequestService {
         return trainerMemberRequest;
     }
 
-    async gymMemberRequest() {
-        //
+    async gymMemberRequest(gymMemberRequestInput: GymMemberRequestInput, userId: number) {
+        const { memberPlanId } = gymMemberRequestInput;
+
+        // Check member plan is existed
+        const memberPlan = await prisma.memberPlan.findFirst({
+            where: {
+                id: memberPlanId,
+                status: Status.ACTIVE,
+                memberTypeId: 1
+            },
+            include: {
+                memberType: true,
+            }
+        });
+
+        if (!memberPlan) {
+            throw new NotFoundException("Member plan not found");
+        }
+
+        // Check member is existed
+        const member = await prisma.member.findUnique({
+            where: {
+                id: userId,
+            },
+            include: {
+                providerTypes: true,
+                memberType: true,
+            }
+        });
+
+        if (member?.memberType?.name === "Gym Member") {
+            throw new BadRequestException("Cannot request to become a gym member because you are already a gym member");
+        }
+
+        if (member?.memberType?.name === "Trainer Member") {
+            throw new BadRequestException("Cannot request to become a gym member because you are a trainer");
+        }
+
+        const gymMemberRequest = await prisma.memberRequest.create({
+            data: {
+                memberId: userId,
+                memberTypeId: 1,
+                memberPlanId,
+            },
+            include: {
+                member: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        status: true
+                    }
+                },
+                memberType: true,
+                memberPlan: true,
+            }
+        });
+
+        return gymMemberRequest;
     }
 }
 

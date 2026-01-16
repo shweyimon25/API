@@ -5,7 +5,7 @@ import { UpdateMemberRequestInput } from "../../../schemas/admin/v1/member-reque
 import MemberService from "./member.service";
 
 class MemberRequestService {
-    private memberService: MemberService; 
+    private memberService: MemberService;
 
     constructor() {
         this.memberService = new MemberService();

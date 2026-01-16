@@ -10,6 +10,42 @@ class PaymentService {
             orderBy: {
                 id: "desc",
             },
+            include: {
+                member: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                memberPlan: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                memberType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                shopLevel: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                bankInformation: {
+                    select: {
+                        id: true,
+                        bankAccountHolder: true,
+                        bankAccountNumber: true,
+                        phone: true,
+                        paymentTypes: true,
+                        coverPhoto: true,
+                    }
+                }
+            },
             skip: (page - 1) * perPage,
             take: perPage,
         });
@@ -25,11 +61,11 @@ class PaymentService {
                 totalPages: Math.ceil(totalPayments / perPage),
                 currentPage: page,
                 perPage,
+                prevPage: page > 1 ? page - 1 : null,
+                nextPage: page < Math.ceil(totalPayments / perPage) ? page + 1 : null,
+                hasPrevPage: page > 1,
+                hasNextPage: page < Math.ceil(totalPayments / perPage),
             },
-            prevPage: page > 1 ? page - 1 : null,
-            nextPage: page < Math.ceil(totalPayments / perPage) ? page + 1 : null,
-            hasPrevPage: page > 1,
-            hasNextPage: page < Math.ceil(totalPayments / perPage),
         };
     }
 
@@ -79,6 +115,42 @@ class PaymentService {
     async findOne(id: number) {
         const payment = await prisma.payment.findUnique({
             where: { id },
+            include: {
+                member: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                memberPlan: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                memberType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                shopLevel: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                bankInformation: {
+                    select: {
+                        id: true,
+                        bankAccountHolder: true,
+                        bankAccountNumber: true,
+                        phone: true,
+                        paymentTypes: true,
+                        coverPhoto: true,
+                    }
+                }
+            }
         });
 
         if (!payment) {

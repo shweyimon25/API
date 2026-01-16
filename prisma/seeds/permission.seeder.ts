@@ -488,6 +488,20 @@ const permissionSeeder = async () => {
       description: "Delete a shop",
     },
 
+    // Shop Level Request
+    {
+      name: "shop-level-request:list",
+      description: "Show all shop level requests",
+    },
+    {
+      name: "shop-level-request:read",
+      description: "Show shop level request details",
+    },
+    {
+      name: "shop-level-request:update",
+      description: "Update a shop level request",
+    },
+
     // Tag 
     {
       name: "tag:list",

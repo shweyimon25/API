@@ -4,8 +4,8 @@ import { updatePaymentStatusSchema } from "../../../schemas/admin/v1/payment.sch
 import { ValidationException } from "../../../helpers/exceptions";
 import { successResponse } from "../../../helpers/response";
 import PaymentService from "../../../services/admin/v1/paymet.service";
-import { PaymentCollection } from "../../../resources/member/v1/payment/payment.collection";
-import { PaymentResource } from "../../../resources/member/v1/payment/payment.resource";
+import { PaymentCollection } from "../../../resources/admin/v1/payment/payment.collection";
+import { PaymentResource } from "../../../resources/admin/v1/payment/payment.resource";
 import { Member, PaymentStatus, Prisma } from "@prisma/client";
 
 class PaymentController {

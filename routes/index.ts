@@ -26,6 +26,7 @@ import adminWaterTrackerRoute from "./admin/v1/water-tracker.route";
 import adminMemberRequestRoute from "./admin/v1/member-request.route";
 import adminPaymentRoute from "./admin/v1/payment.route";
 import adminBodyGoalRoute from "./admin/v1/body-goal.route";
+import adminShopLevelRequestRoute from "./admin/v1/shop-level-request.route";
 
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
@@ -37,6 +38,8 @@ import memberPlanRoute from "./member/v1/member-plan.route";
 import memberRequestRoute from "./member/v1/member-request.route";
 import memberPaymentRoute from "./member/v1/payment.route";
 import memberBankInformationRoute from "./member/v1/bank-information.route";
+import memberShopProfileRoute from "./member/v1/shop-profile.route";
+import memberShopRoute from "./member/v1/shop.route";
 
 const router = Router();
 
@@ -65,6 +68,7 @@ router.use("/admin/v1/bad-habits", adminBadHabitRoute);
 router.use("/admin/v1/body-goals", adminBodyGoalRoute);
 router.use("/admin/v1/water-trackers", adminWaterTrackerRoute);
 router.use("/admin/v1/member-requests", adminMemberRequestRoute);
+router.use("/admin/v1/shop-level-requests", adminShopLevelRequestRoute);
 router.use("/admin/v1/payments", adminPaymentRoute);
 
 // Member Routes
@@ -78,5 +82,7 @@ router.use("/member/v1/member-request", memberRequestRoute);
 router.use("/member/v1/payment", memberPaymentRoute);
 router.use("/member/v1/bank-informations", memberBankInformationRoute);
 router.use("/member/v1/payments", memberPaymentRoute);
+router.use("/member/v1/shop-profile", memberShopProfileRoute);
+router.use("/member/v1/shops", memberShopRoute)
 
 export default router;

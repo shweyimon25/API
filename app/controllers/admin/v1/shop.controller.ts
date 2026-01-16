@@ -97,41 +97,6 @@ class ShopController {
       ShopCollection.toCommonCollection(shops)
     );
   }
-
-  async create(req: Request, res: Response) {
-    const { data, error } = await validater(createShopSchema, req.body);
-
-    if (error) {
-      throw new ValidationException("Failed to create shop", error);
-    }
-
-    const shop = await this.shopService.create(data);
-    return successResponse(
-      res,
-      "Shop created successfully",
-      ShopResource.toResource(shop)
-    );
-  }
-
-  async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateShopSchema, req.body);
-
-    if (error) {
-      throw new ValidationException("Failed to update shop", error);
-    }
-
-    const shop = await this.shopService.update(+req.params.id, data);
-    return successResponse(
-      res,
-      "Shop updated successfully",
-      ShopResource.toResource(shop)
-    );
-  }
-
-  async destroy(req: Request, res: Response) {
-    await this.shopService.destroy(+req.params.id);
-    return successResponse(res, "Shop deleted successfully");
-  }
 }
 
 export default ShopController;
