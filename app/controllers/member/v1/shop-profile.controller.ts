@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import ShopProfileService from "../../../services/member/v1/shop-profile.service";
 import { Member } from "@prisma/client";
 import { validater } from "../../../helpers/validator";
-import { updateShopProfileSchema, upgradeShopProfileSchema } from "../../../schemas/member/v1/shop-profile.schema";
+import { createShopProfileSchema, updateShopProfileSchema, upgradeShopProfileSchema } from "../../../schemas/member/v1/shop-profile.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import { ShopProfileResource } from "../../../resources/member/v1/shop-profile/shop-profile.resource";
 
@@ -18,6 +18,20 @@ class ShopProfileController {
         const memberId = (req.user as Member).id
         const shop = await this.shopProfileService.profile(memberId);
         return successResponse(res, "Shop profile fetched successfully", ShopProfileResource.toResource(shop));
+    }
+
+    async create(req: Request, res: Response) {
+        const { data, success, error } = await validater(createShopProfileSchema, req.body);
+
+        if (!success) {
+            throw new ValidationException("Failed to create shop profile", error);
+        }
+
+        const memberId = (req.user as Member).id;
+        const files = req.files as Express.Multer.File[];
+        const shop = await this.shopProfileService.create(memberId, data, files);
+
+        return successResponse(res, "Shop profile created successfully", ShopProfileResource.toResource(shop));
     }
 
     async update(req: Request, res: Response) {

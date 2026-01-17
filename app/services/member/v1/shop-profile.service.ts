@@ -2,7 +2,7 @@ import { MemberRequestStatus, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { BadRequestException, NotFoundException } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
-import { UpdateShopProfileInput, UpgradeShopProfileInput } from "../../../schemas/member/v1/shop-profile.schema";
+import { CreateShopProfileInput, UpdateShopProfileInput, UpgradeShopProfileInput } from "../../../schemas/member/v1/shop-profile.schema";
 
 class ShopProfileService {
     async profile(memberId: number) {
@@ -16,10 +16,47 @@ class ShopProfileService {
         });
 
         if (!shop) {
-            throw new NotFoundException("Shop not found");
+            throw new NotFoundException("Shop not found. Please create a shop first");
         }
 
         return shop;
+    }
+
+    async create(memberId: number, createShopProfileInput: CreateShopProfileInput, files: Express.Multer.File[]) {
+        const { name } = createShopProfileInput;
+
+        const existingShop = await prisma.shop.findFirst({
+            where: {
+                memberId,
+                deletedAt: null,
+                status: Status.ACTIVE,
+            },
+        });
+
+        if (existingShop) {
+            throw new BadRequestException("You already have a shop. Please update your shop profile instead");
+        }
+
+        let image: string | null = null;
+        const imageFile = files.find((file: Express.Multer.File) => file.fieldname === "image");
+
+        if (imageFile) {
+            const { fileUrl } = await upload(imageFile);
+            image = fileUrl;
+        }
+
+        await prisma.shop.create({
+            data: {
+                name,
+                memberId,
+                image,
+            },
+            include: {
+                shopLevel: true,
+            },
+        });
+
+        return this.profile(memberId);
     }
 
     async update(memberId: number, updateShopProfileInput: UpdateShopProfileInput, files: Express.Multer.File[]) {

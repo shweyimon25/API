@@ -14,6 +14,14 @@ router.get('/', [
     ),
 ]);
 
+router.post('/new', [
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+        async (req: Request, res: Response) =>
+            await shopProfileController.create(req, res)
+    ),
+]);
+
 router.post('/update', [
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
