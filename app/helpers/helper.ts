@@ -29,6 +29,13 @@ export const generateToken = (
 export const decodeToken = (token: any) =>
   jwt.verify(token, process.env.JWT_SECRET as string);
 
+export const generateOTP = () => {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+  return { otp, expiresAt };
+};
+
 export const generateSlug = async (
   columnName: string,
   modelName: Prisma.ModelName
