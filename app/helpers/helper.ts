@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import dotenv from "dotenv";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import slugify from "slugify";
 import { BadRequestException } from "./exceptions";
+import prisma from "../../prisma/client";
 
-const prisma = new PrismaClient();
 dotenv.config();
 
 export const hashPassword = (password: string) => bcrypt.hashSync(password, 10);

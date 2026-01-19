@@ -7,12 +7,10 @@ import {
   UnauthorizedException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { PrismaClient } from "@prisma/client";
 import UserService from "../../../services/admin/v1/user.service";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 import { Status } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../../../../prisma/client";
 class AuthController {
   private userService: UserService;
 
