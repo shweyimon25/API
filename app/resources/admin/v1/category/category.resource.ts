@@ -1,12 +1,12 @@
 export class CategoryResource {
-  static toResource(categories: any) {
+  static toResource(category: any) {
     return {
-      id: categories.id,
-      name: categories.name,
-      createdBy: categories.createdBy,
-      updatedBy: categories.updatedBy,
-      createdAt: categories.createdAt,
-      updatedAt: categories.updatedAt,
+      id: category.id,
+      name: category.name,
+      createdBy: category.createdBy,
+      updatedBy: category.updatedBy,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
     };
   }
 }

@@ -28,7 +28,6 @@ router
 
 router.route("/common").get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['bad-habit:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await badHabitController.findCommonAll(req, res)

@@ -1,11 +1,8 @@
+import { BodyGoalResource } from "./body-goal.resource";
+
 export class BodyGoalCollection {
-  static toCollection(cons: any[]) {
-    return cons.map((con) => ({
-      id: con.id,
-      name: con.name,
-      createdAt: con.createdAt,
-      updatedAt: con.updatedAt,
-    }));
+  static toCollection(bodyGoals: any[]) {
+    return bodyGoals.map((bodyGoal) => BodyGoalResource.toResource(bodyGoal));
   }
 
   static toCommonCollection(bodyGoals: any[]) {
@@ -15,10 +12,10 @@ export class BodyGoalCollection {
     }));
   }
 
-  static withPagination(cons: { data: any[]; meta: any }) {
+  static withPagination(bodyGoals: { data: any[]; meta: any }) {
     return {
-      data: this.toCollection(cons.data),
-      meta: cons.meta,
+      data: this.toCollection(bodyGoals.data),
+      meta: bodyGoals.meta,
     };
   }
 }

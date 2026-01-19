@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ProsCollection } from "../../../resources/admin/v1/pros/pros.collection";
 import { ProsResource } from "../../../resources/admin/v1/pros/pros.resource";
-import { Prisma, Status } from "@prisma/client";
+import { proScope } from "../../../scopes/admin/v1/pro.scope";
 
 class ProsController {
   private prosService: ProsService;
@@ -19,25 +19,9 @@ class ProsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, guard, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.ProsWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (guard) {
-      where.guard = {
-        contains: guard as string,
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = proScope(req.query);
 
     if (page && perPage) {
       const pros = await this.prosService.findByPaginate(+page, +perPage, where);
@@ -58,21 +42,7 @@ class ProsController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name, guard } = req.query;
-
-    let where: Prisma.ProsWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (guard) {
-      where.guard = {
-        contains: guard as string,
-      };
-    }
+    const where = proScope(req.query);
 
     const pros = await this.prosService.findCommonAll(where);
 

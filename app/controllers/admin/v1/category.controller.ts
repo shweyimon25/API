@@ -9,7 +9,7 @@ import {
 } from "../../../schemas/admin/v1/category.schema";
 import { CategoryCollection } from "../../../resources/admin/v1/category/category.collection";
 import { CategoryResource } from "../../../resources/admin/v1/category/category.resource";
-import { Prisma, Status } from "@prisma/client";
+import { categoryScope } from "../../../scopes/admin/v1/category.scope";
 
 class CategoryController {
   private categoryService: CategoryService;
@@ -19,19 +19,9 @@ class CategoryController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.CategoryWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = categoryScope(req.query);
 
     if (page && perPage) {
       const categories = await this.categoryService.findByPaginate(+page, +perPage, where);
@@ -52,15 +42,7 @@ class CategoryController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name } = req.query;
-
-    let where: Prisma.CategoryWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
+    const where = categoryScope(req.query);
 
     const categories = await this.categoryService.findCommonAll(where);
     

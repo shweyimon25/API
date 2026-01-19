@@ -40,6 +40,7 @@ class RoleService {
       where: {
         ...where,
         status: Status.ACTIVE,
+        deletedAt: null,
       },
       orderBy: {
         id: "desc"

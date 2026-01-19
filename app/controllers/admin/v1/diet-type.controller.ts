@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { DietTypeCollection } from "../../../resources/admin/v1/diet-type/diet-type.collection";
 import { DietTypeResource } from "../../../resources/admin/v1/diet-type/diet-type.resource";
-import { Prisma, Status } from "@prisma/client";
+import { dietTypeScope } from "../../../scopes/admin/v1/diet-type.scope";
 
 class DietTypeController {
   private dietTypeService: DietTypeService;
@@ -19,28 +19,9 @@ class DietTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.DietTypeWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      },
-      {
-        description: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = dietTypeScope(req.query);
 
     if (page && perPage) {
       const dietTypes = await this.dietTypeService.findByPaginate(+page, +perPage, where);
@@ -60,24 +41,7 @@ class DietTypeController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
-
-    let where: Prisma.DietTypeWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      },
-      {
-        description: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
+    const where = dietTypeScope(req.query);
 
     const dietTypes = await this.dietTypeService.findCommonAll(where);
 

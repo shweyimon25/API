@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { MealCollection } from "../../../resources/admin/v1/meal/meal.collection";
 import { MealResource } from "../../../resources/admin/v1/meal/meal.resource";
-import { Prisma, Status } from "@prisma/client";
+import { mealScope } from "../../../scopes/admin/v1/meal.scope";
 
 class MealController {
   private mealService: MealService;
@@ -19,23 +19,9 @@ class MealController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, status, mealTypeId } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.MealWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
-
-    if (mealTypeId) {
-      where.mealTypeId = +mealTypeId;
-    }
+    const where = mealScope(req.query);
 
     if (page && perPage) {
       const meals = await this.mealService.findByPaginate(+page, +perPage, where);
@@ -55,15 +41,7 @@ class MealController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name } = req.query;
-
-    let where: Prisma.MealWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
+    const where = mealScope(req.query);
 
     const meals = await this.mealService.findCommonAll(where);
     

@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BodyGoalCollection } from "../../../resources/admin/v1/body-goal/body-goal.collection";
 import { BodyGoalResource } from "../../../resources/admin/v1/body-goal/body-goal.resource";
-import { Prisma, Status } from "@prisma/client";
+import { bodyGoalScope } from "../../../scopes/admin/v1/body-goal.scope";
 
 class BodyGoalController {
     private bodyGoalService: BodyGoalService;
@@ -19,19 +19,9 @@ class BodyGoalController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, name, status } = req.query;
+        const { page, perPage } = req.query;
 
-        let where: Prisma.BodyGoalWhereInput = {};
-
-        if (name) {
-            where.name = {
-                contains: name as string,
-            };
-        }
-
-        if (status) {
-            where.status = status as Status;
-        }
+        const where = bodyGoalScope(req.query);
 
         if (page && perPage) {
             const cons = await this.bodyGoalService.findByPaginate(+page, +perPage, where);
@@ -51,15 +41,7 @@ class BodyGoalController {
     }
 
     async findCommonAll(req: Request, res: Response) {
-        const { name } = req.query;
-
-        let where: Prisma.BodyGoalWhereInput = {};
-
-        if (name) {
-            where.name = {
-                contains: name as string,
-            };
-        }
+        const where = bodyGoalScope(req.query);
 
         const bodyGoals = await this.bodyGoalService.findCommonAll(where);
         

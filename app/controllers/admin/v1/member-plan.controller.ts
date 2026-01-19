@@ -10,6 +10,7 @@ import { ValidationException } from "../../../helpers/exceptions";
 import { MemberPlanCollection } from "../../../resources/admin/v1/member-plan/member-plan.collection";
 import { MemberPlanResource } from "../../../resources/admin/v1/member-plan/member-plan.resource";
 import { Prisma, Status, User } from "@prisma/client";
+import { memberPlanScope } from "../../../scopes/admin/v1/member-plan.scope";
 
 class MemberPlanController {
   private memberPlanService: MemberPlanService;
@@ -19,44 +20,9 @@ class MemberPlanController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search, memberTypeId, minPrice, maxPrice, duration, isVideoGroup } = req.query;
+    const { page, perPage } = req.query;
 
-    const where: Prisma.MemberPlanWhereInput = {};
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search as string, mode: "insensitive" } },
-        { memberType: { name: { contains: search as string, mode: "insensitive" } } },
-      ];
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
-
-    if (memberTypeId) {
-      where.memberTypeId = +memberTypeId as number;
-    }
-
-    if (minPrice) {
-      where.price = {
-        gte: +minPrice as number,
-      };
-    }
-
-    if (maxPrice) {
-      where.price = {
-        lte: +maxPrice as number,
-      };
-    }
-
-    if (duration) {
-      where.duration = +duration as number;
-    }
-
-    if (isVideoGroup) {
-      where.isVideoGroup = isVideoGroup === "true" ? true : false;
-    }
+    const where = memberPlanScope(req.query);
 
     if (page && perPage) {
       const memberPlans = await this.memberPlanService.findByPaginate(
@@ -90,17 +56,7 @@ class MemberPlanController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
-
-    const where: Prisma.MemberPlanWhereInput = {};
-
-    if (search) {
-      where.OR = [
-        { name: { contains: search as string, mode: "insensitive" } },
-        { memberType: { name: { contains: search as string, mode: "insensitive" } } },
-      ];
-    }
-
+    const where = memberPlanScope(req.query);
     const memberPlans = await this.memberPlanService.findCommonAll(where);
 
     return successResponse(

@@ -1,6 +1,5 @@
 import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-import { NotFoundException } from "../../../helpers/exceptions";
 
 class MemberTypeService {
   async findAll() {

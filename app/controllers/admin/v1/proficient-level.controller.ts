@@ -9,7 +9,7 @@ import {
   createProficientLevelSchema,
   updateProficientLevelSchema,
 } from "../../../schemas/admin/v1/proficient-level.schema";
-import { Prisma, Status } from "@prisma/client";
+import { proficientLevelScope } from "../../../scopes/admin/v1/proficient-level.scope";
 
 class ProficientLevelController {
   private proficientLevelService: ProficientLevelService;
@@ -19,19 +19,9 @@ class ProficientLevelController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.ProficientLevelWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = proficientLevelScope(req.query);
 
     if (page && perPage) {
       const proficientLevels = await this.proficientLevelService.findByPaginate(+page, +perPage, where);
@@ -51,15 +41,7 @@ class ProficientLevelController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name } = req.query;
-
-    let where: Prisma.ProficientLevelWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
+    const where = proficientLevelScope(req.query);
 
     const proficientLevels = await this.proficientLevelService.findCommonAll(where);
     

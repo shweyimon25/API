@@ -9,7 +9,8 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { PhysicalLimitationCollection } from "../../../resources/admin/v1/physical-limitation/physical-limitation.collection";
 import { PhysicalLimitationResource } from "../../../resources/admin/v1/physical-limitation/physical-limitation.resource";
-import { Prisma, Status, User } from "@prisma/client";
+import { User } from "@prisma/client";
+import { physicalLimitationScope } from "../../../scopes/admin/v1/physical-limitation.scope";
 
 class PhysicalLimitationController {
   private physicalLimitationService: PhysicalLimitationService;
@@ -19,27 +20,9 @@ class PhysicalLimitationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.PhysicalLimitationWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }, {
-        description: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = physicalLimitationScope(req.query);
 
     if (page && perPage) {
       const physicalLimitations = await this.physicalLimitationService.findByPaginate(+page, +perPage, where);
@@ -61,23 +44,7 @@ class PhysicalLimitationController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
-
-    let where: Prisma.PhysicalLimitationWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }, {
-        description: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
+    const where = physicalLimitationScope(req.query);
 
     const physicalLimitations = await this.physicalLimitationService.findCommonAll(where);
 

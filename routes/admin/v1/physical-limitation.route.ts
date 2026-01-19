@@ -28,7 +28,6 @@ router
 
 router.route("/common").get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['physical-limitation:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await physicalLimitationController.findCommonAll(req, res)

@@ -1,12 +1,13 @@
 export class PlaceResource {
-  static toResource(places: any) {
+  static toResource(place: any) {
     return {
-      id: places.id,
-      name: places.name,
-      createdBy: places.createdBy,
-      updatedBy: places.updatedBy,
-      createdAt: places.createdAt,
-      updatedAt: places.updatedAt,
+      id: place.id,
+      name: place.name,
+      status: place.status,
+      createdBy: place.createdBy,
+      updatedBy: place.updatedBy,
+      createdAt: place.createdAt,
+      updatedAt: place.updatedAt,
     };
   }
 }

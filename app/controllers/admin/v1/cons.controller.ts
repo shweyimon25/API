@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ConsCollection } from "../../../resources/admin/v1/cons/cons.collection";
 import { ConsResource } from "../../../resources/admin/v1/cons/cons.resource";
-import { Prisma, Status } from "@prisma/client";
+import { conScope } from "../../../scopes/admin/v1/con.scope";
 
 class ConsController {
   private consService: ConsService;
@@ -19,25 +19,9 @@ class ConsController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, guard, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.ConsWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (guard) {
-      where.guard = {
-        contains: guard as string,
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = conScope(req.query);
 
     if (page && perPage) {
       const cons = await this.consService.findByPaginate(+page, +perPage, where);
@@ -57,21 +41,7 @@ class ConsController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name, guard } = req.query;
-
-    let where: Prisma.ConsWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (guard) {
-      where.guard = {
-        contains: guard as string,
-      };
-    }
+    const where = conScope(req.query);
 
     const cons = await this.consService.findCommonAll(where);
 

@@ -1,15 +1,9 @@
 import { Request, Response } from "express";
 import ShopService from "../../../services/admin/v1/shop.service";
 import { successResponse } from "../../../helpers/response";
-import { validater } from "../../../helpers/validator";
-import {
-  createShopSchema,
-  updateShopSchema,
-} from "../../../schemas/admin/v1/shop.schema";
-import { ValidationException } from "../../../helpers/exceptions";
 import { ShopCollection } from "../../../resources/admin/v1/shop/shop.collection";
 import { ShopResource } from "../../../resources/admin/v1/shop/shop.resource";
-import { Prisma, Status } from "@prisma/client";
+import { shopScope } from "../../../scopes/admin/v1/shop.scope";
 
 class ShopController {
   private shopService: ShopService;
@@ -19,38 +13,9 @@ class ShopController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, status, shopLevelId, memberId } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.ShopWhereInput = {};
-
-    if (name) {
-      where.OR = [
-        {
-          name: {
-            contains: name as string,
-          },
-        },
-        {
-          member: {
-            name: {
-              contains: name as string,
-            },
-          },
-        },
-      ];
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
-
-    if (shopLevelId) {
-      where.shopLevelId = +shopLevelId;
-    }
-
-    if (memberId) {
-      where.memberId = +memberId;
-    }
+    const where = shopScope(req.query);
 
     if (page && perPage) {
       const shops = await this.shopService.findByPaginate(+page, +perPage, where);
@@ -79,16 +44,7 @@ class ShopController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name } = req.query;
-
-    let where: Prisma.ShopWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
+    const where = shopScope(req.query);
     const shops = await this.shopService.findCommonAll(where);
 
     return successResponse(

@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { MealTypeCollection } from "../../../resources/admin/v1/meal-type/meal-type.collection";
 import { MealTypeResource } from "../../../resources/admin/v1/meal-type/meal-type.resource";
-import { Prisma, Status } from "@prisma/client";
+import { mealTypeScope } from "../../../scopes/admin/v1/meal-type.scope";
 
 class MealTypeController {
   private mealTypeService: MealTypeService;
@@ -19,22 +19,9 @@ class MealTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.MealTypeWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = mealTypeScope(req.query);
 
     if (page && perPage) {
       const mealTypes = await this.mealTypeService.findByPaginate(+page, +perPage, where);
@@ -54,18 +41,7 @@ class MealTypeController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
-
-    let where: Prisma.MealTypeWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
+    const where = mealTypeScope(req.query);
 
     const mealTypes = await this.mealTypeService.findCommonAll(where);
 

@@ -40,7 +40,8 @@ class ConsService {
     const cons = await prisma.cons.findMany({
       where: {
         ...where,
-        status: Status.ACTIVE
+        status: Status.ACTIVE,
+        deletedAt: null,
       },
       orderBy: {
         id: "desc"

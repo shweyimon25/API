@@ -1,5 +1,3 @@
-import { Role } from "@prisma/client";
-
 export class UserResource {
   static toResource(user: any) {
     return {

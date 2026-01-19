@@ -9,7 +9,7 @@ import {
   createRoleSchema,
   updateRoleSchema,
 } from "../../../schemas/admin/v1/role.schema";
-import { Prisma, Status } from "@prisma/client";
+import { roleScope } from "../../../scopes/admin/v1/role.scope";
 
 class RoleController {
   private roleService: RoleService;
@@ -19,31 +19,9 @@ class RoleController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, description, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.RoleWhereInput = {};
-
-    if (name || description) {
-      where.OR = [];
-      if (name) {
-        where.OR.push({
-          name: {
-            contains: name as string,
-          },
-        });
-      }
-      if (description) {
-        where.OR.push({
-          description: {
-            contains: description as string,
-          },
-        });
-      }
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = roleScope(req.query);
 
     if (page && perPage) {
       const roles = await this.roleService.findByPaginate(+page, +perPage, where);
@@ -64,27 +42,7 @@ class RoleController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name, description } = req.query;
-
-    let where: Prisma.RoleWhereInput = {};
-
-    if (name || description) {
-      where.OR = [];
-      if (name) {
-        where.OR.push({
-          name: {
-            contains: name as string,
-          },
-        });
-      }
-      if (description) {
-        where.OR.push({
-          description: {
-            contains: description as string,
-          },
-        });
-      }
-    }
+    const where = roleScope(req.query);
 
     const roles = await this.roleService.findCommonAll(where);
 

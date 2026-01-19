@@ -16,7 +16,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@faker-js/faker": "^10.1.0",
+    "@faker-js/faker": "^10.2.0",
     "@types/ali-oss": "^6.16.13",
     "@types/aws-sdk": "^2.7.4",
     "@types/bcrypt": "^6.0.0",

@@ -28,7 +28,6 @@ router
 
 router.route("/common").get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['workout:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await workoutController.findCommonAll(req, res)

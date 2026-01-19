@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BodyAttentionAreaCollection } from "../../../resources/admin/v1/body-attention-area/body-attention-area.collection";
 import { BodyAttentionAreaResource } from "../../../resources/admin/v1/body-attention-area/body-attention-area.resource";
-import { Prisma, Status } from "@prisma/client";
+import { bodyAttentionAreaScope } from "../../../scopes/admin/v1/body-attention-area.scope";
 
 class BodyAttentionAreaController {
   private bodyAttentionAreaService: BodyAttentionAreaService;
@@ -19,22 +19,9 @@ class BodyAttentionAreaController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.BodyAttentionAreaWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = bodyAttentionAreaScope(req.query);
 
     if (page && perPage) {
       const bodyAttentionAreas =
@@ -55,18 +42,7 @@ class BodyAttentionAreaController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
-
-    let where: Prisma.BodyAttentionAreaWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        name: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
+    const where = bodyAttentionAreaScope(req.query);
 
     const bodyAttentionAreas = await this.bodyAttentionAreaService.findCommonAll(where);
     

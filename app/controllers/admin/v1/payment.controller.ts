@@ -6,7 +6,8 @@ import { successResponse } from "../../../helpers/response";
 import PaymentService from "../../../services/admin/v1/paymet.service";
 import { PaymentCollection } from "../../../resources/admin/v1/payment/payment.collection";
 import { PaymentResource } from "../../../resources/admin/v1/payment/payment.resource";
-import { Member, PaymentStatus, Prisma } from "@prisma/client";
+import { Member } from "@prisma/client";
+import { paymentScope } from "../../../scopes/admin/v1/payment.scope";
 
 class PaymentController {
     private paymentService: PaymentService;
@@ -16,37 +17,9 @@ class PaymentController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, status, memberId, memberPlanId, memberTypeId, minAmount, maxAmount } = req.query;
+        const { page, perPage } = req.query;
 
-        let where: Prisma.PaymentWhereInput = {};
-
-        if (status) {
-            where.status = status as PaymentStatus;
-        }
-
-        if (memberId) {
-            where.memberId = +memberId;
-        }
-
-        if (memberPlanId) {
-            where.memberPlanId = +memberPlanId;
-        }
-
-        if (memberTypeId) {
-            where.memberTypeId = +memberTypeId;
-        }
-
-        if (minAmount) {
-            where.amount = {
-                gte: +minAmount,
-            };
-        }
-
-        if (maxAmount) {
-            where.amount = {
-                lte: +maxAmount,
-            };
-        }
+        const where = paymentScope(req.query);
 
         if (page && perPage) {
             const payments = await this.paymentService.findByPaginate(+page, +perPage, where);

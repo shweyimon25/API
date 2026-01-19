@@ -1,15 +1,8 @@
+import { ConsResource } from "./cons.resource";
+
 export class ConsCollection {
   static toCollection(cons: any[]) {
-    return cons.map((con) => ({
-      id: con.id,
-      name: con.name,
-      guard: con.guard,
-      status: con.status,
-      createdBy: con.createdBy,
-      updatedBy: con.updatedBy,
-      createdAt: con.createdAt,
-      updatedAt: con.updatedAt,
-    }));
+    return cons.map((con) => ConsResource.toResource(con));
   }
 
   static toCommonCollection(cons: any[]) {

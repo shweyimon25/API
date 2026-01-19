@@ -7,6 +7,7 @@ import { validater } from "../../../helpers/validator";
 import { ValidationException } from "../../../helpers/exceptions";
 import { updateMemberRequestSchema } from "../../../schemas/admin/v1/member-request.schema";
 import MemberRequestService from "../../../services/admin/v1/member-request.service";
+import { memberRequestScope } from "../../../scopes/admin/v1/member-request.scope";
 
 class MemberRequestController {
     private memberRequestService: MemberRequestService;
@@ -16,52 +17,9 @@ class MemberRequestController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, name, email, phone, status, memberTypeId, memberPlanId } = req.query;
+        const { page, perPage } = req.query;
 
-        let where: Prisma.MemberRequestWhereInput = {};
-
-        if (name || email || phone) {
-            where.OR = [];
-            if (name) {
-                where.OR.push({
-                    member: {
-                        name: {
-                            contains: name as string,
-                        },
-                    },
-                });
-            }
-            if (email) {
-                where.OR.push({
-                    member: {
-                        email: {
-                            contains: email as string,
-                        },
-                    },
-                });
-            }
-            if (phone) {
-                where.OR.push({
-                    member: {
-                        phone: {
-                            contains: phone as string,
-                        },
-                    },
-                });
-            }
-        }
-
-        if (status) {
-            where.status = status as MemberRequestStatus;
-        }
-
-        if (memberTypeId) {
-            where.memberTypeId = +memberTypeId;
-        }
-
-        // if (memberPlanId) {
-        //     where.memberPlanId = +memberPlanId;
-        // }
+        const where = memberRequestScope(req.query);
 
         if (page && perPage) {
             const memberRequests = await this.memberRequestService.findByPaginate(

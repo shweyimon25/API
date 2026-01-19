@@ -117,7 +117,11 @@ class ShopService {
 
   async findCommonAll(where?: Prisma.ShopWhereInput) {
     const shops = await prisma.shop.findMany({
-      where,
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+        deletedAt: null,
+      },
       orderBy: {
         id: "desc",
       },

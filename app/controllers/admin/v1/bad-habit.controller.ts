@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BadHabitCollection } from "../../../resources/admin/v1/bad-habit/bad-habit.collection";
 import { BadHabitResource } from "../../../resources/admin/v1/bad-habit/bad-habit.resource";
-import { Prisma, Status } from "@prisma/client";
+import { badHabitScope } from "../../../scopes/admin/v1/bad-habit.scope";
 
 class BadHabitController {
   private badHabitService: BadHabitService;
@@ -19,34 +19,9 @@ class BadHabitController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, name, description, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.BadHabitWhereInput = {};
-
-    if (search) {
-      where.OR = [
-        {
-          name: {
-            contains: search as string,
-          },
-        },
-        {
-          description: {
-            contains: search as string,
-          },
-        },
-      ];
-    }
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = badHabitScope(req.query);
 
     if (page && perPage) {
       const badHabits = await this.badHabitService.findByPaginate(+page, +perPage, where);
@@ -66,15 +41,7 @@ class BadHabitController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name } = req.query;
-
-    let where: Prisma.BadHabitWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
+    const where = badHabitScope(req.query);
 
     const badHabits = await this.badHabitService.findCommonAll(where);
     

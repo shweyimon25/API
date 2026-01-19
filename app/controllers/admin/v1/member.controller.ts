@@ -11,6 +11,7 @@ import { ValidationException } from "../../../helpers/exceptions";
 import { MemberCollection } from "../../../resources/admin/v1/member/member.collection";
 import { MemberResource } from "../../../resources/admin/v1/member/member.resource";
 import { Gender, Status } from "@prisma/client";
+import { memberScope } from "../../../scopes/admin/v1/member.scope";
 
 class MemberController {
   private memberService: MemberService;
@@ -20,47 +21,12 @@ class MemberController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, status, memberTypeId, gender, email, phone, code } = req.query;
+    const { page, perPage } = req.query;
 
-    const filters: Prisma.MemberWhereInput = {};
-
-    if (status) {
-      filters.status = status as Status;
-    }
-
-    if (memberTypeId) {
-      filters.memberTypeId = +memberTypeId;
-    }
-
-    if (gender) {
-      filters.profile = {
-        gender: gender as Gender,
-      };
-    }
-
-    if (email) {
-      filters.email = { contains: email as string, mode: "insensitive" };
-    }
-
-    if (phone) {
-      filters.phone = { contains: phone as string, mode: "insensitive" };
-    }
-
-    if (code) {
-      filters.code = { contains: code as string, mode: "insensitive" };
-    }
-
-    if (search) {
-      filters.OR = [
-        { name: { contains: search as string, mode: "insensitive" } },
-        { code: { contains: search as string, mode: "insensitive" } },
-        { email: { contains: search as string, mode: "insensitive" } },
-        { phone: { contains: search as string, mode: "insensitive" } },
-      ];
-    }
+    const where = memberScope(req.query);
 
     if (page && perPage) {
-      const members = await this.memberService.findByPaginate(+page, +perPage, filters);
+      const members = await this.memberService.findByPaginate(+page, +perPage, where);
 
       return successResponse(
         res,
@@ -69,7 +35,7 @@ class MemberController {
       );
     }
 
-    const members = await this.memberService.findAll(filters);
+    const members = await this.memberService.findAll(where);
 
     return successResponse(
       res,
@@ -79,7 +45,8 @@ class MemberController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const members = await this.memberService.findCommonAll();
+    const where = memberScope(req.query);
+    const members = await this.memberService.findCommonAll(where);
 
     return successResponse(
       res,
@@ -89,7 +56,9 @@ class MemberController {
   }
 
   async findOne(req: Request, res: Response) {
-    const member = await this.memberService.findOne(+req.params.id);
+    const { id } = req.params;
+    const member = await this.memberService.findOne(+id);
+
     return successResponse(
       res,
       "Member details successfully",

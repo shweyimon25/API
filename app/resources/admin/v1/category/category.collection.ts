@@ -1,11 +1,8 @@
+import { CategoryResource } from "./category.resource";
+
 export class CategoryCollection {
   static toCollection(categories: any[]) {
-    return categories.map((category) => ({
-      id: category.id,
-      name: category.name,
-      createdAt: category.createdAt,
-      updatedAt: category.updatedAt,
-    }));
+    return categories.map((category) => CategoryResource.toResource(category));
   }
 
   static toCommonCollection(categories: any[]) {

@@ -4,14 +4,16 @@ import {
 } from "./../../../schemas/admin/v1/post.schema";
 import prisma from "../../../../prisma/client";
 import {
-  BadRequestException,
+  NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
 import { generateTimeAgo } from "../../../helpers/helper";
+import { Prisma } from "@prisma/client";
 
 class PostService {
-  async findAll() {
+  async findAll(where?: Prisma.PostWhereInput) {
     const posts = await prisma.post.findMany({
+      where,
       orderBy: {
         id: "desc",
       },
@@ -33,8 +35,9 @@ class PostService {
     return posts;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.PostWhereInput) {
     const posts = await prisma.post.findMany({
+      where,
       orderBy: {
         id: "desc",
       },
@@ -77,10 +80,18 @@ class PostService {
       where: {
         id,
       },
+      include: {
+        tag: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!post) {
-      throw new BadRequestException("Post not found");
+      throw new NotFoundException("Post not found");
     }
 
     return post;
@@ -129,7 +140,7 @@ class PostService {
     });
 
     if (!existingPost) {
-      throw new BadRequestException("Post not found");
+      throw new NotFoundException("Post not found");
     }
 
     // Check tag exists if tagId is being updated

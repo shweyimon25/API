@@ -1,12 +1,13 @@
 export class ProficientLevelResource {
-  static toResource(cons: any) {
+  static toResource(proficientLevel: any) {
     return {
-      id: cons.id,
-      name: cons.name,
-      createdBy: cons.createdBy,
-      updatedBy: cons.updatedBy,
-      createdAt: cons.createdAt,
-      updatedAt: cons.updatedAt,
+      id: proficientLevel.id,
+      name: proficientLevel.name,
+      status: proficientLevel.status,
+      createdBy: proficientLevel.createdBy,
+      updatedBy: proficientLevel.updatedBy,
+      createdAt: proficientLevel.createdAt,
+      updatedAt: proficientLevel.updatedAt,
     };
   }
 }

@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { BankInformationCollection } from "../../../resources/admin/v1/bank-information/bank-information.collection";
 import { BankInformationResource } from "../../../resources/admin/v1/bank-information/bank-information.resource";
-import { PaymentTypes, Prisma, Status } from "@prisma/client";
+import { bankInformationScope } from "../../../scopes/admin/v1/bank-information.scope";
 
 class BankInformationController {
   private bankInformationService: BankInformationService;
@@ -19,59 +19,9 @@ class BankInformationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, bankAccountHolder, bankAccountNumber, phone, paymentTypes, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.BankInformationWhereInput = {};
-
-    if (search) {
-      where.OR = [{
-        bankAccountHolder: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-        bankAccountNumber: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-        phone: {
-          contains: search as string,
-          mode: "insensitive",
-        },
-      }];
-    }
-
-    if (bankAccountHolder || bankAccountNumber || phone) {
-      where.OR = [];
-      if (bankAccountHolder) {
-        where.OR.push({
-          bankAccountHolder: {
-            contains: bankAccountHolder as string,
-          },
-        });
-      }
-      if (bankAccountNumber) {
-        where.OR.push({
-          bankAccountNumber: {
-            contains: bankAccountNumber as string,
-          },
-        });
-      }
-      if (phone) {
-        where.OR.push({
-          phone: {
-            contains: phone as string,
-          },
-        });
-      }
-    }
-
-    if (paymentTypes) {
-      where.paymentTypes = paymentTypes as PaymentTypes;
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = bankInformationScope(req.query);
 
     if (page && perPage) {
       const bankInformations = await this.bankInformationService.findByPaginate(+page, +perPage, where);
@@ -91,15 +41,7 @@ class BankInformationController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { bankAccountHolder } = req.query;
-
-    let where: Prisma.BankInformationWhereInput = {};
-
-    if (bankAccountHolder) {
-      where.bankAccountHolder = {
-        contains: bankAccountHolder as string,
-      };
-    }
+    const where = bankInformationScope(req.query);
 
     const bankInformations = await this.bankInformationService.findCommonAll(where);
 

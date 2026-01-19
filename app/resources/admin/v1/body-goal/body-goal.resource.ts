@@ -1,12 +1,13 @@
 export class BodyGoalResource {
-  static toResource(cons: any) {
+  static toResource(bodyGoal: any) {
     return {
-      id: cons.id,
-      name: cons.name,
-      createdBy: cons.createdBy,
-      updatedBy: cons.updatedBy,
-      createdAt: cons.createdAt,
-      updatedAt: cons.updatedAt,
+      id: bodyGoal.id,
+      name: bodyGoal.name,
+      status: bodyGoal.status,
+      createdBy: bodyGoal.createdBy,
+      updatedBy: bodyGoal.updatedBy,
+      createdAt: bodyGoal.createdAt,
+      updatedAt: bodyGoal.updatedAt,
     };
   }
 }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { successResponse } from "../../../helpers/response";
 import PermissionService from "../../../services/admin/v1/permission.service";
-import { Prisma } from "@prisma/client";
+import { permissionScope } from "../../../scopes/admin/v1/permission.scope";
 
 class PermissionController {
   private permissionService: PermissionService;
@@ -11,15 +11,9 @@ class PermissionController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.PermissionWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
+    const where = permissionScope(req.query);
 
     if (page && perPage) {
       const permissions = await this.permissionService.findByPaginate(+page, +perPage, where);
@@ -31,16 +25,7 @@ class PermissionController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name } = req.query;
-
-    let where: Prisma.PermissionWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
+    const where = permissionScope(req.query);
     const permissions = await this.permissionService.findCommonAll(where);
 
     return successResponse(res, "Common Permission list successfully", permissions);

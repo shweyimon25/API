@@ -9,7 +9,8 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { ShopLevelCollection } from "../../../resources/admin/v1/shop-level/shop-level.collection";
 import { ShopLevelResource } from "../../../resources/admin/v1/shop-level/shop-level.resource";
-import { Prisma, Status, User } from "@prisma/client";
+import { User } from "@prisma/client";
+import { shopLevelScope } from "../../../scopes/admin/v1/shop-level.scope";
 
 class ShopLevelController {
   private shopLevelService: ShopLevelService;
@@ -19,37 +20,9 @@ class ShopLevelController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, status, search, duration, postLimit, name, minPrice, maxPrice } = req.query;
+    const { page, perPage } = req.query;
 
-    const where: Prisma.ShopLevelWhereInput = {};
-
-    if (status) {
-      where.status = status as Status;
-    }
-
-    if (duration) {
-      where.duration = { equals: +duration as number };
-    }
-
-    if (postLimit) {
-      where.postLimit = { equals: +postLimit as number };
-    }
-
-    if (search) {
-      where.name = { contains: search as string, mode: "insensitive" };
-    }
-
-    if (name) {
-      where.name = { equals: name as string };
-    }
-
-    if (minPrice) {
-      where.price = { gte: +minPrice as number };
-    }
-
-    if (maxPrice) {
-      where.price = { lte: +maxPrice as number };
-    }
+    const where = shopLevelScope(req.query);
 
     if (page && perPage) {
       const shopLevels = await this.shopLevelService.findByPaginate(
@@ -85,13 +58,7 @@ class ShopLevelController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
-
-    const where: Prisma.ShopLevelWhereInput = {};
-
-    if (search) {
-      where.name = { contains: search as string, mode: "insensitive" };
-    }
+    const where = shopLevelScope(req.query);
 
     const shopLevels = await this.shopLevelService.findCommonAll(where);
 
@@ -110,7 +77,6 @@ class ShopLevelController {
     }
 
     const userId = (req.user as User)?.id;
-
     const shopLevel = await this.shopLevelService.create(data, +userId);
 
     return successResponse(

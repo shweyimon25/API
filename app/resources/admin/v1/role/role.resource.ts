@@ -3,6 +3,7 @@ export class RoleResource {
     return {
       id: role.id,
       name: role.name,
+      description: role.description,
       permissions: role.permissions?.map((permission: any) => ({
         id: permission.permission.id,
         name: permission.permission.name,

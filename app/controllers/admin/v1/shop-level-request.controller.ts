@@ -7,6 +7,7 @@ import { validater } from "../../../helpers/validator";
 import { ValidationException } from "../../../helpers/exceptions";
 import { updateShopLevelRequestSchema } from "../../../schemas/admin/v1/shop-level-request.schema";
 import ShopLevelRequestService from "../../../services/admin/v1/shop-level-request.service";
+import { shopLevelRequestScope } from "../../../scopes/admin/v1/shop-level-request.scope";
 
 class ShopLevelRequestController {
     private shopLevelRequestService: ShopLevelRequestService;
@@ -16,48 +17,9 @@ class ShopLevelRequestController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, name, email, phone, status, shopLevelId } = req.query;
+        const { page, perPage} = req.query;
 
-        let where: Prisma.ShopUpgradeRequestWhereInput = {};
-
-        if (name || email || phone) {
-            where.OR = [];
-            if (name) {
-                where.OR.push({
-                    member: {
-                        name: {
-                            contains: name as string,
-                        },
-                    },
-                });
-            }
-            if (email) {
-                where.OR.push({
-                    member: {
-                        email: {
-                            contains: email as string,
-                        },
-                    },
-                });
-            }
-            if (phone) {
-                where.OR.push({
-                    member: {
-                        phone: {
-                            contains: phone as string,
-                        },
-                    },
-                });
-            }
-        }
-
-        if (status) {
-            where.status = status as MemberRequestStatus;
-        }
-
-        if (shopLevelId) {
-            where.shopLevelId = +shopLevelId;
-        }
+        const where = shopLevelRequestScope(req.query);
 
         if (page && perPage) {
             const shopUpgradeRequests = await this.shopLevelRequestService.findByPaginate(

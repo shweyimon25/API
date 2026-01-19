@@ -9,7 +9,8 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { UserCollection } from "../../../resources/admin/v1/user/user.collection";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
-import { Prisma, Status, User } from "@prisma/client";
+import { User } from "@prisma/client";
+import { userScope } from "../../../scopes/admin/v1/user.scope";
 
 class UserController {
   private userService: UserService;
@@ -19,46 +20,9 @@ class UserController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, email, username, status, roleId } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.UserWhereInput = {};
-
-    if (name || email || username) {
-      where.OR = [];
-      if (name) {
-        where.OR.push({
-          name: {
-            contains: name as string,
-          },
-        });
-      }
-      if (email) {
-        where.OR.push({
-          email: {
-            contains: email as string,
-          },
-        });
-      }
-      if (username) {
-        where.OR.push({
-          username: {
-            contains: username as string,
-          },
-        });
-      }
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
-
-    if (roleId) {
-      where.roles = {
-        some: {
-          roleId: +roleId,
-        },
-      };
-    }
+    const where = userScope(req.query);
 
     if (page && perPage) {
       const users = await this.userService.findByPaginate(+page, +perPage, where);
@@ -70,6 +34,7 @@ class UserController {
     }
 
     const users = await this.userService.findAll(where);
+
     return successResponse(
       res,
       "User list successfully",
@@ -78,44 +43,9 @@ class UserController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name, email, username, roleId } = req.query;
-
-    let where: Prisma.UserWhereInput = {};
-
-    if (name || email || username) {
-      where.OR = [];
-      if (name) {
-        where.OR.push({
-          name: {
-            contains: name as string,
-          },
-        });
-      }
-      if (email) {
-        where.OR.push({
-          email: {
-            contains: email as string,
-          },
-        });
-      }
-      if (username) {
-        where.OR.push({
-          username: {
-            contains: username as string,
-          },
-        });
-      }
-    }
-
-    if (roleId) {
-      where.roles = {
-        some: {
-          roleId: +roleId,
-        },
-      };
-    }
-
+    const where = userScope(req.query);
     const users = await this.userService.findCommonAll(where);
+
     return successResponse(
       res,
       "Common User list successfully",

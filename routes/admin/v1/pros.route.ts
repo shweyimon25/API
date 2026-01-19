@@ -28,7 +28,6 @@ router
 
 router.route('/common').get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['pro:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await prosController.findCommonAll(req, res)

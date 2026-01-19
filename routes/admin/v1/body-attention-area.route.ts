@@ -28,7 +28,6 @@ router
 
 router.route("/common").get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['body-attention-area:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await bodyAttentionAreaController.findCommonAll(req, res)

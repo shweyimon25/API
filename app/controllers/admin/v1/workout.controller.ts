@@ -6,7 +6,7 @@ import WorkoutService from "../../../services/admin/v1/workout.service";
 import { WorkoutCollection } from "../../../resources/admin/v1/workout/workout.collection";
 import { WorkoutResource } from "../../../resources/admin/v1/workout/workout.resource";
 import { createWorkoutSchema, updateWorkoutSchema } from "../../../schemas/admin/v1/workout.schema";
-import { Day, Gender, Prisma, Status } from "@prisma/client";
+import { workoutScope } from "../../../scopes/admin/v1/workout.scope";
 
 class WorkoutController {
     private workoutService: WorkoutService;
@@ -16,66 +16,9 @@ class WorkoutController {
     }
 
     async findAll(req: Request, res: Response) {
-        const { page, perPage, search, name, gender, categoryId, bodyGoalId, placeId, memberPlanId, workoutDay, sets, reps, status } = req.query;
+        const { page, perPage } = req.query;
 
-        let where: Prisma.WorkoutWhereInput = {};
-
-        if (search) {
-            where.OR = [
-                {
-                    name: {
-                        contains: search as string,
-                        mode: "insensitive",
-                    },
-                }
-            ];
-        }
-
-        if (name) {
-            where.name = {
-                contains: name as string,
-            };
-        }
-
-        if (gender) {
-            where.gender = gender as Gender;
-        }
-
-        if (categoryId) {
-            where.categoryId = +categoryId;
-        }
-
-        if (bodyGoalId) {
-            where.bodyGoalId = +bodyGoalId;
-        }
-
-        if (placeId) {
-            where.placeId = +placeId;
-        }
-
-        if (memberPlanId) {
-            where.memberPlanId = +memberPlanId;
-        }
-
-        if (workoutDay) {
-            where.workoutDay = workoutDay as Day;
-        }
-
-        if (sets) {
-            where.sets = {
-                gte: +sets,
-            };
-        }
-
-        if (reps) {
-            where.reps = {
-                gte: +reps,
-            };
-        }
-
-        if (status) {
-            where.status = status as Status;
-        }
+        const where = workoutScope(req.query);
 
         if (page && perPage) {
             const workouts = await this.workoutService.findByPaginate(+page, +perPage, where);
@@ -105,17 +48,7 @@ class WorkoutController {
     }
 
     async findCommonAll(req: Request, res: Response) {
-
-        const { search } = req.query;
-
-        let where: Prisma.WorkoutWhereInput = {};
-
-        if (search) {
-            where.name = {
-                contains: search as string,
-                mode: "insensitive",
-            };
-        }
+        const where = workoutScope(req.query);
 
         const workouts = await this.workoutService.findCommonAll(where);
 

@@ -3,6 +3,7 @@ export class RoleCollection {
     return roles.map((role) => ({
       id: role.id,
       name: role.name,
+      description: role.description,
       status: role.status,
       createdBy: role.createdBy,
       updatedBy: role.updatedBy,
@@ -23,6 +24,7 @@ export class RoleCollection {
       data: roles.data.map((role: any) => ({
         id: role.id,
         name: role.name,
+        description: role.description,
         status: role.status,
         createdBy: role.createdBy,
         updatedBy: role.updatedBy,

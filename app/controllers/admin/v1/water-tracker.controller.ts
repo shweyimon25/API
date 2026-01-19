@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { WaterTrackerCollection } from "../../../resources/admin/v1/water-tracker/water-tracker.collection";
 import { WaterTrackerResource } from "../../../resources/admin/v1/water-tracker/water-tracker.resource";
-import { Prisma } from "@prisma/client";
+import { waterTrackerScope } from "../../../scopes/admin/v1/water-tracker.scope";
 
 class WaterTrackerController {
   private waterTrackerService: WaterTrackerService;
@@ -19,17 +19,9 @@ class WaterTrackerController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, memberId, date } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.WaterTrackerWhereInput = {};
-
-    if (memberId) {
-      where.memberId = +memberId;
-    }
-
-    if (date) {
-      where.date = date as string;
-    }
+    const where = waterTrackerScope(req.query);
 
     if (page && perPage) {
       const waterTrackers = await this.waterTrackerService.findByPaginate(+page, +perPage, where);

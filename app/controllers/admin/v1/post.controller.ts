@@ -3,7 +3,7 @@ import PostService from "../../../services/admin/v1/post.service";
 import { successResponse } from "../../../helpers/response";
 import { PostCollection } from "../../../resources/admin/v1/post/post.collection";
 import { PostResource } from "../../../resources/admin/v1/post/post.resource";
-
+import { postScope } from "../../../scopes/admin/v1/post.scope";
 class PostController {
   private postService: PostService;
 
@@ -14,8 +14,10 @@ class PostController {
   async findAll(req: Request, res: Response) {
     const { page, perPage } = req.query;
 
+    const where = postScope(req.query);
+
     if (page && perPage) {
-      const posts = await this.postService.findByPaginate(+page, +perPage);
+      const posts = await this.postService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Post list successfully",
@@ -23,7 +25,7 @@ class PostController {
       );
     }
 
-    const posts = await this.postService.findAll();
+    const posts = await this.postService.findAll(where);
     return successResponse(
       res,
       "Post list successfully",
@@ -32,7 +34,9 @@ class PostController {
   }
 
   async findOne(req: Request, res: Response) {
-    const post = await this.postService.findOne(+req.params.id);
+    const { id } = req.params;
+    const post = await this.postService.findOne(+id);
+
     return successResponse(
       res,
       "Post details successfully",

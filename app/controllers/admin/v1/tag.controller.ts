@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { TagCollection } from "../../../resources/admin/v1/tag/tag.collection";
 import { TagResource } from "../../../resources/admin/v1/tag/tag.resource";
-import { Prisma, Status } from "@prisma/client";
+import { tagScope } from "../../../scopes/admin/v1/tag.scope";
 
 class TagController {
   private tagService: TagService;
@@ -19,19 +19,9 @@ class TagController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, name, status } = req.query;
+    const { page, perPage } = req.query;
 
-    let where: Prisma.TagWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = tagScope(req.query);
 
     if (page && perPage) {
       const tags = await this.tagService.findByPaginate(+page, +perPage, where);
@@ -51,18 +41,10 @@ class TagController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { name } = req.query;
-
-    let where: Prisma.TagWhereInput = {};
-
-    if (name) {
-      where.name = {
-        contains: name as string,
-      };
-    }
+    const where = tagScope(req.query);
 
     const tags = await this.tagService.findCommonAll(where);
-    
+
     return successResponse(
       res,
       "Tag list successfully",

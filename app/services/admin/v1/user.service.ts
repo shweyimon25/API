@@ -21,6 +21,7 @@ class UserService {
         id: true,
         name: true,
         email: true,
+        username: true,
         status: true,
         roles: {
           select: {
@@ -57,6 +58,7 @@ class UserService {
       where: {
         ...where,
         status: Status.ACTIVE,
+        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -84,6 +86,7 @@ class UserService {
         id: true,
         name: true,
         email: true,
+        username: true,
         status: true,
         roles: {
           select: {
@@ -140,6 +143,7 @@ class UserService {
         id: true,
         name: true,
         email: true,
+        username: true,
         status: true,
         roles: {
           select: {

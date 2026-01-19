@@ -1,9 +1,10 @@
-import { Prisma, Status } from "@prisma/client";
+
 import { successResponse } from "../../../helpers/response";
 import { MemberTypeCollection } from "../../../resources/admin/v1/member-type/member-type.collection";
 import { MemberTypeResource } from "../../../resources/admin/v1/member-type/member-type.resource";
 import MemberTypeService from "../../../services/admin/v1/member-type.service";
 import { Request, Response } from "express";
+import { memberTypeScope } from "../../../scopes/admin/v1/member-type.scope";
 
 class MemberTypeController {
   private memberTypeService: MemberTypeService;
@@ -13,20 +14,9 @@ class MemberTypeController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { page, perPage, search, status } = req.query;
+    const { page, perPage } = req.query;
 
-    const where: Prisma.MemberTypeWhereInput = {};
-
-    if (search) {
-      where.name = {
-        contains: search as string,
-        mode: "insensitive"
-      };
-    }
-
-    if (status) {
-      where.status = status as Status;
-    }
+    const where = memberTypeScope(req.query);
 
     if (page && perPage) {
       const memberTypes = await this.memberTypeService.findByPaginate(
@@ -52,16 +42,7 @@ class MemberTypeController {
   }
 
   async findCommonAll(req: Request, res: Response) {
-    const { search } = req.query;
-
-    const where: Prisma.MemberTypeWhereInput = {};
-
-    if (search) {
-      where.name = {
-        contains: search as string,
-        mode: "insensitive"
-      };
-    }
+    const where = memberTypeScope(req.query);
 
     const memberTypes = await this.memberTypeService.findCommonAll(where);
 

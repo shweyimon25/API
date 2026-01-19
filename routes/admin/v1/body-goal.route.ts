@@ -28,7 +28,6 @@ router
 
 router.route("/common").get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['body-goal:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await bodyGoalController.findCommonAll(req, res)

@@ -20,7 +20,6 @@ router
 
 router.route("/common").get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['permission:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await permissionController.findCommonAll(req, res)

@@ -28,7 +28,6 @@ router
 
 router.route("/common").get([
   passport.authenticate("jwt", { session: false }),
-  hasPermission(['meal-type:list']),
   asyncHandler(
     async (req: Request, res: Response) =>
       await mealTypeController.findCommonAll(req, res)

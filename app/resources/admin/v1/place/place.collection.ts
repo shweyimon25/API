@@ -1,11 +1,8 @@
+import { PlaceResource } from "./place.resource";
+
 export class PlaceCollection {
-  static toCollection(placs: any[]) {
-    return placs.map((palce) => ({
-      id: palce.id,
-      name: palce.name,
-      createdAt: palce.createdAt,
-      updatedAt: palce.updatedAt,
-    }));
+  static toCollection(places: any[]) {
+    return places.map((place) => PlaceResource.toResource(place));
   }
 
   static toCommonCollection(places: any[]) {
@@ -15,10 +12,10 @@ export class PlaceCollection {
     }));
   }
 
-  static withPagination(placs: { data: any[]; meta: any }) {
+  static withPagination(places: { data: any[]; meta: any }) {
     return {
-      data: this.toCollection(placs.data),
-      meta: placs.meta,
+      data: this.toCollection(places.data),
+      meta: places.meta,
     };
   }
 }

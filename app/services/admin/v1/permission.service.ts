@@ -1,6 +1,6 @@
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
-import { Prisma } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 
 class PermissionService {
   async findAll(where?: Prisma.PermissionWhereInput) {
@@ -16,7 +16,10 @@ class PermissionService {
 
   async findCommonAll(where?: Prisma.PermissionWhereInput) {
     const permissions = await prisma.permission.findMany({
-      where,
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+      },
       orderBy: {
         id: "desc",
       },
