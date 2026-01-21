@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "./node_modules/.prisma/client"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -502,6 +502,8 @@ model Post {
   privencyType PrivencyType @default(PUBLIC)
   timeAgo      String
   media        Json?
+  status       Status       @default(ACTIVE)
+  deletedAt    DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 

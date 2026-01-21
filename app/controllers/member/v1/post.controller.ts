@@ -88,12 +88,8 @@ class PostController {
   }
 
   async destroy(req: Request, res: Response) {
-    const post = await this.postService.destroy(+req.params.id);
-    return successResponse(
-      res,
-      "Post deleted successfully",
-      PostResource.toResource(post)
-    );
+    await this.postService.destroy(+req.params.id);
+    return successResponse(res, "Post deleted successfully");
   }
 }
 

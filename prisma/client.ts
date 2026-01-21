@@ -25,6 +25,7 @@ const SOFT_DELETE_MODELS = new Set([
     Prisma.ModelName.Meal,
     Prisma.ModelName.BadHabit,
     Prisma.ModelName.BankInformation,
+    Prisma.ModelName.Post,
 ]);
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });

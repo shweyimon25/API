@@ -9,7 +9,7 @@ import {
 } from "../../../helpers/exceptions";
 import { generateTimeAgo } from "../../../helpers/helper";
 import { upload } from "../../../helpers/media-upload";
-import { PrivencyType } from "@prisma/client";
+import { PrivencyType, Status } from "@prisma/client";
 
 class PostService {
   async findAll() {
@@ -208,17 +208,16 @@ class PostService {
   }
 
   async destroy(id: number) {
-    // Find post
-    const post = await this.findOne(id);
-
-    // Delete post
-    await prisma.post.delete({
+    await this.findOne(id);
+    await prisma.post.update({
       where: {
         id,
       },
+      data: {
+        status: Status.DELETE,
+        deletedAt: new Date(),
+      }
     });
-
-    return post;
   }
 }
 
