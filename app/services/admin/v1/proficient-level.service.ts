@@ -124,7 +124,6 @@ class ProficientLevelService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -179,14 +178,8 @@ class ProficientLevelService {
   async destroy(id: number) {
     const proficientLevel = await this.findOne(id);
 
-    await prisma.proficientLevel.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.proficientLevel.delete({
+      where: { id },
     });
 
     return proficientLevel;

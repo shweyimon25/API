@@ -63,6 +63,8 @@ export const upload = async (file: any, folderName: string = "temp") => {
 
   const fileUrl = `https://${bucketName}.sgp1.digitaloceanspaces.com/${bucketName}/${key}`;
 
+  console.log(fileUrl);
+
   return {
     fileSize: file.size,
     fileMimeType: file.mimetype,

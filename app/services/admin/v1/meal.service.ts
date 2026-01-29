@@ -141,7 +141,6 @@ class MealService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -253,14 +252,8 @@ class MealService {
   async destroy(id: number) {
     const meal = await this.findOne(id);
 
-    await prisma.meal.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.meal.delete({
+      where: { id },
     });
 
     return meal;

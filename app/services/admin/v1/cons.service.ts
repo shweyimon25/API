@@ -41,7 +41,6 @@ class ConsService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc"
@@ -178,14 +177,8 @@ class ConsService {
   async destroy(id: number) {
     const cons = await this.findOne(id);
 
-    await prisma.cons.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.cons.delete({
+      where: { id },
     });
 
     return cons;

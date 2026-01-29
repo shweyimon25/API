@@ -16,6 +16,7 @@ class ProfileService {
                 email: true,
                 phone: true,
                 profile: true,
+                shop: true,
                 memberType: true,
                 providerTypes: true,
                 language: true,

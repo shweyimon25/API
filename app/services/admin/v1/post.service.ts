@@ -7,8 +7,7 @@ import {
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { generateTimeAgo } from "../../../helpers/helper";
-import { Prisma } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 
 class PostService {
   async findAll(where?: Prisma.PostWhereInput) {
@@ -98,31 +97,33 @@ class PostService {
   }
 
   async create(createPostInput: CreatePostInput) {
-    const { content, tagId, privencyType } = createPostInput;
+    const { content, tagId, memberId, privencyType } = createPostInput;
 
-    // Check tag exists
     const tag = await prisma.tag.findUnique({
-      where: {
-        id: tagId,
-      },
+      where: { id: tagId },
     });
-
     if (!tag) {
       throw new ValidationException("Failed to create post", [
-        {
-          field: "tagId",
-          issue: "Tag is not existed",
-        },
+        { field: "tagId", issue: "Tag is not existed" },
       ]);
     }
 
-    // Create new post
+    const member = await prisma.member.findUnique({
+      where: { id: memberId },
+    });
+    if (!member) {
+      throw new ValidationException("Failed to create post", [
+        { field: "memberId", issue: "Member is not existed" },
+      ]);
+    }
+
     const post = await prisma.post.create({
       data: {
         content: content ?? "",
         tagId,
-        privencyType: privencyType || "PUBLIC",
-        timeAgo: generateTimeAgo(new Date()),
+        memberId,
+        privencyType: privencyType ?? "PUBLIC",
+        status: Status.ACTIVE,
       },
     });
 

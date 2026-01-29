@@ -216,7 +216,6 @@ class MemberService {
     const members = await prisma.member.findMany({
       where: {
         status: Status.ACTIVE,
-        deletedAt: null,
         ...where,
       },
       orderBy: {
@@ -389,14 +388,8 @@ class MemberService {
   async destroy(id: number, userId: number) {
     const member = await this.findOne(id);
 
-    await prisma.member.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      }
+    await prisma.member.delete({
+      where: { id },
     });
 
     return member;

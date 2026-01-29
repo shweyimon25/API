@@ -40,7 +40,6 @@ class RoleService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc"
@@ -301,13 +300,8 @@ class RoleService {
   async destory(id: number) {
     await this.findOne(id);
 
-    await prisma.role.update({
-      where: {
-        id
-      },
-      data: {
-        deletedAt: new Date()
-      }
+    await prisma.role.delete({
+      where: { id },
     });
   }
 }

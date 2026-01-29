@@ -120,7 +120,6 @@ class CategoryService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -176,14 +175,8 @@ class CategoryService {
   async destroy(id: number) {
     const category = await this.findOne(id);
 
-    await prisma.category.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.category.delete({
+      where: { id },
     });
 
     return category;

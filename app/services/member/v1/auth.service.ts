@@ -12,11 +12,15 @@ class AuthService {
                     { phone: providerType === ProviderType.PHONE ? providerValue : null },
                 ],
                 status: Status.ACTIVE,
-                deletedAt: null
             },
             include: {
                 profile: true,
                 memberType: true,
+                shop: {
+                    include: {
+                        shopLevel: true,
+                    },
+                },
                 providerTypes: true,
             },
         });
@@ -34,10 +38,7 @@ class AuthService {
 
     async updateOrCreateOtpByEmail(email: string, otp: string, expiresAt: Date) {
         const existingEmail = await prisma.member.findFirst({
-            where: {
-                email,
-                deletedAt: null
-            },
+            where: { email },
         });
 
         if (existingEmail) {
@@ -136,8 +137,7 @@ class AuthService {
                     { email: providerType === ProviderType.EMAIL ? providerValue : null },
                     { phone: providerType === ProviderType.PHONE ? providerValue : null },
                 ],
-                deletedAt: null
-            }
+            },
         });
 
         if (member) {

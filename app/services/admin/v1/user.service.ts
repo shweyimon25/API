@@ -58,7 +58,6 @@ class UserService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -366,13 +365,8 @@ class UserService {
   async destory(id: number) {
     await this.findOne(id);
 
-    await prisma.user.update({
-      where: {
-        id,
-      },
-      data: {
-        deletedAt: new Date(),
-      }
+    await prisma.user.delete({
+      where: { id },
     });
   }
 }

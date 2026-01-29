@@ -1,49 +1,50 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
+import ShopPostController from "../../../app/controllers/member/v1/shop-post.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
-import ShopController from "../../../app/controllers/member/v1/shop.controller";
 
 const router = Router();
-const shopController = new ShopController();
+const shopPostController = new ShopPostController();
 
-router.route('/')
+router
+    .route("/")
     .get([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(
             async (req: Request, res: Response) =>
-                await shopController.findAll(req, res)
+                await shopPostController.findAll(req, res)
         ),
     ])
     .post([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(
             async (req: Request, res: Response) =>
-                await shopController.create(req, res)
+                await shopPostController.create(req, res)
         ),
     ]);
 
-router.route('/:id')
+router
+    .route("/:id")
     .get([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(
             async (req: Request, res: Response) =>
-                await shopController.findOne(req, res)
+                await shopPostController.findOne(req, res)
         ),
     ])
     .post([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(
             async (req: Request, res: Response) =>
-                await shopController.update(req, res)
+                await shopPostController.update(req, res)
         ),
     ])
     .delete([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(
             async (req: Request, res: Response) =>
-                await shopController.destroy(req, res)
+                await shopPostController.destroy(req, res)
         ),
     ]);
 
 export default router;
-

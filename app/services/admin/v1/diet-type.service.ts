@@ -128,7 +128,6 @@ class DietTypeService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -154,7 +153,6 @@ class DietTypeService {
         where: {
           name,
           status: Status.ACTIVE,
-          deletedAt: null,
         },
       });
 
@@ -213,7 +211,6 @@ class DietTypeService {
         where: {
           name,
           status: Status.ACTIVE,
-          deletedAt: null,
           NOT: {
             id,
           },
@@ -257,14 +254,8 @@ class DietTypeService {
   async destroy(id: number) {
     const dietType = await this.findOne(id);
 
-    await prisma.dietType.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.dietType.delete({
+      where: { id },
     });
 
     return dietType;

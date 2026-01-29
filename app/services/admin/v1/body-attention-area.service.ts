@@ -127,7 +127,6 @@ class BodyAttentionAreaService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -153,7 +152,6 @@ class BodyAttentionAreaService {
           where: {
             name,
             status: Status.ACTIVE,
-            deletedAt: null,
           },
         });
 
@@ -193,7 +191,6 @@ class BodyAttentionAreaService {
           where: {
             name,
             status: Status.ACTIVE,
-            deletedAt: null,
             NOT: {
               id,
             },
@@ -227,14 +224,8 @@ class BodyAttentionAreaService {
   async destroy(id: number) {
     const bodyAttentionArea = await this.findOne(id);
 
-    await prisma.bodyAttentionArea.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.bodyAttentionArea.delete({
+      where: { id },
     });
 
     return bodyAttentionArea;

@@ -7,7 +7,6 @@ class ShopLevelService {
         const shopLevels = await prisma.shopLevel.findMany({
             where: {
                 status: Status.ACTIVE,
-                deletedAt: null
             },
             orderBy: {
                 id: "desc"
@@ -21,7 +20,6 @@ class ShopLevelService {
         const shopLevels = await prisma.shopLevel.findMany({
             where: {
                 status: Status.ACTIVE,
-                deletedAt: null
             },
             orderBy: {
                 id: "desc"
@@ -36,7 +34,6 @@ class ShopLevelService {
             where: {
                 id,
                 status: Status.ACTIVE,
-                deletedAt: null
             },
         });
 

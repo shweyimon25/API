@@ -16,12 +16,11 @@ datasource db {
 model User {
   id       Int    @id @default(autoincrement())
   name     String
-  email    String
+  email    String @unique
   username String @unique
   password String
   status   Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("UserCreatedBy", fields: [createdById], references: [id])
@@ -82,11 +81,10 @@ model User {
 
 model Role {
   id          Int     @id @default(autoincrement())
-  name        String
+  name        String  @unique
   description String? @db.Text()
   status      Status  @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("RoleCreatedBy", fields: [createdById], references: [id])
@@ -158,7 +156,6 @@ model MemberPlan {
   isVideoGroup Boolean    @default(false)
   status       Status     @default(ACTIVE)
 
-  deletedAt      DateTime?
   createdById    Int?
   updatedById    Int?
   createdBy      User?           @relation("MemberPlanCreatedBy", fields: [createdById], references: [id])
@@ -172,13 +169,12 @@ model MemberPlan {
 
 model Pros {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   guard  String
   status Status @default(ACTIVE)
 
   memberPlans MemberPlan[]
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("ProsCreatedBy", fields: [createdById], references: [id])
@@ -189,13 +185,12 @@ model Pros {
 
 model Cons {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   guard  String
   status Status @default(ACTIVE)
 
   memberPlans MemberPlan[]
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("ConsCreatedBy", fields: [createdById], references: [id])
@@ -240,8 +235,8 @@ model Member {
   id           Int         @id @default(autoincrement())
   name         String
   code         String      @unique // YC0244
-  email        String?
-  phone        String?
+  email        String?     @unique
+  phone        String?     @unique
   password     String
   memberType   MemberType? @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int?
@@ -252,7 +247,6 @@ model Member {
   theme    Theme    @default(LIGHT)
   status   Status   @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("MemberCreatedBy", fields: [createdById], references: [id])
@@ -263,13 +257,14 @@ model Member {
   providerTypes       MemberProviderType[]
   postComments        PostComment[]
   payments            Payment[]
-  shops               Shop[]
+  shop                Shop?
   shopRatings         ShopRating[]
   shopPostComments    ShopPostComment[]
   waterTrackers       WaterTracker[]
   memberRequests      MemberRequest[]
   bodyMeasurement     BodyMeasurement?
   shopUpgradeRequests ShopUpgradeRequest[]
+  posts               Post[]
 }
 
 model OTP {
@@ -368,14 +363,13 @@ enum Theme {
 
 model ShopLevel {
   id          Int     @id @default(autoincrement())
-  name        String
+  name        String  @unique
   price       Int     @default(0)
   duration    Int     @default(0)
   description String? @db.Text()
   postLimit   Int     @default(10)
   status      Status  @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
@@ -391,16 +385,15 @@ model ShopLevel {
 model Shop {
   id    Int     @id @default(autoincrement())
   name  String
-  image String?
+  logo String?
 
-  memberId Int    @unique
-  member   Member @relation(fields: [memberId], references: [id])
+  memberId Int?    @unique
+  member   Member? @relation(fields: [memberId], references: [id])
 
   shopLevelId Int?
   shopLevel   ShopLevel? @relation(fields: [shopLevelId], references: [id])
   status      Status     @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("ShopCreatedBy", fields: [createdById], references: [id])
@@ -447,12 +440,13 @@ model ShopRating {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([memberId, shopId])
 }
 
 model ShopPost {
   id           Int          @id @default(autoincrement())
   caption      String
-  privencyType PrivencyType @default(PUBLIC)
   images       Json
 
   shop   Shop @relation(fields: [shopId], references: [id])
@@ -480,10 +474,9 @@ model ShopPostComment {
 
 model Tag {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("TagCreatedBy", fields: [createdById], references: [id])
@@ -500,12 +493,15 @@ model Post {
   tag          Tag          @relation(fields: [tagId], references: [id])
   tagId        Int
   privencyType PrivencyType @default(PUBLIC)
-  timeAgo      String
+  timeAgo      DateTime     @default(now())
   media        Json?
   status       Status       @default(ACTIVE)
-  deletedAt    DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   postComments PostComment[]
 }
@@ -532,10 +528,9 @@ model PostComment {
 
 model BodyGoal {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("BodyGoalCreatedBy", fields: [createdById], references: [id])
@@ -548,10 +543,9 @@ model BodyGoal {
 
 model ProficientLevel {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("ProficientLevelCreatedBy", fields: [createdById], references: [id])
@@ -563,10 +557,9 @@ model ProficientLevel {
 
 model Category {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("CategoryCreatedBy", fields: [createdById], references: [id])
@@ -585,10 +578,9 @@ enum Gender {
 
 model Place {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("PlaceCreatedBy", fields: [createdById], references: [id])
@@ -639,7 +631,6 @@ model Workout {
 
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
@@ -650,12 +641,11 @@ model Workout {
 
 model PhysicalLimitation {
   id          Int     @id @default(autoincrement())
-  name        String
+  name        String  @unique
   photo       String?
   description String? @db.Text()
   status      Status  @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("PhysicalLimitationCreatedBy", fields: [createdById], references: [id])
@@ -666,12 +656,11 @@ model PhysicalLimitation {
 
 model DietType {
   id          Int     @id @default(autoincrement())
-  name        String
+  name        String  @unique
   photo       String?
   description String? @db.Text()
   status      Status  @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("DietTypeCreatedBy", fields: [createdById], references: [id])
@@ -682,10 +671,9 @@ model DietType {
 
 model BodyAttentionArea {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("BodyAttentionAreaCreatedBy", fields: [createdById], references: [id])
@@ -696,10 +684,9 @@ model BodyAttentionArea {
 
 model MealType {
   id     Int    @id @default(autoincrement())
-  name   String
+  name   String @unique
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("MealTypeCreatedBy", fields: [createdById], references: [id])
@@ -722,7 +709,6 @@ model Meal {
 
   status Status @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("MealCreatedBy", fields: [createdById], references: [id])
@@ -733,12 +719,11 @@ model Meal {
 
 model BadHabit {
   id          Int     @id @default(autoincrement())
-  name        String
+  name        String  @unique
   description String? @db.Text()
   photo       String?
   status      Status  @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("BadHabitCreatedBy", fields: [createdById], references: [id])
@@ -756,6 +741,8 @@ model WaterTracker {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([memberId, date])
 }
 
 model BankInformation {
@@ -768,7 +755,6 @@ model BankInformation {
   paymentTypes PaymentTypes @default(BANK_ACCOUNT)
   status       Status       @default(ACTIVE)
 
-  deletedAt   DateTime?
   createdById Int?
   updatedById Int?
   createdBy   User?     @relation("BankInformationCreatedBy", fields: [createdById], references: [id])
@@ -837,5 +823,4 @@ enum PaymentStatus {
 enum Status {
   ACTIVE
   INACTIVE
-  DELETE
 }

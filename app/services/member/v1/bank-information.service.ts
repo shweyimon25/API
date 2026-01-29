@@ -11,7 +11,6 @@ class BankInformationService {
   private where(filters?: BankInformationFilters) {
     const where: any = {
       status: Status.ACTIVE,
-      deletedAt: null,
     };
 
     if (filters?.paymentTypes) {
@@ -53,11 +52,10 @@ class BankInformationService {
   }
 
   async findOne(id: number) {
-    const bankInformation = await prisma.bankInformation.findUnique({
+    const bankInformation = await prisma.bankInformation.findFirst({
       where: {
         id,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
     });
 

@@ -41,7 +41,6 @@ class ProsService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -213,12 +212,8 @@ class ProsService {
   async destroy(id: number) {
     const pros = await this.findOne(id);
 
-    await prisma.pros.update({
+    await prisma.pros.delete({
       where: { id },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
     });
 
     return pros;

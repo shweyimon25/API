@@ -128,7 +128,6 @@ class PhysicalLimitationService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -249,14 +248,8 @@ class PhysicalLimitationService {
   async destroy(id: number) {
     const physicalLimitation = await this.findOne(id);
 
-    await prisma.physicalLimitation.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.physicalLimitation.delete({
+      where: { id },
     });
 
     return physicalLimitation;

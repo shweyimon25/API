@@ -129,7 +129,6 @@ class TagService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -222,18 +221,10 @@ class TagService {
   }
 
   async destroy(id: number) {
-    // Find tag
     const tag = await this.findOne(id);
 
-    // Delete tag
-    await prisma.tag.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.tag.delete({
+      where: { id },
     });
 
     return tag;

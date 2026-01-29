@@ -5,50 +5,56 @@ import {
 import prisma from "../../../../prisma/client";
 import {
   BadRequestException,
+  ForbiddenException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { generateTimeAgo } from "../../../helpers/helper";
 import { upload } from "../../../helpers/media-upload";
 import { PrivencyType, Status } from "@prisma/client";
+
+const feedWhere = {
+  privencyType: PrivencyType.PUBLIC,
+  status: Status.ACTIVE,
+} as const;
+
+const memberInclude = {
+  member: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      code: true,
+      profile: {
+        select: { profilePhoto: true },
+      },
+    },
+  },
+};
+
+const tagInclude = {
+  tag: {
+    select: { id: true, name: true },
+  },
+};
 
 class PostService {
   async findAll() {
     const posts = await prisma.post.findMany({
-      orderBy: {
-        id: "desc",
-      },
-      include: {
-        tag: {
-          select: {
-            id: true,
-            name: true,
-          },
-        }
-      },
+      where: feedWhere,
+      orderBy: { id: "desc" },
+      include: { ...tagInclude, ...memberInclude },
     });
-
     return posts;
   }
 
   async findByPaginate(page: number, perPage: number) {
     const posts = await prisma.post.findMany({
-      orderBy: {
-        id: "desc",
-      },
+      where: feedWhere,
+      orderBy: { id: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
-      include: {
-        tag: {
-          select: {
-            id: true,
-            name: true,
-          },
-        }
-      },
+      include: { ...tagInclude, ...memberInclude },
     });
-
-    const totalPosts = await prisma.post.count();
-
+    const totalPosts = await prisma.post.count({ where: feedWhere });
     return {
       data: posts,
       meta: {
@@ -66,16 +72,10 @@ class PostService {
 
   async findOne(id: number) {
     const post = await prisma.post.findUnique({
-      where: {
-        id,
-      },
+      where: { id, ...feedWhere },
       include: {
-        tag: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        ...tagInclude,
+        ...memberInclude,
         postComments: {
           include: {
             member: {
@@ -87,136 +87,135 @@ class PostService {
               },
             },
           },
-          orderBy: {
-            createdAt: "desc",
-          },
-        }
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
-
     if (!post) {
       throw new BadRequestException("Post not found");
     }
-
     return post;
   }
 
-  async create(createPostInput: CreatePostInput, files: Express.Multer.File[]) {
+  async create(
+    createPostInput: CreatePostInput,
+    files: Express.Multer.File[],
+    memberId: number
+  ) {
     const { content, tagId, privencyType } = createPostInput;
 
-    // Check tag exists
     const tag = await prisma.tag.findUnique({
-      where: {
-        id: tagId,
-      },
+      where: { id: tagId },
     });
-
     if (!tag) {
       throw new ValidationException("Failed to create post", [
-        {
-          field: "tagId",
-          issue: "Tag is not existed",
-        },
+        { field: "tagId", issue: "Tag is not existed" },
       ]);
     }
 
-    // Validate files are provided
-    if (!files || files.length === 0) {
+    const mediaFiles = (files ?? []).filter(
+      (f: Express.Multer.File) => f.fieldname === "media"
+    );
+    if (mediaFiles.length === 0) {
       throw new ValidationException("Failed to create post", [
-        {
-          field: "files",
-          issue: "Media files are required",
-        },
+        { field: "media", issue: "Media files are required" },
       ]);
     }
 
-    // Upload files to OSS
-    const media = await Promise.all(files.map(async (file) => {
-      const { fileUrl } = await upload(file);
-      return fileUrl;
-    }));
+    const media = await Promise.all(
+      mediaFiles.map(async (file) => {
+        const { fileUrl } = await upload(file, "post");
+        return fileUrl;
+      })
+    );
 
-    // Create new post
     const post = await prisma.post.create({
       data: {
         content: content ?? "",
         tagId,
-        privencyType: privencyType || PrivencyType.PUBLIC,
+        privencyType: privencyType ?? PrivencyType.PUBLIC,
         media,
-        timeAgo: generateTimeAgo(new Date()),
+        memberId,
+        status: Status.ACTIVE,
       },
     });
 
     return this.findOne(post.id);
   }
 
-  async update(id: number, updatePostInput: UpdatePostInput, files: Express.Multer.File[]) {
+  async update(
+    id: number,
+    updatePostInput: UpdatePostInput,
+    files: Express.Multer.File[],
+    memberId: number
+  ) {
     const { content, tagId, privencyType } = updatePostInput;
 
-    // Check post exists
     const existingPost = await prisma.post.findUnique({
-      where: {
-        id,
-      },
+      where: { id, status: Status.ACTIVE },
     });
-
     if (!existingPost) {
       throw new BadRequestException("Post not found");
     }
+    if (existingPost.memberId !== memberId) {
+      throw new ForbiddenException("You can only update your own posts");
+    }
 
-    // Check tag exists if tagId is being updated
-    if (tagId && tagId !== existingPost.tagId) {
+    if (tagId != null && tagId !== existingPost.tagId) {
       const tag = await prisma.tag.findUnique({
-        where: {
-          id: tagId,
-        },
+        where: { id: tagId },
       });
-
       if (!tag) {
         throw new ValidationException("Failed to update post", [
-          {
-            field: "tagId",
-            issue: "Tag is not existed",
-          },
+          { field: "tagId", issue: "Tag is not existed" },
         ]);
       }
     }
 
     let media: string[] = [];
-
-    if (files && files.length > 0) {
-      media = await Promise.all(files.map(async (file) => {
-        const { fileUrl } = await upload(file);
-        return fileUrl;
-      }));
+    const mediaFiles = (files ?? []).filter(
+      (f: Express.Multer.File) => f.fieldname === "media"
+    );
+    if (mediaFiles.length > 0) {
+      media = await Promise.all(
+        mediaFiles.map(async (file) => {
+          const { fileUrl } = await upload(file, "post");
+          return fileUrl;
+        })
+      );
     }
 
-    // Update post
+    const mediaValue =
+      media.length > 0 ? media : ((existingPost.media as string[]) ?? []);
+
     await prisma.post.update({
-      where: {
-        id,
-      },
+      where: { id },
       data: {
         content: content ?? existingPost.content,
         tagId: tagId ?? existingPost.tagId,
         privencyType: privencyType ?? existingPost.privencyType,
-        media: media ?? existingPost.media,
+        media: mediaValue,
       },
     });
 
     return this.findOne(id);
   }
 
-  async destroy(id: number) {
-    await this.findOne(id);
-    await prisma.post.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      }
+  async destroy(id: number, memberId: number) {
+    const post = await prisma.post.findFirst({
+      where: { id, status: Status.ACTIVE },
+    });
+
+    if (!post) {
+      throw new BadRequestException("Post not found");
+    }
+
+    if (post.memberId !== memberId) {
+      throw new ForbiddenException("You can only delete your own posts");
+    }
+
+    await prisma.post.delete({
+      where: { id },
     });
   }
 }

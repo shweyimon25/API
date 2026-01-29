@@ -128,7 +128,6 @@ class BadHabitService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -154,7 +153,6 @@ class BadHabitService {
         where: {
           name,
           status: Status.ACTIVE,
-          deletedAt: null,
         },
       });
 
@@ -220,7 +218,6 @@ class BadHabitService {
             id,
           },
           status: Status.ACTIVE,
-          deletedAt: null,
         },
       });
 
@@ -265,14 +262,8 @@ class BadHabitService {
   async destroy(id: number) {
     const badHabit = await this.findOne(id);
 
-    await prisma.badHabit.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.badHabit.delete({
+      where: { id },
     });
 
     return badHabit;

@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Member } from "@prisma/client";
 import PostService from "../../../services/member/v1/post.service";
 import { successResponse } from "../../../helpers/response";
 import { validater } from "../../../helpers/validator";
@@ -56,9 +57,11 @@ class PostController {
       throw new ValidationException("Failed to create post", error);
     }
 
+    const memberId = (req.user as Member).id;
     const post = await this.postService.create(
       data,
-      req.files as Express.Multer.File[]
+      (req.files as Express.Multer.File[]) ?? [],
+      memberId
     );
 
     return successResponse(
@@ -78,7 +81,13 @@ class PostController {
       throw new ValidationException("Failed to update post", error);
     }
 
-    const post = await this.postService.update(+req.params.id, data, req.files as Express.Multer.File[]);
+    const memberId = (req.user as Member).id;
+    const post = await this.postService.update(
+      +req.params.id,
+      data,
+      (req.files as Express.Multer.File[]) ?? [],
+      memberId
+    );
 
     return successResponse(
       res,
@@ -88,7 +97,8 @@ class PostController {
   }
 
   async destroy(req: Request, res: Response) {
-    await this.postService.destroy(+req.params.id);
+    const memberId = (req.user as Member).id;
+    await this.postService.destroy(+req.params.id, memberId);
     return successResponse(res, "Post deleted successfully");
   }
 }

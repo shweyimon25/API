@@ -111,7 +111,6 @@ class ShopLevelService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null
       },
       orderBy: {
         id: "desc",
@@ -223,14 +222,8 @@ class ShopLevelService {
   async destroy(id: number, userId: number) {
     const shopLevel = await this.findOne(id);
 
-    await prisma.shopLevel.update({
-      where: {
-        id
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      }
+    await prisma.shopLevel.delete({
+      where: { id },
     });
 
     return shopLevel;

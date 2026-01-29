@@ -120,7 +120,6 @@ class ShopService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -285,18 +284,10 @@ class ShopService {
   }
 
   async destroy(id: number) {
-    // Find shop
     const shop = await this.findOne(id);
 
-    // Delete shop
-    await prisma.shop.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      }
+    await prisma.shop.delete({
+      where: { id },
     });
 
     return shop;

@@ -15,7 +15,6 @@ import {
   verifyOtpSchema,
 } from "../../../schemas/member/v1/auth.schema";
 import { ProviderType, Status } from "@prisma/client";
-import { sendOTPEmail } from "../../../helpers/send-mail";
 import AuthService from "../../../services/member/v1/auth.service";
 
 class AuthController {

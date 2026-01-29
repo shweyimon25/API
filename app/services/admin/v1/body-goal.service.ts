@@ -89,7 +89,6 @@ class BodyGoalService {
     const bodyGoal = await prisma.bodyGoal.findFirst({
       where: {
         id,
-        deletedAt: null,
       },
       include: {
         createdBy: {
@@ -123,7 +122,6 @@ class BodyGoalService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -156,7 +154,6 @@ class BodyGoalService {
         const existingBodyGoal = await prisma.bodyGoal.findFirst({
             where: {
                 id,
-                deletedAt: null,
             },
         });
 
@@ -180,14 +177,8 @@ class BodyGoalService {
     async destroy(id: number) {
         const bodyGoal = await this.findOne(id);
 
-        await prisma.bodyGoal.update({
-            where: {
-                id,
-            },
-            data: {
-                status: Status.DELETE,
-                deletedAt: new Date(),
-            },
+        await prisma.bodyGoal.delete({
+            where: { id },
         });
 
         return bodyGoal;

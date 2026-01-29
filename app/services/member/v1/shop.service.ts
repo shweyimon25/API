@@ -1,7 +1,7 @@
-import { Prisma, Status } from "@prisma/client";
+import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-import { CreateShopInput, UpdateShopInput } from "../../../schemas/admin/v1/shop.schema";
-import { BadRequestException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import { BadRequestException, ForbiddenException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import { CreateShopInput, UpdateShopInput } from "../../../schemas/member/v1/shop.schema";
 import { upload } from "../../../helpers/media-upload";
 
 class ShopService {
@@ -54,7 +54,6 @@ class ShopService {
             where: {
                 id,
                 status: Status.ACTIVE,
-                deletedAt: null,
             },
         });
 
@@ -63,6 +62,79 @@ class ShopService {
         }
 
         return shop;
+    }
+
+    async create(createShopInput: CreateShopInput, files: Express.Multer.File[], memberId: number) {
+        const { name } = createShopInput;
+
+        const existingShop = await prisma.shop.findUnique({
+            where: { memberId },
+        });
+
+        if (existingShop) {
+            throw new BadRequestException("You already have a shop. Please update your shop profile instead");
+        }
+
+        const logo = files.find((file: Express.Multer.File) => file.fieldname === "logo");
+
+        if (!logo) {
+            throw new ValidationException("Failed to create shop", [
+                { field: "logo", issue: "Logo is required" },
+            ]);
+        }
+
+        const { fileUrl: logoUrl } = await upload(logo, "shop");
+
+        const shop = await prisma.shop.create({
+            data: {
+                name,
+                logo: logoUrl,
+                memberId,
+                status: Status.ACTIVE,
+            }
+        });
+
+        return shop;
+    }
+
+    async update(id: number, updateShopInput: UpdateShopInput, files: Express.Multer.File[], memberId: number,) {
+        const { name } = updateShopInput;
+
+        const existingShop = await this.findOne(id);
+
+        if (existingShop.memberId !== memberId) {
+            throw new ForbiddenException("You are not allowed to update this shop");
+        }
+
+        const logo = files.find((file: Express.Multer.File) => file.fieldname === "logo");
+
+        let logoUrl: string | null = null;
+        if (logo) {
+            const { fileUrl } = await upload(logo, "shop");
+            logoUrl = fileUrl;
+        }
+
+        await prisma.shop.update({
+            where: { id, memberId },
+            data: {
+                name: name ?? existingShop.name,
+                logo: logoUrl ?? existingShop.logo,
+            },
+        });
+
+        return this.findOne(id);
+    }
+
+    async destroy(id: number, memberId: number) {
+        const existingShop = await this.findOne(id);
+
+        if (existingShop.memberId !== memberId) {
+            throw new ForbiddenException("You are not allowed to delete this shop");
+        }
+
+        await prisma.shop.delete({
+            where: { id, memberId },
+        });
     }
 }
 

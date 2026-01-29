@@ -140,7 +140,6 @@ class WorkoutService {
         const workout = await prisma.workout.findFirst({
             where: {
                 id,
-                deletedAt: null,
             },
             include: {
                 category: {
@@ -203,7 +202,6 @@ class WorkoutService {
             where: {
                 ...where,
                 status: Status.ACTIVE,
-                deletedAt: null,
             },
             select: {
                 id: true,
@@ -232,7 +230,6 @@ class WorkoutService {
         const category = await prisma.category.findFirst({
             where: {
                 id: +categoryId,
-                deletedAt: null,
                 status: Status.ACTIVE,
             },
         });
@@ -249,7 +246,6 @@ class WorkoutService {
         const bodyGoal = await prisma.bodyGoal.findFirst({
             where: {
                 id: +bodyGoalId,
-                deletedAt: null,
                 status: Status.ACTIVE,
             },
         });
@@ -267,7 +263,6 @@ class WorkoutService {
             where: {
                 id: +proficientLevelId,
                 status: Status.ACTIVE,
-                deletedAt: null,
             },
         });
 
@@ -283,7 +278,6 @@ class WorkoutService {
         const place = await prisma.place.findFirst({
             where: {
                 id: +placeId,
-                deletedAt: null,
                 status: Status.ACTIVE,
             },
         });
@@ -300,7 +294,6 @@ class WorkoutService {
         const memberPlan = await prisma.memberPlan.findFirst({
             where: {
                 id: +memberPlanId,
-                deletedAt: null,
                 status: Status.ACTIVE,
             },
         });
@@ -394,7 +387,6 @@ class WorkoutService {
         const existingWorkout = await prisma.workout.findFirst({
             where: {
                 id,
-                deletedAt: null,
             },
         });
 
@@ -404,7 +396,7 @@ class WorkoutService {
 
         if (categoryId && categoryId !== existingWorkout.categoryId) {
             const category = await prisma.category.findFirst({
-                where: { id: +categoryId, deletedAt: null, status: Status.ACTIVE },
+                where: { id: +categoryId, status: Status.ACTIVE },
             });
             if (!category) {
                 throw new ValidationException("Failed to update workout", [
@@ -418,7 +410,7 @@ class WorkoutService {
 
         if (bodyGoalId && bodyGoalId !== existingWorkout.bodyGoalId) {
             const bodyGoal = await prisma.bodyGoal.findFirst({
-                where: { id: +bodyGoalId, deletedAt: null, status: Status.ACTIVE },
+                where: { id: +bodyGoalId, status: Status.ACTIVE },
             });
 
             if (!bodyGoal) {
@@ -433,7 +425,7 @@ class WorkoutService {
 
         if (proficientLevelId && proficientLevelId !== existingWorkout.proficientLevelId) {
             const proficientLevel = await prisma.proficientLevel.findFirst({
-                where: { id: +proficientLevelId, deletedAt: null, status: Status.ACTIVE },
+                where: { id: +proficientLevelId, status: Status.ACTIVE },
             });
             if (!proficientLevel) {
                 throw new ValidationException("Failed to update workout", [
@@ -447,7 +439,7 @@ class WorkoutService {
 
         if (placeId && placeId !== existingWorkout.placeId) {
             const place = await prisma.place.findFirst({
-                where: { id: +placeId, deletedAt: null, status: Status.ACTIVE },
+                where: { id: +placeId, status: Status.ACTIVE },
             });
             if (!place) {
                 throw new ValidationException("Failed to update workout", [
@@ -461,7 +453,7 @@ class WorkoutService {
 
         if (memberPlanId && memberPlanId !== existingWorkout.memberPlanId) {
             const memberPlan = await prisma.memberPlan.findFirst({
-                where: { id: +memberPlanId, deletedAt: null, status: Status.ACTIVE },
+                where: { id: +memberPlanId, status: Status.ACTIVE },
             });
             if (!memberPlan) {
                 throw new ValidationException("Failed to update workout", [
@@ -538,14 +530,8 @@ class WorkoutService {
 
     async destroy(id: number) {
         const workout = await this.findOne(id);
-        await prisma.workout.update({
-            where: {
-                id,
-            },
-            data: {
-                status: Status.DELETE,
-                deletedAt: new Date(),
-            },
+        await prisma.workout.delete({
+            where: { id },
         });
 
         return workout;

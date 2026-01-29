@@ -120,7 +120,6 @@ class PlaceService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -175,14 +174,8 @@ class PlaceService {
   async destroy(id: number) {
     const place = await this.findOne(id);
 
-    await prisma.place.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.place.delete({
+      where: { id },
     });
 
     return place;

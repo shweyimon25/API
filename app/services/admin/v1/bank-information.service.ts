@@ -125,7 +125,6 @@ class BankInformationService {
       where: {
         ...where,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
       orderBy: {
         id: "desc",
@@ -158,7 +157,6 @@ class BankInformationService {
       where: {
         bankAccountNumber,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
     });
 
@@ -176,7 +174,6 @@ class BankInformationService {
         where: {
           phone,
           status: Status.ACTIVE,
-          deletedAt: null,
         },
       });
 
@@ -243,7 +240,6 @@ class BankInformationService {
       where: {
         id,
         status: Status.ACTIVE,
-        deletedAt: null,
       },
     });
 
@@ -261,7 +257,6 @@ class BankInformationService {
           where: {
             bankAccountNumber,
             status: Status.ACTIVE,
-            deletedAt: null,
             NOT: {
               id,
             },
@@ -284,7 +279,6 @@ class BankInformationService {
         where: {
           phone,
           status: Status.ACTIVE,
-          deletedAt: null,
           NOT: {
             id,
           },
@@ -330,18 +324,10 @@ class BankInformationService {
   }
 
   async destroy(id: number) {
-    // Find bank information
     const bankInformation = await this.findOne(id);
 
-    // Delete bank information
-    await prisma.bankInformation.update({
-      where: {
-        id,
-      },
-      data: {
-        status: Status.DELETE,
-        deletedAt: new Date(),
-      },
+    await prisma.bankInformation.delete({
+      where: { id },
     });
 
     return bankInformation;

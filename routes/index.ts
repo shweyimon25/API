@@ -41,8 +41,10 @@ import memberPlanRoute from "./member/v1/member-plan.route";
 import memberRequestRoute from "./member/v1/member-request.route";
 import memberPaymentRoute from "./member/v1/payment.route";
 import memberBankInformationRoute from "./member/v1/bank-information.route";
-import memberShopProfileRoute from "./member/v1/shop-profile.route";
 import memberShopRoute from "./member/v1/shop.route";
+import memberShopPostRoute from "./member/v1/shop-post.route";
+import memberShopPostCommentRoute from "./member/v1/shop-post-comment.route";
+import memberShopRatingRoute from "./member/v1/shop-rating.route";
 import memberShopLevelRoute from "./member/v1/shop-level.route";
 
 const router = Router();
@@ -89,7 +91,9 @@ router.use("/member/v1/member-request", memberRequestRoute);
 router.use("/member/v1/payment", memberPaymentRoute);
 router.use("/member/v1/bank-informations", memberBankInformationRoute);
 router.use("/member/v1/shop-levels", memberShopLevelRoute);
-router.use("/member/v1/shop-profile", memberShopProfileRoute);
 router.use("/member/v1/shops", memberShopRoute);
+router.use("/member/v1/shop-posts", memberShopPostRoute);
+router.use("/member/v1/shop-post-comments", memberShopPostCommentRoute);
+router.use("/member/v1/shop-ratings", memberShopRatingRoute);
 
 export default router;
