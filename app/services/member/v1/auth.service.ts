@@ -1,6 +1,7 @@
-import { OTP, ProviderType, Status } from "@prisma/client";
+import { ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-import { BadRequestException, UnauthorizedException, ValidationException } from "../../../helpers/exceptions";
+import { BadRequestException, NotFoundException, UnauthorizedException, ValidationException } from "../../../helpers/exceptions";
+import { hashPassword } from "../../../helpers/helper";
 import { sendOTPEmail } from "../../../helpers/send-mail";
 
 class AuthService {
@@ -36,6 +37,7 @@ class AuthService {
         return member;
     }
 
+    /** For sign-up: email must NOT be registered yet */
     async updateOrCreateOtpByEmail(email: string, otp: string, expiresAt: Date) {
         const existingEmail = await prisma.member.findFirst({
             where: { email },
@@ -50,13 +52,20 @@ class AuthService {
             ]);
         }
 
-        let existingOtp = await prisma.oTP.findFirst({
-            where: {
-                email
-            },
-        });
-
         await sendOTPEmail(email, otp);
+        return this.upsertOtpByEmail(email, otp, expiresAt);
+    }
+
+    /** For forgot-password: only create/update OTP and send email (member existence checked in controller) */
+    async updateOrCreateOtpByEmailOnly(email: string, otp: string, expiresAt: Date) {
+        await sendOTPEmail(email, otp);
+        return this.upsertOtpByEmail(email, otp, expiresAt);
+    }
+
+    private async upsertOtpByEmail(email: string, otp: string, expiresAt: Date) {
+        let existingOtp = await prisma.oTP.findFirst({
+            where: { email },
+        });
 
         if (existingOtp) {
             existingOtp = await prisma.oTP.update({
@@ -73,9 +82,9 @@ class AuthService {
         } else {
             existingOtp = await prisma.oTP.create({
                 data: {
-                    email: email,
-                    otp: otp,
-                    expiresAt: expiresAt,
+                    email,
+                    otp,
+                    expiresAt,
                     isUsed: false,
                     isVerified: false,
                 },
@@ -188,6 +197,71 @@ class AuthService {
         }
 
         return existingOtp;
+    }
+
+    /** Forgot password: find OTP by provider, check not expired and otp matches, return OTP (controller will set isVerified) */
+    async validateOtpForForgotPasswordVerify(providerType: ProviderType, providerValue: string, otp: string) {
+        const whereClause =
+            providerType === ProviderType.EMAIL
+                ? { email: providerValue, otp, isVerified: false, isUsed: false }
+                : { phone: providerValue, otp, isVerified: false, isUsed: false };
+
+        const existingOtp = await prisma.oTP.findFirst({
+            where: whereClause,
+        });
+
+        if (!existingOtp) {
+            throw new ValidationException("Failed to verify OTP", [
+                { field: "otp", issue: "Invalid OTP" },
+            ]);
+        }
+
+        if (existingOtp.expiresAt < new Date()) {
+            throw new ValidationException("Failed to verify OTP", [
+                { field: "otp", issue: "OTP expired" },
+            ]);
+        }
+
+        return existingOtp;
+    }
+
+    /** Forgot password reset: OTP must be verified, then update member password and mark OTP used */
+    async resetPasswordWithOtp(providerType: ProviderType, providerValue: string, otp: string, newPassword: string) {
+        const whereClause =
+            providerType === ProviderType.EMAIL
+                ? { email: providerValue, otp, isVerified: true }
+                : { phone: providerValue, otp, isVerified: true };
+
+        const existingOtp = await prisma.oTP.findFirst({
+            where: whereClause,
+        });
+
+        if (!existingOtp) {
+            throw new ValidationException("Failed to reset password", [
+                { field: "otp", issue: "Invalid or unverified OTP" },
+            ]);
+        }
+
+        if (existingOtp.expiresAt < new Date()) {
+            throw new ValidationException("Failed to reset password", [
+                { field: "otp", issue: "OTP expired" },
+            ]);
+        }
+
+        if (existingOtp.isUsed) {
+            throw new ValidationException("Failed to reset password", [
+                { field: "otp", issue: "OTP already used" },
+            ]);
+        }
+
+        const member = await this.findActivatedMember(providerType, providerValue);
+
+        await prisma.member.update({
+            where: { id: member.id },
+            data: { password: hashPassword(newPassword) },
+        });
+
+        return member;
     }
 }
 

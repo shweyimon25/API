@@ -9,6 +9,7 @@ import {
 import ProfileService from "../../../services/member/v1/profile.service";
 import { Request, Response } from "express";
 import { updateBodyMeasurementsSchema } from "../../../schemas/member/v1/auth.schema";
+import { ProfileResource } from "../../../resources/member/v1/member-profile/member-profile.resource";
 
 class ProfileController {
   private profileService: ProfileService;
@@ -19,7 +20,7 @@ class ProfileController {
 
   async profile(req: Request, res: Response) {
     const member = await this.profileService.profile((req.user as Member).id);
-    return successResponse(res, "Profile fetched successfully", member);
+    return successResponse(res, "Profile fetched successfully", ProfileResource.toResource(member));
   }
 
   async update(req: Request, res: Response) {
@@ -37,7 +38,7 @@ class ProfileController {
       data
     );
 
-    return successResponse(res, "Profile updated successfully", member);
+    return successResponse(res, "Profile updated successfully", ProfileResource.toResource(member));
   }
 
   async changePassword(req: Request, res: Response) {
@@ -55,7 +56,7 @@ class ProfileController {
       data
     );
 
-    return successResponse(res, "Password changed successfully", member);
+    return successResponse(res, "Password changed successfully", ProfileResource.toResource(member));
   }
 
   async updateBodyMeasurements(req: Request, res: Response) {
@@ -66,7 +67,7 @@ class ProfileController {
     }
 
     const member = await this.profileService.updateBodyMeasurements((req.user as Member).id, data);
-    return successResponse(res, "Body measurement updated successfully", member);
+    return successResponse(res, "Body measurement updated successfully", ProfileResource.toResource(member));
   }
 }
 

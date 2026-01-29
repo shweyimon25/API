@@ -803,6 +803,23 @@ model Payment {
   updatedAt DateTime @updatedAt
 }
 
+model Notification {
+  id Int @id @default(autoincrement()) 
+  title String
+  message String
+  type NotificationType @default(INFO)
+  status Status @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  ERROR
+} 
+
 enum PaymentRequestType {
   MEMBER_PLAN_UPGRADE
   SHOP_LEVEL_UPGRADE

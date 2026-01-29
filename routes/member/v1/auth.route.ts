@@ -31,4 +31,25 @@ router.post("/sign-up", [
   ),
 ]);
 
+router.post("/forgot-password/request-otp", [
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await authController.forgotPasswordRequestOtp(req, res)
+  ),
+]);
+
+router.post("/forgot-password/verify-otp", [
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await authController.forgotPasswordVerifyOtp(req, res)
+  ),
+]);
+
+router.post("/forgot-password/reset-password", [
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await authController.forgotPasswordResetPassword(req, res)
+  ),
+]);
+
 export default router;

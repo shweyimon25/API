@@ -13,9 +13,13 @@ import {
   signUpSchema,
   requestOtpSchema,
   verifyOtpSchema,
+  forgotPasswordRequestOtpSchema,
+  forgotPasswordVerifyOtpSchema,
+  forgotPasswordResetPasswordSchema,
 } from "../../../schemas/member/v1/auth.schema";
 import { ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
+import { ProfileResource } from "../../../resources/member/v1/member-profile/member-profile.resource";
 
 class AuthController {
   private authService: AuthService;
@@ -48,19 +52,7 @@ class AuthController {
     );
 
     return successResponse(res, "User sign in successfully", {
-      user: {
-        id: member.id,
-        code: member.code,
-        name: member.name,
-        email: member.email,
-        phone: member.phone,
-        status: member.status,
-        createdAt: member.createdAt,
-        updatedAt: member.updatedAt,
-        profile: member.profile,
-        memberType: member.memberType,
-        providerTypes: member.providerTypes,
-      },
+      user: ProfileResource.toResource(member),
       token,
     });
   }
@@ -207,8 +199,79 @@ class AuthController {
     );
 
     return successResponse(res, "User sign up successfully", {
-      user: member,
+      user: ProfileResource.toResource(member),
       token,
+    });
+  }
+
+  async forgotPasswordRequestOtp(req: Request, res: Response) {
+    const { data, success, error } = await validater(forgotPasswordRequestOtpSchema, req.body);
+
+    if (!success) {
+      throw new ValidationException("Failed to request OTP", error);
+    }
+
+    await this.authService.findActivatedMember(data.providerType, data.providerValue);
+
+    const { otp, expiresAt } = generateOTP();
+
+    if (data.providerType === ProviderType.EMAIL) {
+      await this.authService.updateOrCreateOtpByEmailOnly(data.providerValue, otp, expiresAt);
+    } else {
+      await this.authService.updateOrCreateOtpByPhone(data.providerValue, otp, expiresAt);
+    }
+
+    return successResponse(res, "OTP sent successfully", {
+      providerType: data.providerType,
+      providerValue: data.providerValue,
+    });
+  }
+
+  async forgotPasswordVerifyOtp(req: Request, res: Response) {
+    const { data, success, error } = await validater(forgotPasswordVerifyOtpSchema, req.body);
+
+    if (!success) {
+      throw new ValidationException("Failed to verify OTP", error);
+    }
+
+    await this.authService.validateOtpForForgotPasswordVerify(data.providerType, data.providerValue, data.otp);
+
+    const existingOtp = await prisma.oTP.findFirst({
+      where:
+        data.providerType === ProviderType.EMAIL
+          ? { email: data.providerValue, otp: data.otp }
+          : { phone: data.providerValue, otp: data.otp },
+    });
+
+    if (existingOtp) {
+      await prisma.oTP.update({
+        where: { id: existingOtp.id },
+        data: { isVerified: true },
+      });
+    }
+
+    return successResponse(res, "OTP verified successfully", {
+      providerType: data.providerType,
+      providerValue: data.providerValue,
+    });
+  }
+
+  async forgotPasswordResetPassword(req: Request, res: Response) {
+    const { data, success, error } = await validater(forgotPasswordResetPasswordSchema, req.body);
+
+    if (!success) {
+      throw new ValidationException("Failed to reset password", error);
+    }
+
+    const member = await this.authService.resetPasswordWithOtp(
+      data.providerType,
+      data.providerValue,
+      data.otp,
+      data.newPassword
+    );
+
+    return successResponse(res, "Password reset successfully", {
+      user: ProfileResource.toResource(member),
     });
   }
 }
