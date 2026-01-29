@@ -10,6 +10,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { PostCollection } from "../../../resources/member/v1/post/post.collection";
 import { PostResource } from "../../../resources/member/v1/post/post.resource";
+import { memberPostScope } from "../../../scopes/member/v1/post.scope";
 
 class PostController {
   private postService: PostService;
@@ -20,9 +21,10 @@ class PostController {
 
   async findAll(req: Request, res: Response) {
     const { page, perPage } = req.query;
+    const where = memberPostScope(req.query);
 
     if (page && perPage) {
-      const posts = await this.postService.findByPaginate(+page, +perPage);
+      const posts = await this.postService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Post list successfully",
@@ -30,7 +32,7 @@ class PostController {
       );
     }
 
-    const posts = await this.postService.findAll();
+    const posts = await this.postService.findAll(where);
     return successResponse(
       res,
       "Post list successfully",

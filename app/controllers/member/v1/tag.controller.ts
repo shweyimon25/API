@@ -3,6 +3,7 @@ import TagService from "../../../services/member/v1/tag.service";
 import { successResponse } from "../../../helpers/response";
 import { TagCollection } from "../../../resources/member/v1/tag/tag.collection";
 import { TagResource } from "../../../resources/member/v1/tag/tag.resource";
+import { memberTagScope } from "../../../scopes/member/v1/tag.scope";
 
 class TagController {
   private tagService: TagService;
@@ -13,9 +14,10 @@ class TagController {
 
   async findAll(req: Request, res: Response) {
     const { page, perPage } = req.query;
+    const where = memberTagScope(req.query);
 
     if (page && perPage) {
-      const tags = await this.tagService.findByPaginate(+page, +perPage);
+      const tags = await this.tagService.findByPaginate(+page, +perPage, where);
       return successResponse(
         res,
         "Tag list successfully",
@@ -23,7 +25,7 @@ class TagController {
       );
     }
 
-    const tags = await this.tagService.findAll();
+    const tags = await this.tagService.findAll(where);
     return successResponse(
       res,
       "Tag list successfully",

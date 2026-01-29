@@ -62,9 +62,9 @@ class TagController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(createTagSchema, req.body);
+    const { data, success, error } = await validater(createTagSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to create tag", error);
     }
 
@@ -78,9 +78,9 @@ class TagController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateTagSchema, req.body);
+    const { data, success, error } = await validater(updateTagSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update tag", error);
     }
 

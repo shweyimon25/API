@@ -87,9 +87,9 @@ class ShopLevelController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateShopLevelSchema, req.body);
+    const { data, success, error } = await validater(updateShopLevelSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update shop level", error);
     }
 

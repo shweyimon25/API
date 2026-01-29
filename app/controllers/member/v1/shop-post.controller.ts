@@ -7,6 +7,7 @@ import { ValidationException } from "../../../helpers/exceptions";
 import { createShopPostSchema, updateShopPostSchema } from "../../../schemas/member/v1/shop-post.schema";
 import { ShopPostCollection } from "../../../resources/member/v1/shop-post/shop-post.collection";
 import { ShopPostResource } from "../../../resources/member/v1/shop-post/shop-post.resource";
+import { memberShopPostScope } from "../../../scopes/member/v1/shop-post.scope";
 
 class ShopPostController {
     private shopPostService: ShopPostService;
@@ -17,9 +18,10 @@ class ShopPostController {
 
     async findAll(req: Request, res: Response) {
         const { page, perPage } = req.query;
+        const where = memberShopPostScope(req.query);
 
         if (page && perPage) {
-            const shopPosts = await this.shopPostService.findByPaginate(+page, +perPage);
+            const shopPosts = await this.shopPostService.findByPaginate(+page, +perPage, where);
             return successResponse(
                 res,
                 "Shop posts fetched successfully",
@@ -27,7 +29,7 @@ class ShopPostController {
             );
         }
 
-        const shopPosts = await this.shopPostService.findAll();
+        const shopPosts = await this.shopPostService.findAll(where);
         return successResponse(
             res,
             "Shop posts fetched successfully",

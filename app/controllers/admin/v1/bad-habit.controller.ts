@@ -62,9 +62,9 @@ class BadHabitController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(createBadHabitSchema, req.body);
+    const { data, success, error } = await validater(createBadHabitSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to create bad habit", error);
     }
 
@@ -78,9 +78,9 @@ class BadHabitController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateBadHabitSchema, req.body);
+    const { data, success, error } = await validater(updateBadHabitSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update bad habit", error);
     }
 

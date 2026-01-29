@@ -50,9 +50,9 @@ class WaterTrackerController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(createWaterTrackerSchema, req.body);
+    const { data, success, error } = await validater(createWaterTrackerSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to create water tracker", error);
     }
 
@@ -65,9 +65,9 @@ class WaterTrackerController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateWaterTrackerSchema, req.body);
+    const { data, success, error } = await validater(updateWaterTrackerSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update water tracker", error);
     }
 

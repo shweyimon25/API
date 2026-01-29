@@ -1,16 +1,29 @@
+import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { CreateShopRatingInput, UpdateShopRatingInput } from "../../../schemas/member/v1/shop-rating.schema";
 import { ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
 
+const shopRatingInclude = {
+    shop: {
+        select: { id: true, name: true, logo: true },
+    },
+    member: {
+        select: { id: true, name: true, email: true, code: true },
+    },
+};
+
+/** Member API: only ratings for ACTIVE shops */
+const memberShopRatingWhere = (shopId?: number) => ({
+    ...(shopId != null ? { shopId } : {}),
+    shop: { status: Status.ACTIVE },
+});
+
 class ShopRatingService {
     async findAll(shopId?: number) {
         const shopRatings = await prisma.shopRating.findMany({
-            where: {
-                shopId,
-            },
-            orderBy: {
-                id: "desc",
-            },
+            where: memberShopRatingWhere(shopId),
+            orderBy: { id: "desc" },
+            include: shopRatingInclude,
         });
 
         return shopRatings;
@@ -18,15 +31,16 @@ class ShopRatingService {
 
     async findByPaginate(page: number, perPage: number, shopId: number) {
         const shopRatings = await prisma.shopRating.findMany({
-            where: {
-                shopId,
-            },
+            where: memberShopRatingWhere(shopId),
             orderBy: { id: "desc" },
             skip: (page - 1) * perPage,
             take: perPage,
+            include: shopRatingInclude,
         });
 
-        const totalShopRatings = await prisma.shopRating.count({ where: { shopId } });
+        const totalShopRatings = await prisma.shopRating.count({
+            where: memberShopRatingWhere(shopId),
+        });
 
         return {
             data: shopRatings,
@@ -46,6 +60,7 @@ class ShopRatingService {
     async findOne(id: number) {
         const shopRating = await prisma.shopRating.findUnique({
             where: { id },
+            include: shopRatingInclude,
         });
 
         if (!shopRating) {
@@ -67,7 +82,7 @@ class ShopRatingService {
             },
         });
 
-        return shopRating;
+        return this.findOne(shopRating.id);
     }
 
     async update(id: number, updateShopRatingInput: UpdateShopRatingInput, memberId: number) {

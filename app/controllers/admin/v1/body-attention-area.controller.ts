@@ -65,12 +65,12 @@ class BodyAttentionAreaController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(
+    const { data, success, error } = await validater(
       createBodyAttentionAreaSchema,
       req.body
     );
 
-    if (error) {
+    if (!success) {
       throw new ValidationException(
         "Failed to create body attention area",
         error
@@ -90,12 +90,12 @@ class BodyAttentionAreaController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(
+    const { data, success, error } = await validater(
       updateBodyAttentionAreaSchema,
       req.body
     );
 
-    if (error) {
+    if (!success) {
       throw new ValidationException(
         "Failed to update body attention area",
         error

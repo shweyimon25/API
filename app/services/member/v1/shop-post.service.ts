@@ -1,3 +1,4 @@
+import { Prisma, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
 import { CreateShopPostInput, UpdateShopPostInput } from "../../../schemas/member/v1/shop-post.schema";
@@ -12,9 +13,16 @@ const shopPostInclude = {
     },
 };
 
+/** Member API: only posts from ACTIVE shops */
+const memberShopPostWhere = (where?: Prisma.ShopPostWhereInput): Prisma.ShopPostWhereInput => ({
+    ...where,
+    shop: { status: Status.ACTIVE },
+});
+
 class ShopPostService {
-    async findAll() {
+    async findAll(where?: Prisma.ShopPostWhereInput) {
         const shopPosts = await prisma.shopPost.findMany({
+            where: memberShopPostWhere(where),
             orderBy: { id: "desc" },
             include: shopPostInclude,
         });
@@ -22,15 +30,18 @@ class ShopPostService {
         return shopPosts;
     }
 
-    async findByPaginate(page: number, perPage: number) {
+    async findByPaginate(page: number, perPage: number, where?: Prisma.ShopPostWhereInput) {
         const shopPosts = await prisma.shopPost.findMany({
+            where: memberShopPostWhere(where),
             orderBy: { id: "desc" },
             skip: (page - 1) * perPage,
             take: perPage,
             include: shopPostInclude,
         });
 
-        const totalShopPosts = await prisma.shopPost.count();
+        const totalShopPosts = await prisma.shopPost.count({
+            where: memberShopPostWhere(where),
+        });
 
         return {
             data: shopPosts,

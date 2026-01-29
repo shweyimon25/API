@@ -5,6 +5,7 @@ import { createShopSchema, updateShopSchema } from "../../../schemas/member/v1/s
 import { validater } from "../../../helpers/validator";
 import { ValidationException } from "../../../helpers/exceptions";
 import { Member } from "@prisma/client";
+import { memberShopScope } from "../../../scopes/member/v1/shop.scope";
 
 class ShopController {
     private shopService: ShopService;
@@ -15,13 +16,14 @@ class ShopController {
 
     async findAll(req: Request, res: Response) {
         const { page, perPage } = req.query;
+        const where = memberShopScope(req.query);
 
         if (page && perPage) {
-            const shops = await this.shopService.findByPaginate(+page, +perPage);
+            const shops = await this.shopService.findByPaginate(+page, +perPage, where);
             return successResponse(res, "Shop list successfully", shops);
         }
 
-        const shops = await this.shopService.findAll();
+        const shops = await this.shopService.findAll(where);
         return successResponse(res, "Shop list successfully", shops);
     }
 

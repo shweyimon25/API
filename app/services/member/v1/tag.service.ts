@@ -1,16 +1,18 @@
+import { Prisma, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
-import { Status } from "@prisma/client";
+
+/** Member API: always only ACTIVE tags (no status in scope) */
+const memberTagWhere = (where?: Prisma.TagWhereInput) => ({
+  status: Status.ACTIVE,
+  ...where,
+});
 
 class TagService {
-  async findAll() {
+  async findAll(where?: Prisma.TagWhereInput) {
     const tags = await prisma.tag.findMany({
-      where: {
-        status: Status.ACTIVE,
-      },
-      orderBy: {
-        id: "desc",
-      },
+      where: memberTagWhere(where),
+      orderBy: { id: "desc" },
       select: {
         id: true,
         name: true,
@@ -18,9 +20,7 @@ class TagService {
         createdAt: true,
         updatedAt: true,
         _count: {
-          select: {
-            posts: true,
-          },
+          select: { posts: true },
         },
       },
     });
@@ -28,14 +28,10 @@ class TagService {
     return tags;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.TagWhereInput) {
     const tags = await prisma.tag.findMany({
-      where: {
-        status: Status.ACTIVE,
-      },
-      orderBy: {
-        id: "desc",
-      },
+      where: memberTagWhere(where),
+      orderBy: { id: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
       select: {
@@ -45,17 +41,13 @@ class TagService {
         createdAt: true,
         updatedAt: true,
         _count: {
-          select: {
-            posts: true,
-          },
+          select: { posts: true },
         },
       },
     });
 
     const totalTags = await prisma.tag.count({
-      where: {
-        status: Status.ACTIVE,
-      },
+      where: memberTagWhere(where),
     });
 
     return {

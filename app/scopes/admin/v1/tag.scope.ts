@@ -16,7 +16,7 @@ export const tagScope = (query: TagScopeQuery): Prisma.TagWhereInput => {
     if (name) {
         where.name = {
             contains: name,
-            mode: "insensitive"
+            mode: "insensitive",
         };
     }
 

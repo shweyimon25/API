@@ -62,9 +62,9 @@ class MealController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(createMealSchema, req.body);
+    const { data, success, error } = await validater(createMealSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to create meal", error);
     }
 
@@ -78,9 +78,9 @@ class MealController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(updateMealSchema, req.body);
+    const { data, success, error } = await validater(updateMealSchema, req.body);
 
-    if (error) {
+    if (!success) {
       throw new ValidationException("Failed to update meal", error);
     }
 

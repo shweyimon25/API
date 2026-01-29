@@ -5,6 +5,8 @@ import { validater } from "../../../helpers/validator";
 import { BadRequestException, ValidationException } from "../../../helpers/exceptions";
 import { createShopRatingSchema, updateShopRatingSchema } from "../../../schemas/member/v1/shop-rating.schema";
 import { Member } from "@prisma/client";
+import { ShopRatingCollection } from "../../../resources/member/v1/shop-rating/shop-rating.collection";
+import { ShopRatingResource } from "../../../resources/member/v1/shop-rating/shop-rating.resource";
 
 class ShopRatingController {
     private shopRatingService: ShopRatingService;
@@ -22,11 +24,19 @@ class ShopRatingController {
 
         if (page && perPage) {
             const shopRatings = await this.shopRatingService.findByPaginate(+page, +perPage, +shopId);
-            return successResponse(res, "Shop ratings fetched successfully", shopRatings);
+            return successResponse(
+                res,
+                "Shop ratings fetched successfully",
+                ShopRatingCollection.withPagination(shopRatings)
+            );
         }
 
         const shopRatings = await this.shopRatingService.findAll(+shopId);
-        return successResponse(res, "Shop ratings fetched successfully", shopRatings);
+        return successResponse(
+            res,
+            "Shop ratings fetched successfully",
+            ShopRatingCollection.toCollection(shopRatings)
+        );
     }
 
     async create(req: Request, res: Response) {
@@ -38,7 +48,11 @@ class ShopRatingController {
 
         const memberId = (req.user as Member).id;
         const shopRating = await this.shopRatingService.create(data, memberId);
-        return successResponse(res, "Shop rating created successfully", shopRating);
+        return successResponse(
+            res,
+            "Shop rating created successfully",
+            ShopRatingResource.toResource(shopRating)
+        );
     }
 
     async update(req: Request, res: Response) {
@@ -52,7 +66,11 @@ class ShopRatingController {
 
         const memberId = (req.user as Member).id;
         const shopRating = await this.shopRatingService.update(+id, data, memberId);
-        return successResponse(res, "Shop rating updated successfully", shopRating);
+        return successResponse(
+            res,
+            "Shop rating updated successfully",
+            ShopRatingResource.toResource(shopRating)
+        );
     }
 
     async destroy(req: Request, res: Response) {

@@ -9,12 +9,18 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
-import { PrivencyType, Status } from "@prisma/client";
+import { Prisma, PrivencyType, Status } from "@prisma/client";
 
 const feedWhere = {
   privencyType: PrivencyType.PUBLIC,
   status: Status.ACTIVE,
 } as const;
+
+/** Member API: always ACTIVE + PUBLIC, merge with scope filters (no status in scope) */
+const memberPostWhere = (where?: Prisma.PostWhereInput) => ({
+  ...feedWhere,
+  ...where,
+});
 
 const memberInclude = {
   member: {
@@ -37,24 +43,24 @@ const tagInclude = {
 };
 
 class PostService {
-  async findAll() {
+  async findAll(where?: Prisma.PostWhereInput) {
     const posts = await prisma.post.findMany({
-      where: feedWhere,
+      where: memberPostWhere(where),
       orderBy: { id: "desc" },
       include: { ...tagInclude, ...memberInclude },
     });
     return posts;
   }
 
-  async findByPaginate(page: number, perPage: number) {
+  async findByPaginate(page: number, perPage: number, where?: Prisma.PostWhereInput) {
     const posts = await prisma.post.findMany({
-      where: feedWhere,
+      where: memberPostWhere(where),
       orderBy: { id: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
       include: { ...tagInclude, ...memberInclude },
     });
-    const totalPosts = await prisma.post.count({ where: feedWhere });
+    const totalPosts = await prisma.post.count({ where: memberPostWhere(where) });
     return {
       data: posts,
       meta: {

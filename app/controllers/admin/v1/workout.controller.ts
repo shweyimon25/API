@@ -9,94 +9,93 @@ import { createWorkoutSchema, updateWorkoutSchema } from "../../../schemas/admin
 import { workoutScope } from "../../../scopes/admin/v1/workout.scope";
 
 class WorkoutController {
-    private workoutService: WorkoutService;
+  private workoutService: WorkoutService;
 
-    constructor() {
-        this.workoutService = new WorkoutService();
+  constructor() {
+    this.workoutService = new WorkoutService();
+  }
+
+  async findAll(req: Request, res: Response) {
+    const { page, perPage } = req.query;
+
+    const where = workoutScope(req.query);
+
+    if (page && perPage) {
+      const workouts = await this.workoutService.findByPaginate(+page, +perPage, where);
+      return successResponse(
+        res,
+        "Workout list successfully",
+        WorkoutCollection.withPagination(workouts)
+      );
     }
 
-    async findAll(req: Request, res: Response) {
-        const { page, perPage } = req.query;
+    const workouts = await this.workoutService.findAll(where);
 
-        const where = workoutScope(req.query);
+    return successResponse(
+      res,
+      "Workout list successfully",
+      WorkoutCollection.toCollection(workouts)
+    );
+  }
 
-        if (page && perPage) {
-            const workouts = await this.workoutService.findByPaginate(+page, +perPage, where);
-            return successResponse(
-                res,
-                "Workout list successfully",
-                WorkoutCollection.withPagination(workouts)
-            );
-        }
+  async findOne(req: Request, res: Response) {
+    const workout = await this.workoutService.findOne(+req.params.id);
+    return successResponse(
+      res,
+      "Workout details successfully",
+      WorkoutResource.toResource(workout)
+    );
+  }
 
-        const workouts = await this.workoutService.findAll(where);
+  async findCommonAll(req: Request, res: Response) {
+    const where = workoutScope(req.query);
 
-        return successResponse(
-            res,
-            "Workout list successfully",
-            WorkoutCollection.toCollection(workouts)
-        );
+    const workouts = await this.workoutService.findCommonAll(where);
+
+    return successResponse(
+      res,
+      "Common workout list successfully",
+      WorkoutCollection.toCommonCollection(workouts)
+    );
+  }
+
+  async create(req: Request, res: Response) {
+    const { data, success, error } = await validater(createWorkoutSchema, req.body);
+
+    if (!success) {
+      throw new ValidationException("Failed to create workout", error);
     }
 
-    async findOne(req: Request, res: Response) {
-        const workout = await this.workoutService.findOne(+req.params.id);
-        return successResponse(
-            res,
-            "Wrokout details successfully",
-            WorkoutResource.toResource(workout)
-        );
+    const userId = (req.user as any)?.id;
+    const workout = await this.workoutService.create(data, req.files as Express.Multer.File[], userId);
+
+    return successResponse(
+      res,
+      "Workout created successfully",
+      WorkoutResource.toResource(workout)
+    );
+  }
+
+  async update(req: Request, res: Response) {
+    const { data, success, error } = await validater(updateWorkoutSchema, req.body);
+
+    if (!success) {
+      throw new ValidationException("Failed to update workout", error);
     }
 
-    async findCommonAll(req: Request, res: Response) {
-        const where = workoutScope(req.query);
+    const userId = (req.user as any)?.id;
+    const workout = await this.workoutService.update(+req.params.id, data, req.files as Express.Multer.File[], userId);
+    return successResponse(
+      res,
+      "Workout updated successfully",
+      WorkoutResource.toResource(workout)
+    );
+  }
 
-        const workouts = await this.workoutService.findCommonAll(where);
-
-        return successResponse(
-            res,
-            "Common workout list successfully",
-            WorkoutCollection.toCommonCollection(workouts)
-        );
-    }
-
-    async create(req: Request, res: Response) {
-        const { data, success, error } = await validater(createWorkoutSchema, req.body);
-
-        if (!success) {
-            throw new ValidationException("Failed to create workout", error);
-        }
-
-        const userId = (req.user as any)?.id;
-        const workout = await this.workoutService.create(data, req.files as Express.Multer.File[], userId);
-
-        return successResponse(
-            res,
-            "Workout created successfully",
-            WorkoutResource.toResource(workout)
-        );
-    }
-
-    async update(req: Request, res: Response) {
-        const { data, error } = await validater(updateWorkoutSchema, req.body);
-
-        if (error) {
-            throw new ValidationException("Failed to update tag", error);
-        }
-
-        const userId = (req.user as any)?.id;
-        const workout = await this.workoutService.update(+req.params.id, data, req.files as Express.Multer.File[], userId);
-        return successResponse(
-            res,
-            "Wrokout updated successfully",
-            WorkoutResource.toResource(workout)
-        );
-    }
-
-    async destroy(req: Request, res: Response) {
-        await this.workoutService.destroy(+req.params.id);
-        return successResponse(res, "Wrokout deleted successfully");
-    }
+  async destroy(req: Request, res: Response) {
+    await this.workoutService.destroy(+req.params.id);
+    return successResponse(res, "Workout deleted successfully");
+  }
 }
 
 export default WorkoutController;
-

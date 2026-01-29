@@ -67,12 +67,12 @@ class PhysicalLimitationController {
   }
 
   async create(req: Request, res: Response) {
-    const { data, error } = await validater(
+    const { data, success, error } = await validater(
       createPhysicalLimitationSchema,
       req.body
     );
 
-    if (error) {
+    if (!success) {
       throw new ValidationException(
         "Failed to create physical limitation",
         error
@@ -93,12 +93,12 @@ class PhysicalLimitationController {
   }
 
   async update(req: Request, res: Response) {
-    const { data, error } = await validater(
+    const { data, success, error } = await validater(
       updatePhysicalLimitationSchema,
       req.body
     );
 
-    if (error) {
+    if (!success) {
       throw new ValidationException(
         "Failed to update physical limitation",
         error

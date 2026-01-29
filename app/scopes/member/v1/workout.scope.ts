@@ -1,6 +1,7 @@
-import { Prisma, Day, Gender, Status } from "@prisma/client";
+import { Prisma, Day, Gender } from "@prisma/client";
 
-interface WorkoutScopeQuery {
+/** Member workout scope: no status filter – member API always returns ACTIVE workouts only */
+export interface MemberWorkoutScopeQuery {
   name?: string;
   gender?: string;
   categoryId?: string;
@@ -10,11 +11,12 @@ interface WorkoutScopeQuery {
   workoutDay?: string;
   sets?: string;
   reps?: string;
-  status?: string;
+  fromDate?: string;
+  toDate?: string;
 }
 
-export const workoutScope = (query: WorkoutScopeQuery): Prisma.WorkoutWhereInput => {
-  const { name, gender, categoryId, bodyGoalId, placeId, memberPlanId, workoutDay, sets, reps, status } = query;
+export const memberWorkoutScope = (query: MemberWorkoutScopeQuery): Prisma.WorkoutWhereInput => {
+  const { name, gender, categoryId, bodyGoalId, placeId, memberPlanId, workoutDay, sets, reps, fromDate, toDate } = query;
 
   const where: Prisma.WorkoutWhereInput = {};
 
@@ -61,8 +63,14 @@ export const workoutScope = (query: WorkoutScopeQuery): Prisma.WorkoutWhereInput
     };
   }
 
-  if (status) {
-    where.status = status as Status;
+  if (fromDate || toDate) {
+    where.createdAt = {};
+    if (fromDate) {
+      where.createdAt.gte = new Date(fromDate);
+    }
+    if (toDate) {
+      where.createdAt.lte = new Date(toDate);
+    }
   }
 
   return where;
