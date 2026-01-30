@@ -1,5 +1,5 @@
-import prisma from "../client";
 import { Status } from "@prisma/client";
+import prisma from "../client";
 
 const mealTypeSeeder = async () => {
   console.log("Meal type seeding ...");
@@ -14,8 +14,10 @@ const mealTypeSeeder = async () => {
   ];
 
   for (const mealTypeName of mealTypes) {
-    await prisma.mealType.create({
-      data: {
+    await prisma.mealType.upsert({
+      where: { name: mealTypeName },
+      update: { status: Status.ACTIVE },
+      create: {
         name: mealTypeName,
         createdById: 1,
       },

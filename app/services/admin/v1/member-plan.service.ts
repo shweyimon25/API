@@ -9,6 +9,7 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 import MemberTypeService from "./member-type.service";
+import { upload } from "../../../helpers/media-upload";
 
 class MemberPlanService {
   private memberTypeService: MemberTypeService;
@@ -174,7 +175,7 @@ class MemberPlanService {
     return memberPlan;
   }
 
-  async create(createMemberPlanInput: CreateMemberPlanInput, userId: number) {
+  async create(createMemberPlanInput: CreateMemberPlanInput, files: Express.Multer.File[], userId: number) {
     const existingMemberPlanName = await prisma.memberPlan.findFirst({
       where: {
         name: createMemberPlanInput.name,
@@ -255,10 +256,28 @@ class MemberPlanService {
       }
     }
 
+    let image: string | null = null;
+    const imageFile = files.find((file: Express.Multer.File) => file.fieldname === "image");
+
+    if (imageFile) {
+      const { fileUrl } = await upload(imageFile, "member-plan");
+      image = fileUrl;
+    }
+
+    if (!image) {
+      throw new ValidationException("Failed to create member plan", [
+        {
+          field: "image",
+          issue: "Image is required",
+        },
+      ]);
+    }
+
     const memberPlan = await prisma.memberPlan.create({
       data: {
         name: createMemberPlanInput.name,
         duration: createMemberPlanInput.duration,
+        image: image,
         isVideoGroup: createMemberPlanInput.isVideoGroup,
         status: createMemberPlanInput.status ?? Status.ACTIVE,
         memberType: {
@@ -296,6 +315,7 @@ class MemberPlanService {
   async update(
     memberPlanId: number,
     updateMemberPlanInput: UpdateMemberPlanInput,
+    files: Express.Multer.File[],
     userId: number
   ) {
     // Find old member plan
@@ -401,6 +421,14 @@ class MemberPlanService {
       }
     }
 
+    let image: string | null = null;
+    const imageFile = files.find((file: Express.Multer.File) => file.fieldname === "image");
+
+    if (imageFile) {
+      const { fileUrl } = await upload(imageFile, "member-plan");
+      image = fileUrl;
+    }
+
     const memberPlan = await prisma.memberPlan.update({
       where: {
         id: memberPlanId,
@@ -412,6 +440,7 @@ class MemberPlanService {
             id: updateMemberPlanInput.memberTypeId ?? existingMemberType.id,
           },
         },
+        image: image ?? existingMemberPlan.image,
         price: updateMemberPlanInput.price ?? existingMemberPlan.price,
         duration: updateMemberPlanInput.duration ?? existingMemberPlan.duration,
         isVideoGroup:

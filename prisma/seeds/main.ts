@@ -3,6 +3,7 @@ import prisma from "../client";
 import roleSeeder from "./role.seeder";
 import permissionSeeder from "./permission.seeder";
 import adminUserSeeder from "./admin-user.seeder";
+import memberUserSeeder from "./member-user.seeder";
 import memberTypeSeeder from "./member-type.seeder";
 import proSeeder from "./pros.seeder";
 import conSeeder from "./cons.seeder";
@@ -55,11 +56,10 @@ const assignAdminRole = async () => {
 const main = async () => {
   try {
     await permissionSeeder();
-    // Create admin user first (without role) so we can use it as createdBy
     await adminUserSeeder();
     await roleSeeder();
-    // Assign SuperAdmin role to admin user after roles are created
     await assignAdminRole();
+    await memberUserSeeder();
     await bankInformationSeeder();
     await memberTypeSeeder();
     await shopLevelSeeder();

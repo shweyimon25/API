@@ -489,13 +489,12 @@ model Tag {
 
 model Post {
   id           Int          @id @default(autoincrement())
-  content      String
+  content      Json
   tag          Tag          @relation(fields: [tagId], references: [id])
   tagId        Int
   privencyType PrivencyType @default(PUBLIC)
   timeAgo      DateTime     @default(now())
-  media        Json?
-  status       Status       @default(ACTIVE)
+  media        Json
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id])

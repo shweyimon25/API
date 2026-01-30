@@ -20,6 +20,9 @@ CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'BOTH');
 CREATE TYPE "Day" AS ENUM ('SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY');
 
 -- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('INFO', 'WARNING', 'ERROR');
+
+-- CreateEnum
 CREATE TYPE "PaymentRequestType" AS ENUM ('MEMBER_PLAN_UPGRADE', 'SHOP_LEVEL_UPGRADE');
 
 -- CreateEnum
@@ -29,7 +32,7 @@ CREATE TYPE "PaymentTypes" AS ENUM ('BANK_ACCOUNT', 'E_WALLET');
 CREATE TYPE "PaymentStatus" AS ENUM ('DRAFT', 'CONFIRMED', 'CANCELLED', 'PAID');
 
 -- CreateEnum
-CREATE TYPE "Status" AS ENUM ('ACTIVE', 'INACTIVE', 'DELETE');
+CREATE TYPE "Status" AS ENUM ('ACTIVE', 'INACTIVE');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -39,7 +42,6 @@ CREATE TABLE "User" (
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -54,7 +56,6 @@ CREATE TABLE "Role" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -114,7 +115,6 @@ CREATE TABLE "MemberPlan" (
     "duration" INTEGER NOT NULL DEFAULT 1,
     "isVideoGroup" BOOLEAN NOT NULL DEFAULT false,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -129,7 +129,6 @@ CREATE TABLE "Pros" (
     "name" TEXT NOT NULL,
     "guard" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -144,7 +143,6 @@ CREATE TABLE "Cons" (
     "name" TEXT NOT NULL,
     "guard" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -189,7 +187,6 @@ CREATE TABLE "Member" (
     "language" "Language" NOT NULL DEFAULT 'ENG',
     "theme" "Theme" NOT NULL DEFAULT 'LIGHT',
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -275,7 +272,6 @@ CREATE TABLE "ShopLevel" (
     "description" TEXT,
     "postLimit" INTEGER NOT NULL DEFAULT 10,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -288,11 +284,10 @@ CREATE TABLE "ShopLevel" (
 CREATE TABLE "Shop" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "image" TEXT,
-    "memberId" INTEGER NOT NULL,
+    "logo" TEXT,
+    "memberId" INTEGER,
     "shopLevelId" INTEGER,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -335,7 +330,6 @@ CREATE TABLE "ShopRating" (
 CREATE TABLE "ShopPost" (
     "id" SERIAL NOT NULL,
     "caption" TEXT NOT NULL,
-    "privencyType" "PrivencyType" NOT NULL DEFAULT 'PUBLIC',
     "images" JSONB NOT NULL,
     "shopId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -362,7 +356,6 @@ CREATE TABLE "Tag" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -374,11 +367,12 @@ CREATE TABLE "Tag" (
 -- CreateTable
 CREATE TABLE "Post" (
     "id" SERIAL NOT NULL,
-    "content" TEXT NOT NULL,
+    "content" JSONB NOT NULL,
     "tagId" INTEGER NOT NULL,
     "privencyType" "PrivencyType" NOT NULL DEFAULT 'PUBLIC',
-    "timeAgo" TEXT NOT NULL,
-    "media" JSONB,
+    "timeAgo" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "media" JSONB NOT NULL,
+    "memberId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -403,7 +397,6 @@ CREATE TABLE "BodyGoal" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -417,7 +410,6 @@ CREATE TABLE "ProficientLevel" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -431,7 +423,6 @@ CREATE TABLE "Category" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -445,7 +436,6 @@ CREATE TABLE "Place" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -471,7 +461,6 @@ CREATE TABLE "Workout" (
     "sets" INTEGER,
     "reps" INTEGER,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -487,7 +476,6 @@ CREATE TABLE "PhysicalLimitation" (
     "photo" TEXT,
     "description" TEXT,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -503,7 +491,6 @@ CREATE TABLE "DietType" (
     "photo" TEXT,
     "description" TEXT,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -517,7 +504,6 @@ CREATE TABLE "BodyAttentionArea" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -531,7 +517,6 @@ CREATE TABLE "MealType" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -550,7 +535,6 @@ CREATE TABLE "Meal" (
     "fat" DOUBLE PRECISION NOT NULL DEFAULT 0.00,
     "mealTypeId" INTEGER NOT NULL,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -566,7 +550,6 @@ CREATE TABLE "BadHabit" (
     "description" TEXT,
     "photo" TEXT,
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -596,7 +579,6 @@ CREATE TABLE "BankInformation" (
     "phone" TEXT NOT NULL,
     "paymentTypes" "PaymentTypes" NOT NULL DEFAULT 'BANK_ACCOUNT',
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
-    "deletedAt" TIMESTAMP(3),
     "createdById" INTEGER,
     "updatedById" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -630,6 +612,19 @@ CREATE TABLE "Payment" (
 );
 
 -- CreateTable
+CREATE TABLE "Notification" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "message" TEXT NOT NULL,
+    "type" "NotificationType" NOT NULL DEFAULT 'INFO',
+    "status" "Status" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_MemberPlanToPros" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL,
@@ -646,7 +641,13 @@ CREATE TABLE "_ConsToMemberPlan" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_name_key" ON "Permission"("name");
@@ -661,7 +662,19 @@ CREATE UNIQUE INDEX "RolePermission_roleId_permissionId_key" ON "RolePermission"
 CREATE UNIQUE INDEX "MemberType_name_key" ON "MemberType"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Pros_name_key" ON "Pros"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Cons_name_key" ON "Cons"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Member_code_key" ON "Member"("code");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Member_email_key" ON "Member"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Member_phone_key" ON "Member"("phone");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "OTP_email_otp_key" ON "OTP"("email", "otp");
@@ -679,7 +692,46 @@ CREATE UNIQUE INDEX "MemberProfile_memberId_key" ON "MemberProfile"("memberId");
 CREATE UNIQUE INDEX "BodyMeasurement_memberId_key" ON "BodyMeasurement"("memberId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ShopLevel_name_key" ON "ShopLevel"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Shop_memberId_key" ON "Shop"("memberId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ShopRating_memberId_shopId_key" ON "ShopRating"("memberId", "shopId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BodyGoal_name_key" ON "BodyGoal"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ProficientLevel_name_key" ON "ProficientLevel"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Place_name_key" ON "Place"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PhysicalLimitation_name_key" ON "PhysicalLimitation"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DietType_name_key" ON "DietType"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BodyAttentionArea_name_key" ON "BodyAttentionArea"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MealType_name_key" ON "MealType"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "BadHabit_name_key" ON "BadHabit"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WaterTracker_memberId_date_key" ON "WaterTracker"("memberId", "date");
 
 -- CreateIndex
 CREATE INDEX "_MemberPlanToPros_B_index" ON "_MemberPlanToPros"("B");
@@ -772,7 +824,7 @@ ALTER TABLE "ShopLevel" ADD CONSTRAINT "ShopLevel_createdById_fkey" FOREIGN KEY 
 ALTER TABLE "ShopLevel" ADD CONSTRAINT "ShopLevel_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Shop" ADD CONSTRAINT "Shop_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Shop" ADD CONSTRAINT "Shop_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Shop" ADD CONSTRAINT "Shop_shopLevelId_fkey" FOREIGN KEY ("shopLevelId") REFERENCES "ShopLevel"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -821,6 +873,9 @@ ALTER TABLE "Tag" ADD CONSTRAINT "Tag_updatedById_fkey" FOREIGN KEY ("updatedByI
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Post" ADD CONSTRAINT "Post_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PostComment" ADD CONSTRAINT "PostComment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;

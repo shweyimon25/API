@@ -9,44 +9,28 @@ const adminUserSeeder = async () => {
     name: "Admin",
     email: "admin@admin.com",
     username: "admin",
-    password: hashPassword("admin"),
+    password: hashPassword("Admin@123"),
+    status: Status.ACTIVE,
   };
 
-  // Check if admin user already exists
-  const existingUser = await prisma.user.findFirst({
+  await prisma.user.upsert({
     where: { email: adminData.email },
-  });
-
-  if (existingUser) {
-    console.log("Admin User already exists, skipping...");
-    return;
-  }
-
-  // Create admin user first without role (role will be assigned later)
-  const adminUser = await prisma.user.create({
-    data: {
+    update: {
+      name: adminData.name,
+      username: adminData.username,
+      password: adminData.password,
+      status: adminData.status,
+    },
+    create: {
       name: adminData.name,
       email: adminData.email,
       password: adminData.password,
       username: adminData.username,
-      status: Status.ACTIVE,
+      status: adminData.status,
     },
   });
 
-  // Assign SuperAdmin role if it exists
-  const superAdminRole = await prisma.role.findFirst({
-    where: { name: "SuperAdmin" },
-  });
-
-  if (superAdminRole) {
-    await prisma.userRole.create({
-      data: {
-        userId: adminUser.id,
-        roleId: superAdminRole.id,
-      },
-    });
-  }
-
+  // Role assignment happens in main.ts (assignAdminRole) after roleSeeder runs
   console.log("Admin User seeded successfully");
 };
 

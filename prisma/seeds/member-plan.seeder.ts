@@ -46,32 +46,48 @@ const memberPlanSeeder = async () => {
   ];
 
   for (const memberPlan of memberPlans) {
-    await prisma.memberPlan.create({
-      data: {
-        memberType: {
-          connect: {
-            id: memberPlan.memberTypeId,
-          },
-        },
+    const existing = await prisma.memberPlan.findFirst({
+      where: {
         name: memberPlan.name,
-        duration: memberPlan.duration,
-        price: memberPlan.price,
-        pros: {
-          connect: memberPlan.pros
-            .map((index) => allPros[index])
-            .filter(Boolean)
-            .map((pro) => ({ id: pro.id })),
-        },
-        cons: {
-          connect: memberPlan.cons
-            .map((index) => allCons[index])
-            .filter(Boolean)
-            .map((con) => ({ id: con.id })),
-        },
-        isVideoGroup: memberPlan.isVideoGroup,
-        status: memberPlan.status,
+        memberTypeId: memberPlan.memberTypeId,
       },
     });
+
+    const prosToConnect = memberPlan.pros
+      .map((index) => allPros[index])
+      .filter(Boolean)
+      .map((pro) => ({ id: pro.id }));
+    const consToConnect = memberPlan.cons
+      .map((index) => allCons[index])
+      .filter(Boolean)
+      .map((con) => ({ id: con.id }));
+
+    if (existing) {
+      await prisma.memberPlan.update({
+        where: { id: existing.id },
+        data: {
+          duration: memberPlan.duration,
+          price: memberPlan.price,
+          isVideoGroup: memberPlan.isVideoGroup,
+          status: memberPlan.status,
+          pros: { set: prosToConnect },
+          cons: { set: consToConnect },
+        },
+      });
+    } else {
+      await prisma.memberPlan.create({
+        data: {
+          memberType: { connect: { id: memberPlan.memberTypeId } },
+          name: memberPlan.name,
+          duration: memberPlan.duration,
+          price: memberPlan.price,
+          pros: { connect: prosToConnect },
+          cons: { connect: consToConnect },
+          isVideoGroup: memberPlan.isVideoGroup,
+          status: memberPlan.status,
+        },
+      });
+    }
   }
 
   console.log("Member plan seeded successfully");

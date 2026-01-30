@@ -47,6 +47,7 @@ import memberShopPostCommentRoute from "./member/v1/shop-post-comment.route";
 import memberShopRatingRoute from "./member/v1/shop-rating.route";
 import memberShopLevelRoute from "./member/v1/shop-level.route";
 import memberWorkoutRoute from "./member/v1/workout.route";
+import memberShopLevelRequestRoute from "./member/v1/shop-level-request.route";
 
 const router = Router();
 
@@ -96,6 +97,7 @@ router.use("/member/v1/shops", memberShopRoute);
 router.use("/member/v1/shop-posts", memberShopPostRoute);
 router.use("/member/v1/shop-post-comments", memberShopPostCommentRoute);
 router.use("/member/v1/shop-ratings", memberShopRatingRoute);
+router.use("/member/v1/shop-level-requests", memberShopLevelRequestRoute);
 router.use("/member/v1/workouts", memberWorkoutRoute);
 
 export default router;

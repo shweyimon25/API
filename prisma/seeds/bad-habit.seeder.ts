@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import prisma from "../client";
 
 const BadHabitSeeder = async () => {
@@ -12,10 +13,12 @@ const BadHabitSeeder = async () => {
     ];
 
     for (const badHabit of badHabits) {
-        await prisma.badHabit.create({
-            data: {
+        await prisma.badHabit.upsert({
+            where: { name: badHabit },
+            update: { status: Status.ACTIVE },
+            create: {
                 name: badHabit,
-                createdById: 1
+                createdById: 1,
             },
         });
     }

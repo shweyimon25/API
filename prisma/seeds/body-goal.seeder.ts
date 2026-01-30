@@ -1,31 +1,34 @@
+import { Status } from "@prisma/client";
 import prisma from "../client";
 
 const BodyGoalSeeder = async () => {
-    console.log("Body goal seeding ...");
+  console.log("Body goal seeding ...");
 
-    const bodyGoals = [
-        "Lose weight",
-        "Gain weight",
-        "Gain muscle",
-        "Improve health",
-        "Improve sleep",
-        "Improve mood",
-        "Improve energy",
-        "Improve focus",
-        "Improve memory",
-        "Improve concentration",
-    ];
+  const bodyGoals = [
+    "Lose weight",
+    "Gain weight",
+    "Gain muscle",
+    "Improve health",
+    "Improve sleep",
+    "Improve mood",
+    "Improve energy",
+    "Improve focus",
+    "Improve memory",
+    "Improve concentration",
+  ];
 
-    for (const bodyGoal of bodyGoals) {
-        await prisma.bodyGoal.create({
-            data: {
-                name: bodyGoal,
-                createdById: 1,
-            },
-        });
-    }
+  for (const bodyGoal of bodyGoals) {
+    await prisma.bodyGoal.upsert({
+      where: { name: bodyGoal },
+      update: { status: Status.ACTIVE },
+      create: {
+        name: bodyGoal,
+        createdById: 1,
+      },
+    });
+  }
 
-    console.log("Body goal seeded successfully");
+  console.log("Body goal seeded successfully");
 };
 
 export default BodyGoalSeeder;

@@ -9,7 +9,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { MemberPlanCollection } from "../../../resources/admin/v1/member-plan/member-plan.collection";
 import { MemberPlanResource } from "../../../resources/admin/v1/member-plan/member-plan.resource";
-import { Prisma, Status, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { memberPlanScope } from "../../../scopes/admin/v1/member-plan.scope";
 
 class MemberPlanController {
@@ -74,7 +74,7 @@ class MemberPlanController {
     }
 
     const userId = (req.user as User)?.id;
-    const memberPlan = await this.memberPlanService.create(data, +userId);
+    const memberPlan = await this.memberPlanService.create(data, req.files as Express.Multer.File[], +userId);
 
     return successResponse(
       res,
@@ -92,7 +92,7 @@ class MemberPlanController {
     }
 
     const userId = (req.user as User)?.id;
-    const memberPlan = await this.memberPlanService.update(+id, data, +userId);
+    const memberPlan = await this.memberPlanService.update(+id, data, req.files as Express.Multer.File[], +userId);
 
     return successResponse(
       res,
