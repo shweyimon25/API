@@ -1,6 +1,5 @@
 import { Prisma } from "@prisma/client";
 
-/** Member shop scope: no status filter – member API always returns ACTIVE shops only */
 export interface MemberShopScopeQuery {
     name?: string;
     shopLevelId?: string;

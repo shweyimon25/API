@@ -13,8 +13,7 @@ export const postScope = (query: PostScopeQuery): Prisma.PostWhereInput => {
 
     if (content) {
         where.content = {
-            contains: content,
-            mode: "insensitive"
+            equals: JSON.stringify(content)
         };
     }
 

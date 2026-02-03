@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  provider   = "prisma-client-js"
+  output     = "../node_modules/.prisma/client"
+  engineType = "client"
 }
 
 datasource db {
@@ -23,10 +24,10 @@ model User {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("UserCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("UserUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("UserCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("UserUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   roles                       UserRole[]
   tagsCreated                 Tag[]                @relation("TagCreatedBy")
@@ -87,10 +88,10 @@ model Role {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("RoleCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("RoleCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("RoleUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   permissions RolePermission[]
   users       UserRole[]
@@ -177,10 +178,10 @@ model Pros {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("ProsCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("ProsUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("ProsCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("ProsUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Cons {
@@ -193,10 +194,10 @@ model Cons {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("ConsCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("ConsUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("ConsCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("ConsUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model MemberRequest {
@@ -249,10 +250,10 @@ model Member {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("MemberCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("MemberUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("MemberCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("MemberUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   providerTypes       MemberProviderType[]
   postComments        PostComment[]
@@ -265,6 +266,10 @@ model Member {
   bodyMeasurement     BodyMeasurement?
   shopUpgradeRequests ShopUpgradeRequest[]
   posts               Post[]
+  friends             Friend[]             @relation("MemberFriends")
+  friendsOf           Friend[]             @relation("MemberFriend")
+  friendRequests      FriendRequest[]      @relation("MemberFriendRequestSender")
+  friendRequestsOf    FriendRequest[]      @relation("MemberFriendRequestReceiver")
 }
 
 model OTP {
@@ -372,10 +377,10 @@ model ShopLevel {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("ShopLevelUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("ShopLevelCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("ShopLevelUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   shops               Shop[]
   shopUpgradeRequests ShopUpgradeRequest[]
@@ -383,8 +388,8 @@ model ShopLevel {
 }
 
 model Shop {
-  id    Int     @id @default(autoincrement())
-  name  String
+  id   Int     @id @default(autoincrement())
+  name String
   logo String?
 
   memberId Int?    @unique
@@ -396,10 +401,10 @@ model Shop {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("ShopCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("ShopUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("ShopCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("ShopUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   shopPosts   ShopPost[]
   shopRatings ShopRating[]
@@ -445,9 +450,9 @@ model ShopRating {
 }
 
 model ShopPost {
-  id           Int          @id @default(autoincrement())
-  caption      String
-  images       Json
+  id      Int    @id @default(autoincrement())
+  caption String
+  images  Json
 
   shop   Shop @relation(fields: [shopId], references: [id])
   shopId Int
@@ -479,10 +484,10 @@ model Tag {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("TagCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("TagUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   posts Post[]
 }
@@ -499,8 +504,8 @@ model Post {
   memberId Int
   member   Member @relation(fields: [memberId], references: [id])
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   postComments PostComment[]
 }
@@ -532,10 +537,10 @@ model BodyGoal {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("BodyGoalCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("BodyGoalUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("BodyGoalCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("BodyGoalUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   workouts Workout[]
 }
@@ -561,10 +566,10 @@ model Category {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("CategoryCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("CategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("CategoryUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   workouts Workout[]
 }
@@ -632,10 +637,10 @@ model Workout {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("WorkoutCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("WorkoutUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model PhysicalLimitation {
@@ -647,10 +652,10 @@ model PhysicalLimitation {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("PhysicalLimitationCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("PhysicalLimitationUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("PhysicalLimitationCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("PhysicalLimitationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model DietType {
@@ -662,10 +667,10 @@ model DietType {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("DietTypeCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("DietTypeUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("DietTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("DietTypeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model BodyAttentionArea {
@@ -675,10 +680,10 @@ model BodyAttentionArea {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("BodyAttentionAreaCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("BodyAttentionAreaUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("BodyAttentionAreaCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("BodyAttentionAreaUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model MealType {
@@ -688,10 +693,10 @@ model MealType {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("MealTypeCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("MealTypeUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("MealTypeCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("MealTypeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   meals       Meal[]
 }
 
@@ -710,10 +715,10 @@ model Meal {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("MealCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("MealUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("MealCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("MealUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model BadHabit {
@@ -725,10 +730,10 @@ model BadHabit {
 
   createdById Int?
   updatedById Int?
-  createdBy   User?     @relation("BadHabitCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("BadHabitUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   User?    @relation("BadHabitCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("BadHabitUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model WaterTracker {
@@ -802,12 +807,44 @@ model Payment {
   updatedAt DateTime @updatedAt
 }
 
+model FriendRequest {
+  id Int @id @default(autoincrement())
+
+  senderId Int
+  sender   Member @relation("MemberFriendRequestSender", fields: [senderId], references: [id])
+
+  receiverId Int
+  receiver   Member @relation("MemberFriendRequestReceiver", fields: [receiverId], references: [id])
+
+  status FriendRequestStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+}
+
+model Friend {
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation("MemberFriends", fields: [memberId], references: [id])
+
+  friendId Int
+  friend   Member @relation("MemberFriend", fields: [friendId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, friendId])
+}
+
 model Notification {
-  id Int @id @default(autoincrement()) 
-  title String
+  id      Int              @id @default(autoincrement())
+  title   String
   message String
-  type NotificationType @default(INFO)
-  status Status @default(ACTIVE)
+  type    NotificationType @default(INFO)
+  status  Status           @default(ACTIVE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -817,7 +854,13 @@ enum NotificationType {
   INFO
   WARNING
   ERROR
-} 
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
 
 enum PaymentRequestType {
   MEMBER_PLAN_UPGRADE

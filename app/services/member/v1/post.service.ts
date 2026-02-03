@@ -9,14 +9,12 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
-import { Prisma, PrivencyType, Status } from "@prisma/client";
+import { Prisma, PrivencyType } from "@prisma/client";
 
 const feedWhere = {
   privencyType: PrivencyType.PUBLIC,
-  status: Status.ACTIVE,
 } as const;
 
-/** Member API: always ACTIVE + PUBLIC, merge with scope filters (no status in scope) */
 const memberPostWhere = (where?: Prisma.PostWhereInput) => ({
   ...feedWhere,
   ...where,
@@ -32,6 +30,12 @@ const memberInclude = {
       profile: {
         select: { profilePhoto: true },
       },
+      memberType: {
+        select: {
+          id: true,
+          name: true,
+        },
+      }
     },
   },
 };
@@ -113,6 +117,7 @@ class PostService {
     const tag = await prisma.tag.findUnique({
       where: { id: tagId },
     });
+
     if (!tag) {
       throw new ValidationException("Failed to create post", [
         { field: "tagId", issue: "Tag is not existed" },
@@ -122,6 +127,7 @@ class PostService {
     const mediaFiles = (files ?? []).filter(
       (f: Express.Multer.File) => f.fieldname === "media"
     );
+
     if (mediaFiles.length === 0) {
       throw new ValidationException("Failed to create post", [
         { field: "media", issue: "Media files are required" },
@@ -141,8 +147,7 @@ class PostService {
         tagId,
         privencyType: privencyType ?? PrivencyType.PUBLIC,
         media,
-        memberId,
-        status: Status.ACTIVE,
+        memberId
       },
     });
 
@@ -158,11 +163,13 @@ class PostService {
     const { content, tagId, privencyType } = updatePostInput;
 
     const existingPost = await prisma.post.findUnique({
-      where: { id, status: Status.ACTIVE },
+      where: { id },
     });
+
     if (!existingPost) {
       throw new BadRequestException("Post not found");
     }
+
     if (existingPost.memberId !== memberId) {
       throw new ForbiddenException("You can only update your own posts");
     }
@@ -171,6 +178,7 @@ class PostService {
       const tag = await prisma.tag.findUnique({
         where: { id: tagId },
       });
+
       if (!tag) {
         throw new ValidationException("Failed to update post", [
           { field: "tagId", issue: "Tag is not existed" },
@@ -182,25 +190,21 @@ class PostService {
     const mediaFiles = (files ?? []).filter(
       (f: Express.Multer.File) => f.fieldname === "media"
     );
-    if (mediaFiles.length > 0) {
-      media = await Promise.all(
-        mediaFiles.map(async (file) => {
-          const { fileUrl } = await upload(file, "post");
-          return fileUrl;
-        })
-      );
-    }
 
-    const mediaValue =
-      media.length > 0 ? media : ((existingPost.media as string[]) ?? []);
+    media = await Promise.all(
+      mediaFiles.map(async (file) => {
+        const { fileUrl } = await upload(file, "post");
+        return fileUrl;
+      })
+    );
 
     await prisma.post.update({
       where: { id },
       data: {
-        content: content ?? existingPost.content,
+        content: (content ?? existingPost.content) as Prisma.InputJsonValue,
         tagId: tagId ?? existingPost.tagId,
         privencyType: privencyType ?? existingPost.privencyType,
-        media: mediaValue,
+        media
       },
     });
 
@@ -209,7 +213,7 @@ class PostService {
 
   async destroy(id: number, memberId: number) {
     const post = await prisma.post.findFirst({
-      where: { id, status: Status.ACTIVE },
+      where: { id },
     });
 
     if (!post) {

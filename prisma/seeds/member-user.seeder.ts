@@ -1,3 +1,4 @@
+import { Gender } from "@prisma/client";
 import { generateMemberCode, hashPassword } from "../../app/helpers/helper";
 import prisma from "../client";
 
@@ -9,6 +10,9 @@ const memberUserSeeder = async () => {
       name: "Member",
       email: "member@member.com",
       password: hashPassword("Member@123"),
+      phone: "0123456789",
+      dob: new Date("1990-01-01"),
+      gender: Gender.MALE,
     },
   ];
 
@@ -23,6 +27,11 @@ const memberUserSeeder = async () => {
         data: {
           name: memberUser.name,
           password: memberUser.password,
+          profile: {
+            create: {
+              gender: memberUser.gender,
+            },
+          }
         },
       });
     } else {
@@ -32,6 +41,11 @@ const memberUserSeeder = async () => {
           email: memberUser.email,
           code: await generateMemberCode(),
           password: memberUser.password,
+          profile: {
+            create: {
+              gender: memberUser.gender,
+            },
+          }
         },
       });
     }

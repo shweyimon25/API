@@ -1,6 +1,5 @@
 import { Prisma, Day, Gender } from "@prisma/client";
 
-/** Member workout scope: no status filter – member API always returns ACTIVE workouts only */
 export interface MemberWorkoutScopeQuery {
   name?: string;
   gender?: string;

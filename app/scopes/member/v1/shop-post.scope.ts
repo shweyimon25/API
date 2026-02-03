@@ -1,6 +1,5 @@
 import { Prisma } from "@prisma/client";
 
-/** Member shop-post scope: no status filter – member API only returns posts from ACTIVE shops */
 export interface MemberShopPostScopeQuery {
     caption?: string;
     shopId?: string;

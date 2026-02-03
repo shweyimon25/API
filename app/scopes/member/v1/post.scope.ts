@@ -1,6 +1,5 @@
 import { Prisma } from "@prisma/client";
 
-/** Member post scope: no status filter – member API always returns ACTIVE posts only */
 export interface MemberPostScopeQuery {
     content?: string;
     tagId?: string;
@@ -15,13 +14,14 @@ export const memberPostScope = (query: MemberPostScopeQuery): Prisma.PostWhereIn
 
     if (content) {
         where.content = {
-            contains: content,
-            mode: "insensitive",
+            equals: JSON.stringify(content)
         };
     }
+
     if (tagId) {
         where.tagId = +tagId;
     }
+
     if (fromDate || toDate) {
         where.createdAt = {};
         if (fromDate) {
