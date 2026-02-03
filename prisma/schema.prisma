@@ -270,6 +270,19 @@ model Member {
   friendsOf           Friend[]             @relation("MemberFriend")
   friendRequests      FriendRequest[]      @relation("MemberFriendRequestSender")
   friendRequestsOf    FriendRequest[]      @relation("MemberFriendRequestReceiver")
+  memberFcmTokens     MemberFcmToken[]
+}
+
+model MemberFcmToken {
+  id Int @id @default(autoincrement())
+  memberId Int
+  member Member @relation(fields: [memberId], references: [id])
+  token String
+  deviceType DeviceType @default(ANDROID)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, token])
 }
 
 model OTP {
@@ -882,4 +895,10 @@ enum PaymentStatus {
 enum Status {
   ACTIVE
   INACTIVE
+}
+
+enum DeviceType {
+  ANDROID
+  IOS
+  WEB
 }

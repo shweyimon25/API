@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import prisma from "../../../../prisma/client";
 import { validater } from "../../../helpers/validator";
 import {
+  BadRequestException,
   UnauthorizedException,
   ValidationException,
 } from "../../../helpers/exceptions";
@@ -19,7 +20,7 @@ import {
 } from "../../../schemas/member/v1/auth.schema";
 import { ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
-import { ProfileResource } from "../../../resources/member/v1/member-profile/member-profile.resource";
+import { ProfileResource } from "../../../resources/member/v1/profile/profile.resource";
 
 class AuthController {
   private authService: AuthService;
@@ -69,7 +70,10 @@ class AuthController {
 
     const { otp, expiresAt } = generateOTP();
 
-    // Check existing email
+    // Check if member already exists
+    await this.authService.checkDuplicateMember(data.providerType, data.providerValue);
+
+    // Check existing email otp
     if (data.providerType === ProviderType.EMAIL) {
       const existingOtp = await this.authService.updateOrCreateOtpByEmail(data.providerValue, otp, expiresAt);
       return successResponse(res, "OTP requested successfully", {
@@ -78,7 +82,7 @@ class AuthController {
       });
     }
 
-    // Check existing phone
+    // Check existing phone otp
     if (data.providerType === ProviderType.PHONE) {
       const existingOtp = await this.authService.updateOrCreateOtpByPhone(data.providerValue, otp, expiresAt);
 
@@ -180,6 +184,22 @@ class AuthController {
         providerTypes: true,
       },
     });
+
+    if (data.fcmToken) {
+      await prisma.memberFcmToken.upsert({
+        where: {
+          memberId_token: { memberId: member.id, token: data.fcmToken },
+        },
+        create: {
+          memberId: member.id,
+          token: data.fcmToken,
+          deviceType: data.deviceType,
+        },
+        update: {
+          deviceType: data.deviceType,
+        },
+      });
+    }
 
     await prisma.oTP.update({
       where: {

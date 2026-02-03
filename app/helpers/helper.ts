@@ -116,3 +116,7 @@ export const generateTimeAgo = (date: Date) => {
   }
   return `${Math.floor(diffInYears)} years ago`;
 };
+
+export const generateFcmToken = async () => {
+  
+};

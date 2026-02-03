@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ProviderType } from "@prisma/client";
+import { DeviceType, ProviderType } from "@prisma/client";
 
 export const requestOtpSchema = z
   .object({
@@ -70,6 +70,12 @@ export const signUpSchema = z
         }
       ),
     passwordConfirm: z.string(),
+    fcmToken: z.string({ message: "FCM token is required" }).optional(),
+    deviceType: z.enum([
+      DeviceType.ANDROID,
+      DeviceType.IOS,
+      DeviceType.WEB,
+    ], { message: "Device type must be ANDROID | IOS | WEB" })
   })
   .refine((data) => {
     if (data.providerType === ProviderType.EMAIL) {

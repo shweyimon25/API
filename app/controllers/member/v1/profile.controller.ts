@@ -9,7 +9,7 @@ import {
 import ProfileService from "../../../services/member/v1/profile.service";
 import { Request, Response } from "express";
 import { updateBodyMeasurementsSchema } from "../../../schemas/member/v1/auth.schema";
-import { ProfileResource } from "../../../resources/member/v1/member-profile/member-profile.resource";
+import { ProfileResource } from "../../../resources/member/v1/profile/profile.resource";
 
 class ProfileController {
   private profileService: ProfileService;

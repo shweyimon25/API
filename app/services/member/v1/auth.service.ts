@@ -6,14 +6,13 @@ import { sendOTPEmail } from "../../../helpers/send-mail";
 
 class AuthService {
     async findActivatedMember(providerType: ProviderType, providerValue: string) {
+        const where =
+            providerType === ProviderType.EMAIL
+                ? { email: providerValue, status: Status.ACTIVE }
+                : { phone: providerValue, status: Status.ACTIVE };
+
         const member = await prisma.member.findFirst({
-            where: {
-                OR: [
-                    { email: providerType === ProviderType.EMAIL ? providerValue : null },
-                    { phone: providerType === ProviderType.PHONE ? providerValue : null },
-                ],
-                status: Status.ACTIVE,
-            },
+            where,
             include: {
                 profile: true,
                 memberType: true,
@@ -23,6 +22,7 @@ class AuthService {
                     },
                 },
                 providerTypes: true,
+                memberFcmTokens: true,
             },
         });
 
@@ -126,38 +126,34 @@ class AuthService {
     }
 
     async findPendingOtp(providerType: ProviderType, providerValue: string) {
+        const where =
+            providerType === ProviderType.EMAIL
+                ? { email: providerValue, isVerified: false, isUsed: false }
+                : { phone: providerValue, isVerified: false, isUsed: false };
+
         return await prisma.oTP.findFirst({
-            where: {
-                OR: [
-                    { email: providerType === ProviderType.EMAIL ? providerValue : null },
-                    { phone: providerType === ProviderType.PHONE ? providerValue : null },
-                ],
-                isVerified: false,
-                isUsed: false,
-            },
+            where,
         });
     }
 
     async checkDuplicateMember(providerType: ProviderType, providerValue: string) {
+        const where =
+            providerType === ProviderType.EMAIL
+                ? { email: providerValue }
+                : { phone: providerValue };
 
         const member = await prisma.member.findFirst({
-            where: {
-                OR: [
-                    { email: providerType === ProviderType.EMAIL ? providerValue : null },
-                    { phone: providerType === ProviderType.PHONE ? providerValue : null },
-                ],
-            },
+            where,
         });
 
         if (member) {
             throw new ValidationException("Failed to sign up", [
                 {
                     field: "providerValue",
-                    issue: `${providerType === ProviderType.EMAIL ? 'Email' : 'Phone'} is already registar`
+                    issue: `${providerType === ProviderType.EMAIL ? "Email" : "Phone"} is already registered`,
                 },
             ]);
         }
-
     }
 
     async validateOtpForSignUp(providerType: ProviderType, providerValue: string, otp: string) {

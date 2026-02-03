@@ -13,6 +13,7 @@ export class MemberResource {
       status: member.status,
       profile: member.profile,
       providerTypes: member.providerTypes?.map((item: { providerType: ProviderType }) => item.providerType),
+      fcmTokens: member.memberFcmTokens?.map((item: { token: string }) => item.token),
       memberType: member.memberType,
       createdAt: member.createdAt,
       updatedAt: member.updatedAt,

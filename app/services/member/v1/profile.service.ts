@@ -15,10 +15,51 @@ class ProfileService {
                 name: true,
                 email: true,
                 phone: true,
-                profile: true,
-                shop: true,
-                memberType: true,
-                providerTypes: true,
+                profile: {
+                    select: {
+                        id: true,
+                        memberId: true,
+                        address: true,
+                        bio: true,
+                        gender: true,
+                        profilePhoto: true,
+                        coverPhoto: true,
+                        age: true,
+                        yearOfExp: true,
+                        reason: true,
+                        certificates: true,
+                        photos: true,
+                    }
+                },
+                shop: {
+                    select: {
+                        id: true,
+                        name: true,
+                        logo: true,
+                        memberId: true,
+                    }
+                },
+                memberType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                providerTypes: {
+                    select: {
+                        id: true,
+                        memberId: true,
+                        providerType: true,
+                    }
+                },
+                memberFcmTokens: {
+                    select: {
+                        id: true,
+                        memberId: true,
+                        token: true,
+                        deviceType: true,
+                    }
+                },
                 language: true,
                 theme: true,
                 createdAt: true,

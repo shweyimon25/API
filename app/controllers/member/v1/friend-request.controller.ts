@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { Member } from "@prisma/client";
-import FriendRequestService from "../../../services/member/v1/friend-request.service";
 import { successResponse } from "../../../helpers/response";
 import { validater } from "../../../helpers/validator";
 import { ValidationException } from "../../../helpers/exceptions";
@@ -12,6 +11,7 @@ import {
     FriendRequestResource,
 } from "../../../resources/member/v1/friend-request/friend-request.resource";
 import { FriendRequestCollection } from "../../../resources/member/v1/friend-request/friend-request.collection";
+import FriendRequestService from "../../../services/member/v1/friend-request.service";
 
 class FriendRequestController {
     private friendRequestService: FriendRequestService;
