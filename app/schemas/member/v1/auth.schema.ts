@@ -70,12 +70,8 @@ export const signUpSchema = z
         }
       ),
     passwordConfirm: z.string(),
-    fcmToken: z.string({ message: "FCM token is required" }).optional(),
-    deviceType: z.enum([
-      DeviceType.ANDROID,
-      DeviceType.IOS,
-      DeviceType.WEB,
-    ], { message: "Device type must be ANDROID | IOS | WEB" })
+    fcmToken: z.string({ message: "FCM token is required" }),
+    deviceType: z.nativeEnum(DeviceType, { message: "Device type must be ANDROID | IOS | WEB" }),
   })
   .refine((data) => {
     if (data.providerType === ProviderType.EMAIL) {
@@ -100,6 +96,8 @@ export const sigInSchema = z
     providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
     providerValue: z.string(),
     password: z.string({ message: "Password is required" }),
+    fcmToken: z.string({ message: "FCM token is required" }),
+    deviceType: z.nativeEnum(DeviceType, { message: "Device type must be ANDROID | IOS | WEB" }),
   })
   .refine((data) => {
     if (data.providerType === ProviderType.EMAIL) {

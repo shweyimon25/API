@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import prisma from "../../../../prisma/client";
 import { validater } from "../../../helpers/validator";
 import {
-  BadRequestException,
   UnauthorizedException,
   ValidationException,
 } from "../../../helpers/exceptions";
@@ -37,6 +36,9 @@ class AuthController {
     }
 
     const member = await this.authService.findActivatedMember(data.providerType, data.providerValue);
+
+    // Create or Update FCM Token
+    await this.authService.upsertFcmToken(member.id, data.fcmToken, data.deviceType);
 
     const passwordCompress = comparePassword(data.password, member.password);
 
@@ -176,30 +178,55 @@ class AuthController {
         email: true,
         phone: true,
         code: true,
-        profile: true,
+        profile: {
+          select: {
+            id: true,
+            memberId: true,
+            address: true,
+            bio: true,
+            gender: true,
+            profilePhoto: true,
+            coverPhoto: true,
+            age: true,
+            yearOfExp: true,
+            reason: true,
+            certificates: true,
+            photos: true,
+          },
+        },
+        memberType: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        providerTypes: {
+          select: {
+            providerType: true,
+          },
+        },
+        fcmToken: {
+          select: {
+            token: true,
+            deviceType: true,
+          },
+        },
+        shop: {
+          select: {
+            id: true,
+            name: true,
+            logo: true,
+            memberId: true,
+          }
+        },
         status: true,
         createdAt: true,
         updatedAt: true,
-        memberType: true,
-        providerTypes: true,
       },
     });
 
-    if (data.fcmToken) {
-      await prisma.memberFcmToken.upsert({
-        where: {
-          memberId_token: { memberId: member.id, token: data.fcmToken },
-        },
-        create: {
-          memberId: member.id,
-          token: data.fcmToken,
-          deviceType: data.deviceType,
-        },
-        update: {
-          deviceType: data.deviceType,
-        },
-      });
-    }
+    // Create or Update FCM Token
+    await this.authService.upsertFcmToken(member.id, data.fcmToken, data.deviceType);
 
     await prisma.oTP.update({
       where: {

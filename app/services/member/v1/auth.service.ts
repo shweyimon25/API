@@ -1,4 +1,4 @@
-import { ProviderType, Status } from "@prisma/client";
+import { DeviceType, ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { BadRequestException, NotFoundException, UnauthorizedException, ValidationException } from "../../../helpers/exceptions";
 import { hashPassword } from "../../../helpers/helper";
@@ -14,15 +14,44 @@ class AuthService {
         const member = await prisma.member.findFirst({
             where,
             include: {
-                profile: true,
-                memberType: true,
+                profile: {
+                    select: {
+                        id: true,
+                        memberId: true,
+                        address: true,
+                        bio: true,
+                        gender: true,
+                        profilePhoto: true,
+                        coverPhoto: true,
+                        age: true,
+                        yearOfExp: true,
+                        reason: true,
+                        certificates: true,
+                        photos: true,
+                    },
+                },
+                memberType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
                 shop: {
                     include: {
                         shopLevel: true,
                     },
                 },
-                providerTypes: true,
-                memberFcmTokens: true,
+                providerTypes: {
+                    select: {
+                        providerType: true,
+                    },
+                },
+                fcmToken: {
+                    select: {
+                        deviceType: true,
+                        token: true,
+                    },
+                },
             },
         });
 
@@ -258,6 +287,23 @@ class AuthService {
         });
 
         return member;
+    }
+
+    async upsertFcmToken(memberId: number, token: string, deviceType: DeviceType) {
+        return await prisma.memberFcmToken.upsert({
+            where: {
+                memberId: memberId,
+            },
+            update: {
+                token: token,
+                deviceType: deviceType,
+            },
+            create: {
+                memberId: memberId,
+                token: token,
+                deviceType: deviceType,
+            },
+        });
     }
 }
 

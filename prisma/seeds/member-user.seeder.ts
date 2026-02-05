@@ -1,4 +1,4 @@
-import { Gender } from "@prisma/client";
+import { Gender, ProviderType } from "@prisma/client";
 import { generateMemberCode, hashPassword } from "../../app/helpers/helper";
 import prisma from "../client";
 
@@ -31,7 +31,12 @@ const memberUserSeeder = async () => {
             create: {
               gender: memberUser.gender,
             },
-          }
+          },
+          providerTypes: {
+            create: {
+              providerType: ProviderType.EMAIL,
+            },
+          },
         },
       });
     } else {

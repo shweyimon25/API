@@ -1,3 +1,5 @@
+import { ProviderType } from "@prisma/client";
+
 const TRAINER_MEMBER_TYPE_ID = 2;
 
 function toProfileResource(profile: any, memberTypeId: number | undefined) {
@@ -15,20 +17,20 @@ export class ProfileResource {
     const memberTypeId = member.memberType?.id ?? member.memberTypeId;
     return {
       id: member.id,
-      code: member.code ?? null,
+      code: member.code,
       name: member.name,
-      email: member.email ?? null,
-      phone: member.phone ?? null,
-      status: member.status ?? null,
-      language: member.language ?? null,
-      theme: member.theme ?? null,
+      email: member.email,
+      phone: member.phone,
+      status: member.status,
+      language: member.language,
+      theme: member.theme,
       createdAt: member.createdAt,
       updatedAt: member.updatedAt,
       profile: toProfileResource(member.profile, memberTypeId),
-      memberType: member.memberType ?? null,
-      providerTypes: member.providerTypes ?? null,
-      fcmTokens: member.memberFcmTokens ?? [],
-      shop: member.shop ?? null,
+      memberType: member.memberType,
+      providerTypes: member.providerTypes && member.providerTypes.map((item: { providerType: ProviderType }) => item.providerType),
+      fcmToken: member.fcmToken,
+      shop: member.shop,
     };
   }
 }

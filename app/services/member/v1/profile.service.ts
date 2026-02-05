@@ -52,12 +52,10 @@ class ProfileService {
                         providerType: true,
                     }
                 },
-                memberFcmTokens: {
+                fcmToken: {
                     select: {
-                        id: true,
-                        memberId: true,
-                        token: true,
                         deviceType: true,
+                        token: true,
                     }
                 },
                 language: true,
