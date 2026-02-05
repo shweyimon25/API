@@ -45,12 +45,14 @@ import memberBankInformationRoute from "./member/v1/bank-information.route";
 import memberShopRoute from "./member/v1/shop.route";
 import memberShopPostRoute from "./member/v1/shop-post.route";
 import memberShopPostCommentRoute from "./member/v1/shop-post-comment.route";
+import memberShopPostReactionRoute from "./member/v1/shop-post-reaction.route";
 import memberShopRatingRoute from "./member/v1/shop-rating.route";
 import memberShopLevelRoute from "./member/v1/shop-level.route";
 import memberWorkoutRoute from "./member/v1/workout.route";
 import memberShopLevelRequestRoute from "./member/v1/shop-level-request.route";
 import memberFriendRequestRoute from "./member/v1/friend-request.route";
 import memberFriendRoute from "./member/v1/friend.route";
+import memberPostReactionRoute from "./member/v1/post-reaction.route";
 
 const router = Router();
 
@@ -101,9 +103,11 @@ router.use("/member/v1/shops", memberShopRoute);
 router.use("/member/v1/shop-posts", memberShopPostRoute);
 router.use("/member/v1/shop-post-comments", memberShopPostCommentRoute);
 router.use("/member/v1/shop-ratings", memberShopRatingRoute);
+router.use("/member/v1/shop-post-reactions", memberShopPostReactionRoute);
 router.use("/member/v1/shop-level-requests", memberShopLevelRequestRoute);
 router.use("/member/v1/workouts", memberWorkoutRoute);
 router.use("/member/v1/friend-requests", memberFriendRequestRoute);
 router.use("/member/v1/friends", memberFriendRoute);
+router.use("/member/v1/post-reactions", memberPostReactionRoute);
 
 export default router;

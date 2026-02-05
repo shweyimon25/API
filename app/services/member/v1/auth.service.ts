@@ -7,7 +7,7 @@ import { sendOTPEmail } from "../../../helpers/send-mail";
 class AuthService {
     async findActivatedMember(providerType: ProviderType, providerValue: string) {
         const where =
-            providerType === ProviderType.EMAIL
+            providerType === ProviderType.EMAIL || providerType === ProviderType.GOOGLE
                 ? { email: providerValue, status: Status.ACTIVE }
                 : { phone: providerValue, status: Status.ACTIVE };
 
@@ -156,7 +156,7 @@ class AuthService {
 
     async findPendingOtp(providerType: ProviderType, providerValue: string) {
         const where =
-            providerType === ProviderType.EMAIL
+            providerType === ProviderType.EMAIL || providerType === ProviderType.GOOGLE
                 ? { email: providerValue, isVerified: false, isUsed: false }
                 : { phone: providerValue, isVerified: false, isUsed: false };
 
@@ -167,7 +167,7 @@ class AuthService {
 
     async checkDuplicateMember(providerType: ProviderType, providerValue: string) {
         const where =
-            providerType === ProviderType.EMAIL
+            providerType === ProviderType.EMAIL || providerType === ProviderType.GOOGLE
                 ? { email: providerValue }
                 : { phone: providerValue };
 
@@ -179,7 +179,7 @@ class AuthService {
     }
 
     async validateOtpForSignUp(providerType: ProviderType, providerValue: string, otp: string) {
-        const whereClause = providerType === ProviderType.EMAIL
+        const whereClause = providerType === ProviderType.EMAIL || providerType === ProviderType.GOOGLE
             ? { email: providerValue, otp }
             : { phone: providerValue, otp };
 
@@ -220,7 +220,7 @@ class AuthService {
     /** Forgot password: find OTP by provider, check not expired and otp matches, return OTP (controller will set isVerified) */
     async validateOtpForForgotPasswordVerify(providerType: ProviderType, providerValue: string, otp: string) {
         const whereClause =
-            providerType === ProviderType.EMAIL
+            providerType === ProviderType.EMAIL || providerType === ProviderType.GOOGLE
                 ? { email: providerValue, otp, isVerified: false, isUsed: false }
                 : { phone: providerValue, otp, isVerified: false, isUsed: false };
 
@@ -246,7 +246,7 @@ class AuthService {
     /** Forgot password reset: OTP must be verified, then update member password and mark OTP used */
     async resetPasswordWithOtp(providerType: ProviderType, providerValue: string, otp: string, newPassword: string) {
         const whereClause =
-            providerType === ProviderType.EMAIL
+            providerType === ProviderType.EMAIL || providerType === ProviderType.GOOGLE
                 ? { email: providerValue, otp, isVerified: true }
                 : { phone: providerValue, otp, isVerified: true };
 
