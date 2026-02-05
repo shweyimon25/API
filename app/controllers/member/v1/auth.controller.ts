@@ -16,6 +16,7 @@ import {
   forgotPasswordRequestOtpSchema,
   forgotPasswordVerifyOtpSchema,
   forgotPasswordResetPasswordSchema,
+  signInWithGoogleSchema,
 } from "../../../schemas/member/v1/auth.schema";
 import { ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
@@ -26,6 +27,83 @@ class AuthController {
 
   constructor() {
     this.authService = new AuthService();
+  }
+
+  async signInWithGoogle(req: Request, res: Response) {
+    const { data, error, success } = await validater(signInWithGoogleSchema, req.body);
+
+    if (!success) {
+      throw new ValidationException("Failed to sign in with Google", error);
+    }
+
+    const existingEmail = await prisma.member.findFirst({
+      where: {
+        email: data.email
+      },
+      include: {
+        providerTypes: true,
+        memberType: true,
+      }
+    });
+
+    if (existingEmail) {
+      // 1. Check if they already have GOOGLE linked
+      const hasGoogle = existingEmail.providerTypes.some(p => p.providerType === ProviderType.GOOGLE);
+
+      // 2. Only add GOOGLE if they don't have it yet
+      if (!hasGoogle) {
+        await prisma.member.update({
+          where: { id: existingEmail.id },
+          data: {
+            providerTypes: {
+              create: {
+                providerType: ProviderType.GOOGLE,
+              }
+            }
+          }
+        });
+      }
+
+      const token: string = generateToken(
+        { id: existingEmail.id, loginType: "member" },
+        "30d"
+      );
+
+      // Note: You might want to re-fetch the user or manually update the object 
+      // if ProfileResource needs the newly added providerType in the response.
+      return successResponse(res, "User sign in successfully", {
+        user: ProfileResource.toResource(existingEmail),
+        token,
+      });
+    }
+    
+    const member = await prisma.member.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        code: await generateMemberCode(),
+        password: hashPassword("P@55w0rd"),
+        status: Status.ACTIVE,
+        providerTypes: {
+          create: {
+            providerType: ProviderType.GOOGLE
+          }
+        }
+      }
+    });
+
+    const token: string = generateToken(
+      {
+        id: member.id,
+        loginType: "member",
+      },
+      "30d"
+    );
+
+    return successResponse(res, "User sign in successfully", {
+      user: ProfileResource.toResource(member),
+      token,
+    });
   }
 
   async signIn(req: Request, res: Response) {
@@ -73,7 +151,16 @@ class AuthController {
     const { otp, expiresAt } = generateOTP();
 
     // Check if member already exists
-    await this.authService.checkDuplicateMember(data.providerType, data.providerValue);
+    const isDuplicate = await this.authService.checkDuplicateMember(data.providerType, data.providerValue);
+
+    if (isDuplicate) {
+      throw new ValidationException("Failed to request OTP", [
+        {
+          field: "providerValue",
+          issue: `${data.providerType === ProviderType.EMAIL ? "Email" : "Phone"} is already registered`,
+        },
+      ]);
+    }
 
     // Check existing email otp
     if (data.providerType === ProviderType.EMAIL) {
@@ -144,7 +231,16 @@ class AuthController {
       throw new ValidationException("Failed to sign up", error);
     }
 
-    await this.authService.checkDuplicateMember(data.providerType, data.providerValue);
+    const isDuplicate = await this.authService.checkDuplicateMember(data.providerType, data.providerValue);
+
+    if (isDuplicate) {
+      throw new ValidationException("Failed to sign up", [
+        {
+          field: "providerValue",
+          issue: `${data.providerType === ProviderType.EMAIL ? "Email" : "Phone"} is already registered`,
+        },
+      ]);
+    }
 
     const existingOtp = await this.authService.validateOtpForSignUp(data.providerType, data.providerValue, data.otp);
 

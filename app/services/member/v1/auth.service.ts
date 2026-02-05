@@ -175,14 +175,7 @@ class AuthService {
             where,
         });
 
-        if (member) {
-            throw new ValidationException("Failed to sign up", [
-                {
-                    field: "providerValue",
-                    issue: `${providerType === ProviderType.EMAIL ? "Email" : "Phone"} is already registered`,
-                },
-            ]);
-        }
+        return member ? true : false;
     }
 
     async validateOtpForSignUp(providerType: ProviderType, providerValue: string, otp: string) {

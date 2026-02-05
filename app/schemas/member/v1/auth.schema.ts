@@ -169,9 +169,21 @@ export const forgotPasswordResetPasswordSchema = z
     path: ["newPasswordConfirm"],
   });
 
+export const signInWithGoogleSchema = z.object({
+  email: z.string({
+    message: "Email is required"
+  }).email({
+    message: "Email is invalid"
+  }),
+  name: z.string({
+    message: "Name is required"
+  })
+});
+
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type SignInInput = z.infer<typeof sigInSchema>;
+export type SignInWithGoogleInput = z.infer<typeof signInWithGoogleSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type UpdateBodyMeasurementsInput = z.infer<typeof updateBodyMeasurementsSchema>;
 export type ForgotPasswordRequestOtpInput = z.infer<typeof forgotPasswordRequestOtpSchema>;

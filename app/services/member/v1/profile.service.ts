@@ -113,7 +113,7 @@ class ProfileService {
             throw new NotFoundException("Member not found");
         }
 
-        const isPasswordCorrect = comparePassword(oldPassword, existingMember.password);
+        const isPasswordCorrect = comparePassword(oldPassword, existingMember.password ?? "");
 
         if (!isPasswordCorrect) {
             throw new ValidationException("Failed to change password", [
