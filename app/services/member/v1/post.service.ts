@@ -104,7 +104,28 @@ class PostService {
     if (!post) {
       throw new BadRequestException("Post not found");
     }
-    return post;
+    const updated = await prisma.post.update({
+      where: { id },
+      data: { viewCount: { increment: 1 } },
+      include: {
+        ...tagInclude,
+        ...memberInclude,
+        postComments: {
+          include: {
+            member: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                code: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+    return updated;
   }
 
   async create(

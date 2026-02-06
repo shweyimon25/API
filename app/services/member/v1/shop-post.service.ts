@@ -1,7 +1,8 @@
 import { Prisma, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-import { ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
+import { ForbiddenException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { CreateShopPostInput, UpdateShopPostInput } from "../../../schemas/member/v1/shop-post.schema";
+import { upload } from "../../../helpers/media-upload";
 
 const shopPostInclude = {
     shop: {
@@ -68,11 +69,16 @@ class ShopPostService {
             throw new NotFoundException("Shop post not found");
         }
 
-        return shopPost;
+        const updated = await prisma.shopPost.update({
+            where: { id },
+            data: { viewCount: { increment: 1 } },
+            include: shopPostInclude,
+        });
+        return updated;
     }
 
-    async create(createShopPostInput: CreateShopPostInput, memberId: number) {
-        const { caption, images, shopId } = createShopPostInput;
+    async create(createShopPostInput: CreateShopPostInput, files: Express.Multer.File[], memberId: number) {
+        const { caption, shopId } = createShopPostInput;
 
         const shop = await prisma.shop.findUnique({
             where: { id: shopId },
@@ -81,18 +87,38 @@ class ShopPostService {
         if (!shop) {
             throw new NotFoundException("Shop not found");
         }
+
         if (shop.memberId !== memberId) {
             throw new ForbiddenException("You can only create posts for your own shop");
         }
 
+        const imageFiles = (files ?? []).filter(
+            (f: Express.Multer.File) => f.fieldname === "images"
+        );
+
+        if (imageFiles.length === 0) {
+            throw new ValidationException("Failed to create post", [
+                { field: "images", issue: "Images files are required" },
+            ]);
+        }
+
+        const imageUrls = await Promise.all(
+            imageFiles.map(async (file: Express.Multer.File) => {
+                const { fileUrl } = await upload(file, "shop-post");
+                return fileUrl;
+            })
+        );
+
         const shopPost = await prisma.shopPost.create({
-            data: { caption, images, shopId },
+            data: { caption, images: imageUrls, shopId },
         });
 
         return this.findOne(shopPost.id);
     }
 
-    async update(id: number, updateShopPostInput: UpdateShopPostInput, memberId: number) {
+    async update(id: number, updateShopPostInput: UpdateShopPostInput, files: Express.Multer.File[], memberId: number) {
+        const { caption } = updateShopPostInput;
+
         const existing = await prisma.shopPost.findUnique({
             where: { id },
             include: { shop: true },
@@ -101,14 +127,31 @@ class ShopPostService {
         if (!existing) {
             throw new NotFoundException("Shop post not found");
         }
+
         if (existing.shop.memberId !== memberId) {
             throw new ForbiddenException("You can only update your own shop posts");
         }
 
-        const { caption } = updateShopPostInput;
+        const imageFiles = (files ?? []).filter(
+            (f: Express.Multer.File) => f.fieldname === "images"
+        );
+
+        if (imageFiles.length === 0) {
+            throw new ValidationException("Failed to update shop post", [
+                { field: "images", issue: "Images files are required" },
+            ]);
+        }
+
+        const imageUrls = await Promise.all(
+            imageFiles.map(async (file: Express.Multer.File) => {
+                const { fileUrl } = await upload(file, "shop-post");
+                return fileUrl;
+            })
+        );
+
         await prisma.shopPost.update({
             where: { id },
-            data: { caption: caption ?? existing.caption },
+            data: { caption: caption ?? existing.caption, images: imageUrls },
         });
 
         return this.findOne(id);

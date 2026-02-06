@@ -11,6 +11,7 @@ export class PostResource {
         : null,
       privencyType: post.privencyType,
       media: post.media,
+      viewCount: post.viewCount ?? 0,
       commentsCount: post._count?.postComments || 0,
       comments: post.postComments
         ? post.postComments.map((comment: any) => ({

@@ -53,7 +53,8 @@ class ShopPostController {
         }
 
         const memberId = (req.user as Member).id;
-        const shopPost = await this.shopPostService.create(data, memberId);
+        const shopPost = await this.shopPostService.create(data, req.files as Express.Multer.File[], memberId);
+
         return successResponse(
             res,
             "Shop post created successfully",
@@ -68,7 +69,7 @@ class ShopPostController {
         }
 
         const memberId = (req.user as Member).id;
-        const shopPost = await this.shopPostService.update(+req.params.id, data, memberId);
+        const shopPost = await this.shopPostService.update(+req.params.id, data, req.files as Express.Multer.File[], memberId);
         return successResponse(
             res,
             "Shop post updated successfully",

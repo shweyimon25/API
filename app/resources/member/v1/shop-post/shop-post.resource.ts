@@ -5,6 +5,7 @@ export class ShopPostResource {
             caption: shopPost.caption,
             images: shopPost.images,
             shop: shopPost.shop ?? null,
+            viewCount: shopPost.viewCount ?? 0,
             createdAt: shopPost.createdAt,
             updatedAt: shopPost.updatedAt,
         };

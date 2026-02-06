@@ -465,9 +465,10 @@ model ShopRating {
 }
 
 model ShopPost {
-  id      Int    @id @default(autoincrement())
-  caption String
-  images  Json
+  id        Int    @id @default(autoincrement())
+  caption   String
+  images    Json
+  viewCount Int    @default(0)
 
   shop   Shop @relation(fields: [shopId], references: [id])
   shopId Int
@@ -529,6 +530,7 @@ model Post {
   privencyType PrivencyType @default(PUBLIC)
   timeAgo      DateTime     @default(now())
   media        Json
+  viewCount    Int          @default(0)
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id])

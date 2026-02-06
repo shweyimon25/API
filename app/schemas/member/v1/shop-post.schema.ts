@@ -5,7 +5,6 @@ export const createShopPostSchema = z.object({
     caption: z.string({
         message: "Caption is required"
     }),
-    images: z.array(z.string()).min(1, { message: "Images are required" }),
     shopId: z.coerce.number().min(1, { message: "Shop is required" }),
 });
 
