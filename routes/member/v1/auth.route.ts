@@ -54,9 +54,16 @@ router.post("/forgot-password/reset-password", [
 
 router.post("/sign-in/google", [
   asyncHandler(
-    async (req: Request, res: Response) => 
+    async (req: Request, res: Response) =>
       await authController.signInWithGoogle(req, res)
   )
-])
+]);
+
+router.post("/sign-in/facebook", [
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await authController.signInWithFacebook(req, res)
+  )
+]);
 
 export default router;

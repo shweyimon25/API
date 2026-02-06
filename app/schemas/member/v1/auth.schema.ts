@@ -180,6 +180,17 @@ export const signInWithGoogleSchema = z.object({
   })
 });
 
+export const signInWithFacebookSchema = z.object({
+  phone: z.string({
+    message: "Phone is required"
+  }).min(9, { message: "Phone number is required" })
+    .max(15, { message: "Phone number must be at most 15 characters" })
+    .regex(/^[0-9]+$/, { message: "Phone number must contain only numbers" }),
+  name: z.string({
+    message: "Name is required"
+  }),
+});
+
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type SignInInput = z.infer<typeof sigInSchema>;

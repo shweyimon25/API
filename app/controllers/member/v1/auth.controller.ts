@@ -17,6 +17,7 @@ import {
   forgotPasswordVerifyOtpSchema,
   forgotPasswordResetPasswordSchema,
   signInWithGoogleSchema,
+  signInWithFacebookSchema,
 } from "../../../schemas/member/v1/auth.schema";
 import { ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
@@ -76,7 +77,7 @@ class AuthController {
         token,
       });
     }
-    
+
     const member = await prisma.member.create({
       data: {
         name: data.name,
@@ -101,6 +102,76 @@ class AuthController {
     );
 
     return successResponse(res, "User sign in successfully", {
+      user: ProfileResource.toResource(member),
+      token,
+    });
+  }
+
+  async signInWithFacebook(req: Request, res: Response) {
+    const { data, error, success } = await validater(signInWithFacebookSchema, req.body);
+
+    if (!success) {
+      throw new ValidationException("Failed to sign in with Facebook", error);
+    }
+
+    const existingPhone = await prisma.member.findFirst({
+      where: {
+        phone: data.phone
+      },
+      include: {
+        providerTypes: true,
+        memberType: true,
+      }
+    });
+
+    if (existingPhone) {
+      const hasFacebook = existingPhone.providerTypes.some(p => p.providerType === ProviderType.FACEBOOK);
+
+      if (!hasFacebook) {
+        await prisma.member.update({
+          where: { id: existingPhone.id },
+          data: {
+            providerTypes: {
+              create: {
+                providerType: ProviderType.FACEBOOK,
+              }
+            }
+          }
+        });
+      }
+
+      const token: string = generateToken(
+        { id: existingPhone.id, loginType: "member" },
+        "30d"
+      );
+
+      return successResponse(res, "User sign in successfully", {
+        user: ProfileResource.toResource(existingPhone),
+        token,
+      });
+    }
+
+    const member = await prisma.member.create({
+      data: {
+        name: data.name,
+        phone: data.phone,
+        code: await generateMemberCode(),
+        password: hashPassword("P@55w0rd"),
+        status: Status.ACTIVE,
+        providerTypes: {
+          create: {
+            providerType: ProviderType.FACEBOOK,
+          }
+        }
+      }
+    });
+
+    const token: string = generateToken(
+      { id: member.id, loginType: "member" },
+      "30d"
+    );
+
+    return successResponse(res, "Member sign in successfully", {
       user: ProfileResource.toResource(member),
       token,
     });
