@@ -9,10 +9,12 @@ import { createServer } from "node:http";
 import "./middlewares/passport/jwt-strategy";
 import multer from "multer";
 import loggerMiddleware from "./middlewares/logger.middleware";
+import { initializeSocket } from "./socket";
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
 const server = createServer(app);
+initializeSocket(server);
 
 // Middlewares
 app.use(loggerMiddleware);

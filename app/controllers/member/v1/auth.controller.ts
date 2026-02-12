@@ -22,6 +22,7 @@ import {
 import { ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
 import { ProfileResource } from "../../../resources/member/v1/profile/profile.resource";
+import { sendSms } from "../../../helpers/send-sms";
 
 class AuthController {
   private authService: AuthService;

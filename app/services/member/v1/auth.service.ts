@@ -3,6 +3,7 @@ import prisma from "../../../../prisma/client";
 import { BadRequestException, NotFoundException, UnauthorizedException, ValidationException } from "../../../helpers/exceptions";
 import { hashPassword } from "../../../helpers/helper";
 import { sendOTPEmail } from "../../../helpers/send-mail";
+import { generateAuthToken, sendSms } from "../../../helpers/send-sms";
 
 class AuthService {
     async findActivatedMember(providerType: ProviderType, providerValue: string) {
@@ -150,6 +151,8 @@ class AuthService {
                 },
             });
         }
+
+        await sendSms(phone, `Your OTP is ${otp}`);
 
         return existingOtp;
     }

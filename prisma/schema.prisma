@@ -255,24 +255,26 @@ model Member {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  providerTypes       MemberProviderType[]
-  postComments        PostComment[]
-  payments            Payment[]
-  shop                Shop?
-  shopRatings         ShopRating[]
-  shopPostComments    ShopPostComment[]
-  waterTrackers       WaterTracker[]
-  memberRequests      MemberRequest[]
-  bodyMeasurement     BodyMeasurement?
-  shopUpgradeRequests ShopUpgradeRequest[]
-  posts               Post[]
-  friends             Friend[]             @relation("MemberFriends")
-  friendsOf           Friend[]             @relation("MemberFriend")
-  friendRequests      FriendRequest[]      @relation("MemberFriendRequestSender")
-  friendRequestsOf    FriendRequest[]      @relation("MemberFriendRequestReceiver")
-  fcmToken            MemberFcmToken?
-  postReactions       PostReaction[]
-  shopPostReactions   ShopPostReaction[]
+  providerTypes            MemberProviderType[]
+  postComments             PostComment[]
+  payments                 Payment[]
+  shop                     Shop?
+  shopRatings              ShopRating[]
+  shopPostComments         ShopPostComment[]
+  waterTrackers            WaterTracker[]
+  memberRequests           MemberRequest[]
+  bodyMeasurement          BodyMeasurement?
+  shopUpgradeRequests      ShopUpgradeRequest[]
+  posts                    Post[]
+  friends                  Friend[]                  @relation("MemberFriends")
+  friendsOf                Friend[]                  @relation("MemberFriend")
+  friendRequests           FriendRequest[]           @relation("MemberFriendRequestSender")
+  friendRequestsOf         FriendRequest[]           @relation("MemberFriendRequestReceiver")
+  fcmToken                 MemberFcmToken?
+  postReactions            PostReaction[]
+  shopPostReactions        ShopPostReaction[]
+  conversationParticipants ConversationParticipant[]
+  messages                 Message[]
 }
 
 model MemberFcmToken {
@@ -893,6 +895,59 @@ model Notification {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Conversation {
+  id        Int              @id @default(autoincrement())
+  type      ConversationType @default(PRIVATE)
+  name      String? // For group chats
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+enum ConversationType {
+  PRIVATE
+  GROUP
+}
+
+model ConversationParticipant {
+  id             Int             @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  memberId       Int
+  member         Member          @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  role           ParticipantRole @default(MEMBER)
+  joinedAt       DateTime        @default(now())
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, memberId])
+}
+
+enum ParticipantRole {
+  ADMIN
+  MEMBER
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       Int
+  sender         Member       @relation(fields: [senderId], references: [id])
+  content        String       @db.Text()
+  type           MessageType  @default(TEXT)
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
 }
 
 enum NotificationType {
