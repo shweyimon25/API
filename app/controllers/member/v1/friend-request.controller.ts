@@ -63,7 +63,7 @@ class FriendRequestController {
         );
         return successResponse(
             res,
-            "Friend request fetched successfully",
+            "Friend request details successfully",
             FriendRequestResource.toResource(request)
         );
     }
@@ -78,6 +78,7 @@ class FriendRequestController {
         }
         const memberId = (req.user as Member).id;
         const request = await this.friendRequestService.create(data, memberId);
+
         return successResponse(
             res,
             "Friend request sent successfully",

@@ -3,6 +3,7 @@ import BankInformationService from "../../../services/member/v1/bank-information
 import { successResponse } from "../../../helpers/response";
 import { BankInformationCollection } from "../../../resources/member/v1/bank-information/bank-information.collection";
 import { BankInformationResource } from "../../../resources/member/v1/bank-information/bank-information.resource";
+import { bankInformationScope } from "../../../scopes/member/v1/bank-information.scope";
 
 class BankInformationController {
   private bankInformationService: BankInformationService;
@@ -12,24 +13,36 @@ class BankInformationController {
   }
 
   async findAll(req: Request, res: Response) {
-    const { paymentTypes, search } = req.query;
+    const { page, perPage } = req.query;
 
-    const filters: any = {};
-    if (paymentTypes) {
-      filters.paymentTypes = paymentTypes as string;
-    }
-    if (search) {
-      filters.search = search as string;
+    const where = bankInformationScope(req.query);
+
+    if (page && perPage) {
+      const bankInformations = await this.bankInformationService.findByPaginate(+page, +perPage, where);
+      return successResponse(
+        res,
+        "Bank information list successfully",
+        BankInformationCollection.withPagination(bankInformations)
+      );
     }
 
-    const bankInformations = await this.bankInformationService.findAll(
-      Object.keys(filters).length > 0 ? filters : undefined
-    );
+    const bankInformations = await this.bankInformationService.findAll(where);
 
     return successResponse(
       res,
       "Bank information list successfully",
       BankInformationCollection.toCollection(bankInformations)
+    );
+  }
+
+  async findCommonAll(req: Request, res: Response) {
+    const where = bankInformationScope(req.query);
+    console.log(where);
+    const bankInformations = await this.bankInformationService.findCommonAll(where);
+    return successResponse(
+      res,
+      "Bank information list successfully",
+      BankInformationCollection.toCommonCollection(bankInformations)
     );
   }
 
