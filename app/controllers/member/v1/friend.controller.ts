@@ -4,6 +4,7 @@ import FriendService from "../../../services/member/v1/friend.service";
 import { successResponse } from "../../../helpers/response";
 import { FriendCollection } from "../../../resources/member/v1/friend/friend.collection";
 import { FriendResource } from "../../../resources/member/v1/friend/friend.resource";
+import { friendScope } from "../../../scopes/member/v1/friend.scope";
 
 class FriendController {
   private friendService: FriendService;
@@ -14,22 +15,25 @@ class FriendController {
 
   async findAll(req: Request, res: Response) {
     const { page, perPage } = req.query;
+    const where = friendScope(req.query);
     const memberId = (req.user as Member).id;
 
     if (page && perPage) {
-      const result = await this.friendService.findByPaginate(
+      const friends = await this.friendService.findByPaginate(
         memberId,
         +page,
-        +perPage
+        +perPage,
+        where
       );
+
       return successResponse(
         res,
         "Friends list successfully",
-        FriendCollection.withPagination(result)
+        FriendCollection.withPagination(friends)
       );
     }
 
-    const friends = await this.friendService.findAll(memberId);
+    const friends = await this.friendService.findAll(memberId, where);
     return successResponse(
       res,
       "Friends list successfully",
@@ -51,7 +55,7 @@ class FriendController {
   async destroy(req: Request, res: Response) {
     const memberId = (req.user as Member).id;
     const id = +req.params.id;
-    await this.friendService.remove(memberId, id);
+    await this.friendService.destroy(memberId, id);
     return successResponse(res, "Friend removed successfully");
   }
 }

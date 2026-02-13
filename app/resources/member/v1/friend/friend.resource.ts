@@ -1,12 +1,13 @@
 export class FriendResource {
-  static toResource(member: any) {
-    if (!member) return null;
+  static toResource(friend: any) {
     return {
-      id: member.id,
-      name: member.name,
-      email: member.email,
-      code: member.code,
-      profile: member.profile ?? null,
+      id: friend.id,
+      name: friend.name,
+      email: friend.email,
+      phone: friend.phone,
+      code: friend.code,
+      memberType: friend.memberType,
+      profile: friend.profile
     };
   }
 }

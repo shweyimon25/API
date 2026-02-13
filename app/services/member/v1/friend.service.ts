@@ -1,31 +1,34 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
+
+const memberProfileSelect = {
+  id: true,
+  profilePhoto: true,
+  coverPhoto: true,
+  bio: true,
+  gender: true,
+  age: true,
+}
 
 const memberSelect = {
   id: true,
   name: true,
   email: true,
+  phone: true,
   code: true,
-  profile: { select: { profilePhoto: true } },
+  memberType: true,
+  profile: {
+    select: memberProfileSelect
+  }
 };
 
-function getFriendMembers(memberId: number, rows: any[]) {
-  const seen = new Set<number>();
-  const friendMembers: any[] = [];
-  for (const f of rows) {
-    const otherId = f.memberId === memberId ? f.friendId : f.memberId;
-    if (seen.has(otherId)) continue;
-    seen.add(otherId);
-    friendMembers.push(f.memberId === memberId ? f.friend : f.member);
-  }
-  return friendMembers;
-}
-
 class FriendService {
-  async findAll(memberId: number) {
-    const allRows = await prisma.friend.findMany({
+  async findAll(memberId: number, where: Prisma.FriendWhereInput) {
+    const friends = await prisma.friend.findMany({
       where: {
         OR: [{ memberId }, { friendId: memberId }],
+        ...where
       },
       include: {
         member: { select: memberSelect },
@@ -33,11 +36,77 @@ class FriendService {
       },
       orderBy: { createdAt: "desc" },
     });
-    return getFriendMembers(memberId, allRows);
+
+    // To avoid duplicate friends when both sides have added each other
+    const uniqueFriends = new Map<number, any>();
+
+    for (const row of friends) {
+      const friend =
+        row.memberId === memberId ? row.friend : row.member;
+
+      if (!uniqueFriends.has(friend.id)) {
+        uniqueFriends.set(friend.id, {
+          ...friend,
+          friendsSince: row.createdAt,
+        });
+      }
+    }
+
+    return Array.from(uniqueFriends.values());
+  }
+
+  async findByPaginate(memberId: number, page: number, perPage: number, where: Prisma.FriendWhereInput) {
+    const friends = await prisma.friend.findMany({
+      where: {
+        OR: [{ memberId }, { friendId: memberId }],
+        ...where
+      },
+      include: {
+        member: { select: memberSelect },
+        friend: { select: memberSelect },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const totalFriends = await prisma.friend.count({
+      where: {
+        OR: [{ memberId }, { friendId: memberId }],
+      },
+    });
+
+    // To avoid duplicate friends when both sides have added each other
+    const uniqueFriends = new Map<number, any>();
+
+    for (const row of friends) {
+      const friend =
+        row.memberId === memberId ? row.friend : row.member;
+
+      if (!uniqueFriends.has(friend.id)) {
+        uniqueFriends.set(friend.id, {
+          ...friend,
+          friendsSince: row.createdAt,
+        });
+      }
+    }
+
+    return {
+      data: Array.from(uniqueFriends.values()),
+      meta: {
+        totalCount: totalFriends,
+        totalPages: Math.ceil(totalFriends / perPage),
+        currentPage: page,
+        perPage,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage:
+          page < Math.ceil(totalFriends / perPage) ? page + 1 : null,
+        hasPrevPage: page > 1,
+        hasNextPage: page < Math.ceil(totalFriends / perPage),
+      },
+    };
   }
 
   async findOne(memberId: number, id: number) {
-    const friendRecord = await prisma.friend.findFirst({
+    const friend = await prisma.friend.findFirst({
       where: {
         OR: [
           { memberId, friendId: id },
@@ -50,49 +119,19 @@ class FriendService {
       },
     });
 
-    if (!friendRecord) {
+    if (!friend) {
       throw new NotFoundException("Friend not found");
     }
-    if (friendRecord.memberId !== memberId && friendRecord.friendId !== memberId) {
+
+    if (friend.memberId !== memberId && friend.friendId !== memberId) {
       throw new ForbiddenException("You can only view your own friends");
     }
 
-    return friendRecord.memberId === memberId ? friendRecord.friend : friendRecord.member;
+    return friend.memberId === memberId ? friend.friend : friend.member;
   }
 
-  async findByPaginate(memberId: number, page: number, perPage: number) {
-    const allRows = await prisma.friend.findMany({
-      where: {
-        OR: [{ memberId }, { friendId: memberId }],
-      },
-      include: {
-        member: { select: memberSelect },
-        friend: { select: memberSelect },
-      },
-      orderBy: { createdAt: "desc" },
-    });
 
-    const friendMembers = getFriendMembers(memberId, allRows);
-    const total = friendMembers.length;
-    const start = (page - 1) * perPage;
-    const paginated = friendMembers.slice(start, start + perPage);
-
-    return {
-      data: paginated,
-      meta: {
-        totalCount: total,
-        totalPages: Math.ceil(total / perPage),
-        currentPage: page,
-        perPage,
-        prevPage: page > 1 ? page - 1 : null,
-        nextPage: page < Math.ceil(total / perPage) ? page + 1 : null,
-        hasPrevPage: page > 1,
-        hasNextPage: page < Math.ceil(total / perPage),
-      },
-    };
-  }
-
-  async remove(memberId: number, id: number) {
+  async destroy(memberId: number, id: number) {
     const friendRecord = await prisma.friend.findFirst({
       where: {
         OR: [
@@ -105,6 +144,7 @@ class FriendService {
     if (!friendRecord) {
       throw new NotFoundException("Friend not found or already removed");
     }
+
     if (friendRecord.memberId !== memberId && friendRecord.friendId !== memberId) {
       throw new ForbiddenException("You can only remove your own friends");
     }
@@ -115,6 +155,15 @@ class FriendService {
           OR: [
             { memberId, friendId: id },
             { memberId: id, friendId: memberId },
+          ],
+        },
+      }),
+
+      prisma.friendRequest.deleteMany({
+        where: {
+          OR: [
+            { senderId: memberId, receiverId: id },
+            { senderId: id, receiverId: memberId },
           ],
         },
       }),

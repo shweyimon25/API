@@ -2,7 +2,7 @@ import { FriendResource } from "./friend.resource";
 
 export class FriendCollection {
   static toCollection(res: any[]) {
-    return res.map((member) => FriendResource.toResource(member));
+    return res.map((friend) => FriendResource.toResource(friend));
   }
 
   static withPagination(res: { data: any[]; meta: any }) {

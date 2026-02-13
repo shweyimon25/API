@@ -27,6 +27,7 @@ class FriendRequestService {
     const receiver = await prisma.member.findUnique({
       where: { id: receiverId },
     });
+
     if (!receiver) {
       throw new NotFoundException("Receiver not found");
     }
@@ -36,6 +37,7 @@ class FriendRequestService {
         senderId_receiverId: { senderId, receiverId },
       },
     });
+    
     if (existingRequest) {
       if (existingRequest.status === FriendRequestStatus.PENDING) {
         throw new BadRequestException("Friend request already sent");
