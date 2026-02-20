@@ -899,6 +899,7 @@ model Notification {
 
 model Conversation {
   id        Int              @id @default(autoincrement())
+  image     String?
   type      ConversationType @default(PRIVATE)
   name      String? // For group chats
   createdAt DateTime         @default(now())

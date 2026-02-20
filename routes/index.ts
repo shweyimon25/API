@@ -53,6 +53,7 @@ import memberShopLevelRequestRoute from "./member/v1/shop-level-request.route";
 import memberFriendRequestRoute from "./member/v1/friend-request.route";
 import memberFriendRoute from "./member/v1/friend.route";
 import memberPostReactionRoute from "./member/v1/post-reaction.route";
+import memberConversationRoute from "./member/v1/conversation.route";
 
 const router = Router();
 
@@ -109,5 +110,6 @@ router.use("/member/v1/workouts", memberWorkoutRoute);
 router.use("/member/v1/friend-requests", memberFriendRequestRoute);
 router.use("/member/v1/friends", memberFriendRoute);
 router.use("/member/v1/post-reactions", memberPostReactionRoute);
+router.use("/member/v1/conversations", memberConversationRoute);
 
 export default router;
