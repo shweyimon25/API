@@ -30,6 +30,7 @@ import adminProficientLevelRoute from "./admin/v1/proficient-level.route";
 import adminBodyGoalRoute from "./admin/v1/body-goal.route";
 import adminShopLevelRequestRoute from "./admin/v1/shop-level-request.route";
 import adminCategoryRoute from "./admin/v1/category.route";
+import adminAttendanceRoute from "./admin/v1/attendance.route";
 
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
@@ -111,5 +112,6 @@ router.use("/member/v1/friend-requests", memberFriendRequestRoute);
 router.use("/member/v1/friends", memberFriendRoute);
 router.use("/member/v1/post-reactions", memberPostReactionRoute);
 router.use("/member/v1/conversations", memberConversationRoute);
+router.use("/admin/v1/attendances", adminAttendanceRoute);
 
 export default router;

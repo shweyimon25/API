@@ -78,6 +78,8 @@ model User {
   paymentsApproved            Payment[]            @relation("PaymentApprovedBy")
   shopUpgradeRequestsApproved ShopUpgradeRequest[] @relation("ShopUpgradeRequestApprovedBy")
   shopUpgradeRequestsRejected ShopUpgradeRequest[] @relation("ShopUpgradeRequestRejectedBy")
+  attendancesCreated          Attendance[]         @relation("AttendanceCreatedBy")
+  attendancesUpdated          Attendance[]         @relation("AttendanceUpdatedBy")
 }
 
 model Role {
@@ -275,6 +277,7 @@ model Member {
   shopPostReactions        ShopPostReaction[]
   conversationParticipants ConversationParticipant[]
   messages                 Message[]
+  attendances              Attendance[]
 }
 
 model MemberFcmToken {
@@ -852,6 +855,22 @@ model Payment {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Attendance {
+  id       Int      @id @default(autoincrement())
+  memberId Int
+  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date     String
+  
+  createdById Int?
+  updatedById Int?
+  createdBy   User?    @relation("AttendanceCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?    @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, date])
 }
 
 model FriendRequest {

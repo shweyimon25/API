@@ -3,7 +3,6 @@ import prisma from "../client";
 import roleSeeder from "./role.seeder";
 import permissionSeeder from "./permission.seeder";
 import adminUserSeeder from "./admin-user.seeder";
-import memberUserSeeder from "./member-user.seeder";
 import memberTypeSeeder from "./member-type.seeder";
 import proSeeder from "./pros.seeder";
 import conSeeder from "./cons.seeder";
@@ -59,7 +58,6 @@ const main = async () => {
     await adminUserSeeder();
     await roleSeeder();
     await assignAdminRole();
-    await memberUserSeeder();
     await bankInformationSeeder();
     await memberTypeSeeder();
     await shopLevelSeeder();

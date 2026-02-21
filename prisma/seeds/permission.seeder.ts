@@ -581,6 +581,28 @@ const permissionSeeder = async () => {
       name: "payment:update",
       description: "Update a payment",
     },
+
+    // Attendance
+    {
+      name: "attendance:list",
+      description: "Show all attendances",
+    },
+    {
+      name: "attendance:read",
+      description: "Show attendance details",
+    },
+    {
+      name: "attendance:create",
+      description: "Create new attendance",
+    },
+    {
+      name: "attendance:update",
+      description: "Update an attendance",
+    },
+    {
+      name: "attendance:delete",
+      description: "Delete an attendance",
+    }
   ];
 
   for (const permission of permissions) {
