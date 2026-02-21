@@ -6,6 +6,8 @@ import { conversationScope } from "../../../scopes/member/v1/conversation.scope"
 import { validater } from "../../../helpers/validator";
 import { createConversationSchema, updateConversationSchema } from "../../../schemas/member/v1/conversation.schema";
 import { ValidationException } from "../../../helpers/exceptions";
+import { ConversationCollection } from "../../../resources/member/v1/conversation/conversation.collection";
+import { ConversationResource } from "../../../resources/member/v1/conversation/conversation.resource";
 
 class ConversationController {
     private conversationService: ConversationService;
@@ -30,7 +32,7 @@ class ConversationController {
             return successResponse(
                 res,
                 "Conversations list successfully",
-                conversations
+                ConversationCollection.withPagination(conversations),
             );
         }
 
@@ -39,15 +41,24 @@ class ConversationController {
         return successResponse(
             res,
             "Conversations list successfully",
-            conversations
+            ConversationCollection.toCollection(conversations),
         );
+    }
+
+    async findCommonAll(req: Request, res: Response) {
+        const memberId = (req.user as Member).id;
+        const where = conversationScope(req.query);
+        const conversations = await this.conversationService.findCommonAll(memberId, where);
+        return successResponse(res, "Common Conversations list successfully", conversations);
     }
 
     async findOne(req: Request, res: Response) {
         const { id } = req.params;
         const memberId = (req.user as Member).id;
         const conversation = await this.conversationService.findOne(memberId, +id);
-        return successResponse(res, "Conversation found successfully", conversation);
+        return successResponse(res, "Conversation found successfully",
+            ConversationResource.toResource(conversation)
+        );
     }
 
     async create(req: Request, res: Response) {
@@ -58,12 +69,17 @@ class ConversationController {
         }
 
         const memberId = (req.user as Member).id;
+        const files = req.files as Express.Multer.File[];
+
         const conversation = await this.conversationService.create(
             memberId,
-            data
+            data,
+            files
         );
 
-        return successResponse(res, "Conversation created successfully", conversation);
+        return successResponse(res, "Conversation created successfully",
+            ConversationResource.toResource(conversation)
+        );
     }
 
     async update(req: Request, res: Response) {
@@ -75,13 +91,18 @@ class ConversationController {
 
         const { id } = req.params;
         const memberId = (req.user as Member).id;
+        const files = req.files as Express.Multer.File[];
+
         const conversation = await this.conversationService.update(
             memberId,
             +id,
-            data
+            data,
+            files
         );
 
-        return successResponse(res, "Conversation updated successfully", conversation);
+        return successResponse(res, "Conversation updated successfully",
+            ConversationResource.toResource(conversation)
+        );
     }
 
     async destroy(req: Request, res: Response) {

@@ -1,24 +1,32 @@
-import { BankInformationResource } from "./bank-information.resource";
-
-export class BankInformationCollection {
-  static toCollection(bankInformations: any[]) {
-    return bankInformations.map((bankInformation) =>
-      BankInformationResource.toResource(bankInformation)
-    );
+export class ConversationCollection {
+  static toCollection(conversations: any[]) {
+    return conversations.map((conversation) => {
+      return {
+        id: conversation.id,
+        name: conversation.name,
+        type: conversation.type,
+        image: conversation.image,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt
+      }
+    });
   }
 
-  static toCommonCollection(bankInformations: any[]) {
-    return bankInformations.map((bankInformation) => ({
-      id: bankInformation.id,
-      bankAccountHolder: bankInformation.bankAccountHolder,
-      bankAccountNumber: bankInformation.bankAccountNumber
-    }));
+  static toCommonCollection(conversations: any[]) {
+    return conversations.map((conversation) => {
+      return {
+        id: conversation.id,
+        name: conversation.name,
+        type: conversation.type,
+        image: conversation.image
+      }
+    });
   }
 
-  static withPagination(bankInformations: { data: any[]; meta: any }) {
+  static withPagination(conversations: { data: any[]; meta: any }) {
     return {
-      data: this.toCollection(bankInformations.data),
-      meta: bankInformations.meta,
+      data: this.toCollection(conversations.data),
+      meta: conversations.meta,
     };
   }
 }

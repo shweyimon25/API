@@ -5,6 +5,7 @@ export class ConversationResource {
             image: conversation.image,
             type: conversation.type,
             name: conversation.name,
+            participants: conversation.participants,
             createdAt: conversation.createdAt,
             updatedAt: conversation.updatedAt,
         };
