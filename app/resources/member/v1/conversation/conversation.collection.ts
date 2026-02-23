@@ -6,6 +6,7 @@ export class ConversationCollection {
         name: conversation.name,
         type: conversation.type,
         image: conversation.image,
+        participantCount: conversation._count?.participants,
         createdAt: conversation.createdAt,
         updatedAt: conversation.updatedAt
       }

@@ -5,10 +5,16 @@ interface ConversationScopeQuery {
     type?: string;
 }
 
-export const conversationScope = (query: ConversationScopeQuery): Prisma.ConversationWhereInput => {
+export const conversationScope = (query: ConversationScopeQuery, memberId: number): Prisma.ConversationWhereInput => {
     const { name, type } = query;
 
-    const where: Prisma.ConversationWhereInput = {};
+    const where: Prisma.ConversationWhereInput = {
+        participants: {
+            some: {
+                memberId: +memberId,
+            }
+        }
+    };
 
     if (name) {
         where.name = {

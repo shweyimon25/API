@@ -6,6 +6,7 @@ export class ConversationResource {
             type: conversation.type,
             name: conversation.name,
             participants: conversation.participants,
+            participantCount: conversation._count?.participants,
             createdAt: conversation.createdAt,
             updatedAt: conversation.updatedAt,
         };

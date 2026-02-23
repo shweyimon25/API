@@ -6,17 +6,17 @@ import { upload } from "../../../helpers/media-upload";
 class ConversationService {
     async findAll(memberId: number, where: Prisma.ConversationWhereInput) {
         const conversations = await prisma.conversation.findMany({
-            where: {
-                ...where,
-                participants: {
-                    some: {
-                        memberId
-                    }
-                }
-            },
+            where,
             orderBy: {
                 id: "desc"
             },
+            include: {
+                _count: {
+                    select: {
+                        participants: true,
+                    }
+                }
+            }
         });
 
         return conversations;
@@ -24,11 +24,11 @@ class ConversationService {
 
     async findByPaginate(memberId: number, page: number, perPage: number, where: Prisma.ConversationWhereInput) {
         const conversations = await prisma.conversation.findMany({
-            where: {
-                ...where,
-                participants: {
-                    some: {
-                        memberId
+            where,
+            include: {
+                _count: {
+                    select: {
+                        participants: true,
                     }
                 }
             },
@@ -67,14 +67,7 @@ class ConversationService {
 
     async findCommonAll(memberId: number, where: Prisma.ConversationWhereInput) {
         const conversations = await prisma.conversation.findMany({
-            where: {
-                ...where,
-                participants: {
-                    some: {
-                        memberId
-                    }
-                }
-            },
+            where,
             orderBy: {
                 id: "desc"
             },
@@ -87,6 +80,11 @@ class ConversationService {
         const conversation = await prisma.conversation.findUnique({
             where: {
                 id,
+                participants: {
+                    some: {
+                        memberId
+                    }
+                }
             },
             include: {
                 participants: {
@@ -193,6 +191,7 @@ class ConversationService {
 
     async update(memberId: number, id: number, updateConversationInput: CreateConversationInput, files: Express.Multer.File[]) {
         const { name, participantIds } = updateConversationInput;
+        const conversation = await this.findOne(memberId, id);
 
         // Image Upload
         let imageUrl;
@@ -206,13 +205,12 @@ class ConversationService {
             }
         }
 
-        const conversation = await this.findOne(memberId, id);
-
         if (conversation.type === ConversationType.PRIVATE) {
             await prisma.conversation.update({
                 where: { id },
                 data: {
                     name: name ?? conversation.name,
+                    image: imageUrl ?? conversation.image
                 },
             });
         }

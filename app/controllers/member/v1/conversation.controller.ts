@@ -18,8 +18,8 @@ class ConversationController {
 
     async findAll(req: Request, res: Response) {
         const { page, perPage } = req.query;
-        const where = conversationScope(req.query);
         const memberId = (req.user as Member).id;
+        const where = conversationScope(req.query, memberId);
 
         if (page && perPage) {
             const conversations = await this.conversationService.findByPaginate(
@@ -47,7 +47,7 @@ class ConversationController {
 
     async findCommonAll(req: Request, res: Response) {
         const memberId = (req.user as Member).id;
-        const where = conversationScope(req.query);
+        const where = conversationScope(req.query, memberId);
         const conversations = await this.conversationService.findCommonAll(memberId, where);
         return successResponse(res, "Common Conversations list successfully", conversations);
     }
