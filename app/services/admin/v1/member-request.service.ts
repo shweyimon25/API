@@ -104,13 +104,23 @@ class MemberRequestService {
                 data: {
                     memberTypeId: 2, // Trainer Member Type
                     profile: {
-                        create: {
-                            age: existingMemberRequest.age,
-                            gender: existingMemberRequest.gender,
-                            yearOfExp: existingMemberRequest.yearOfExp,
-                            reason: existingMemberRequest.reason,
-                            certificates: existingMemberRequest.certificates as Prisma.InputJsonValue,
-                            photos: existingMemberRequest.photos as Prisma.InputJsonValue,
+                        upsert: {
+                            create: {
+                                age: existingMemberRequest.age,
+                                gender: existingMemberRequest.gender,
+                                yearOfExp: existingMemberRequest.yearOfExp,
+                                reason: existingMemberRequest.reason,
+                                certificates: existingMemberRequest.certificates as Prisma.InputJsonValue,
+                                photos: existingMemberRequest.photos as Prisma.InputJsonValue,
+                            },
+                            update: {
+                                age: existingMemberRequest.age,
+                                gender: existingMemberRequest.gender,
+                                yearOfExp: existingMemberRequest.yearOfExp,
+                                reason: existingMemberRequest.reason,
+                                certificates: existingMemberRequest.certificates as Prisma.InputJsonValue,
+                                photos: existingMemberRequest.photos as Prisma.InputJsonValue,
+                            }
                         }
                     }
                 },

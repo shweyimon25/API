@@ -3,8 +3,12 @@ export class ConversationResource {
         return {
             id: conversation.id,
             image: conversation.image,
-            type: conversation.type,
             name: conversation.name,
+            type: conversation.type,
+            bodyGoal: conversation.bodyGoal,
+            gender: conversation.gender,
+            proficientLevel: conversation.proficientLevel,
+            memberPlan: conversation.memberPlan,
             participants: conversation.participants,
             participantCount: conversation._count?.participants,
             createdAt: conversation.createdAt,

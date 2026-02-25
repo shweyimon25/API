@@ -168,6 +168,7 @@ model MemberPlan {
   payments       Payment[]
   workouts       Workout[]
   memberRequests MemberRequest[]
+  conversations  Conversation[]
 }
 
 model Pros {
@@ -592,7 +593,8 @@ model BodyGoal {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workouts Workout[]
+  workouts      Workout[]
+  conversations Conversation[]
 }
 
 model ProficientLevel {
@@ -600,13 +602,14 @@ model ProficientLevel {
   name   String @unique
   status Status @default(ACTIVE)
 
-  createdById Int?
-  updatedById Int?
-  createdBy   User?     @relation("ProficientLevelCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?     @relation("ProficientLevelUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  workouts    Workout[]
+  createdById   Int?
+  updatedById   Int?
+  createdBy     User?          @relation("ProficientLevelCreatedBy", fields: [createdById], references: [id])
+  updatedBy     User?          @relation("ProficientLevelUpdatedBy", fields: [updatedById], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  workouts      Workout[]
+  conversations Conversation[]
 }
 
 model Category {
@@ -858,17 +861,17 @@ model Payment {
 }
 
 model Attendance {
-  id       Int      @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   memberId Int
-  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
   date     String
-  
+
   createdById Int?
   updatedById Int?
   createdBy   User?    @relation("AttendanceCreatedBy", fields: [createdById], references: [id])
   updatedBy   User?    @relation("AttendanceUpdatedBy", fields: [updatedById], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@unique([memberId, date])
 }
@@ -917,12 +920,24 @@ model Notification {
 }
 
 model Conversation {
-  id        Int              @id @default(autoincrement())
-  image     String?
-  type      ConversationType @default(PRIVATE)
-  name      String? // For group chats
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id    Int              @id @default(autoincrement())
+  image String?
+  type  ConversationType @default(PRIVATE)
+  name  String?
+
+  memberPlanId Int?
+  memberPlan   MemberPlan? @relation(fields: [memberPlanId], references: [id])
+
+  proficientLevelId Int?
+  proficientLevel   ProficientLevel? @relation(fields: [proficientLevelId], references: [id])
+
+  gender Gender?
+
+  bodyGoalId Int?
+  bodyGoal   BodyGoal? @relation(fields: [bodyGoalId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   participants ConversationParticipant[]
   messages     Message[]
@@ -931,6 +946,7 @@ model Conversation {
 enum ConversationType {
   PRIVATE
   GROUP
+  TRAINER_GROUP
 }
 
 model ConversationParticipant {

@@ -8,6 +8,7 @@ import { createConversationSchema, updateConversationSchema } from "../../../sch
 import { ValidationException } from "../../../helpers/exceptions";
 import { ConversationCollection } from "../../../resources/member/v1/conversation/conversation.collection";
 import { ConversationResource } from "../../../resources/member/v1/conversation/conversation.resource";
+import prisma from "../../../../prisma/client";
 
 class ConversationController {
     private conversationService: ConversationService;
@@ -68,11 +69,23 @@ class ConversationController {
             throw new ValidationException("Create Conversation Failed", error);
         }
 
-        const memberId = (req.user as Member).id;
+        const currentMember: any = await prisma.member.findFirst({
+            where: {
+                id: (req.user as Member).id,
+            },
+            include: {
+                memberType: {
+                    include: {
+                        memberPlans: true
+                    }
+                }
+            }
+        });
+
         const files = req.files as Express.Multer.File[];
 
         const conversation = await this.conversationService.create(
-            memberId,
+            currentMember,
             data,
             files
         );
