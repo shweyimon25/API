@@ -55,6 +55,7 @@ import memberFriendRequestRoute from "./member/v1/friend-request.route";
 import memberFriendRoute from "./member/v1/friend.route";
 import memberPostReactionRoute from "./member/v1/post-reaction.route";
 import memberConversationRoute from "./member/v1/conversation.route";
+import memberMember from "./member/v1/member.route";
 
 const router = Router();
 
@@ -88,6 +89,7 @@ router.use("/admin/v1/member-requests", adminMemberRequestRoute);
 router.use("/admin/v1/shop-level-requests", adminShopLevelRequestRoute);
 router.use("/admin/v1/categories", adminCategoryRoute);
 router.use("/admin/v1/payments", adminPaymentRoute);
+router.use("/admin/v1/attendances", adminAttendanceRoute);
 
 // Member Routes
 router.use("/member/v1/auth", memberAuthRoute);
@@ -112,6 +114,6 @@ router.use("/member/v1/friend-requests", memberFriendRequestRoute);
 router.use("/member/v1/friends", memberFriendRoute);
 router.use("/member/v1/post-reactions", memberPostReactionRoute);
 router.use("/member/v1/conversations", memberConversationRoute);
-router.use("/admin/v1/attendances", adminAttendanceRoute);
+router.use("/member/v1/members", memberMember);    
 
 export default router;

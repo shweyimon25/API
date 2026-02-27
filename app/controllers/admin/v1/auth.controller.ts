@@ -11,6 +11,7 @@ import UserService from "../../../services/admin/v1/user.service";
 import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
+
 class AuthController {
   private userService: UserService;
 
