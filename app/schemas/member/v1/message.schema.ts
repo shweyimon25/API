@@ -16,4 +16,14 @@ export const updateMessageSchema = z.object({
     attachments: z.array(attachmentSchema).optional()
 });
 
+export const uploadMessageSchema = z.object({
+    type: z.enum([
+        'IMAGE',
+        'FILE',
+        'VIDEO'
+    ])
+});
+
 export type CreateMessageInput = z.infer<typeof createMessageSchema>;
+export type UpdateMessageInput = z.infer<typeof updateMessageSchema>;
+export type UploadMessageInput = z.infer<typeof uploadMessageSchema>;
