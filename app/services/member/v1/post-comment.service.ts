@@ -19,19 +19,28 @@ const memberSelect = {
 };
 
 function mapComment(c: any): any {
+  const member = c.member
+    ? {
+        id: c.member.id,
+        name: c.member.name,
+        email: c.member.email,
+        code: c.member.code,
+        profile: c.member.profile ?? null,
+      }
+    : null;
+
+  const reactions = (c.postCommentReactions ?? []).map((r: any) => ({
+    memberId: r.memberId,
+    reaction: r.reaction,
+  }));
+
   return {
     id: c.id,
     comment: c.comment,
     parentId: c.parentId,
-        member: c.member
-      ? {
-          id: c.member.id,
-          name: c.member.name,
-          email: c.member.email,
-          code: c.member.code,
-          profile: c.member.profile ?? null,
-        }
-      : null,
+    member,
+    reactions,
+    reactionsCount: reactions.length,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
     replies: (c.replies ?? []).map(mapComment),
@@ -76,8 +85,24 @@ class PostCommentService {
       where: { id: created.id },
       include: {
         member: { select: memberSelect },
+        postCommentReactions: {
+          select: {
+            postCommentId: true,
+            memberId: true,
+            reaction: true,
+          },
+        },
         replies: {
-          include: { member: { select: memberSelect } },
+          include: {
+            member: { select: memberSelect },
+            postCommentReactions: {
+              select: {
+                postCommentId: true,
+                memberId: true,
+                reaction: true,
+              },
+            },
+          },
           orderBy: { createdAt: "asc" },
         },
       },
@@ -90,15 +115,33 @@ class PostCommentService {
       where: { id },
       include: {
         member: { select: memberSelect },
+        postCommentReactions: {
+          select: {
+            postCommentId: true,
+            memberId: true,
+            reaction: true,
+          },
+        },
         replies: {
-          include: { member: { select: memberSelect } },
+          include: {
+            member: { select: memberSelect },
+            postCommentReactions: {
+              select: {
+                postCommentId: true,
+                memberId: true,
+                reaction: true,
+              },
+            },
+          },
           orderBy: { createdAt: "asc" },
         },
       },
     });
+
     if (!comment) {
       throw new NotFoundException("Post comment not found");
     }
+
     return comment;
   }
 
@@ -106,6 +149,7 @@ class PostCommentService {
     const post = await prisma.post.findFirst({
       where: { id: postId, privencyType: PrivencyType.PUBLIC },
     });
+
     if (!post) {
       throw new NotFoundException("Post not found");
     }
@@ -114,8 +158,24 @@ class PostCommentService {
       where: { postId, parentId: null },
       include: {
         member: { select: memberSelect },
+        postCommentReactions: {
+          select: {
+            postCommentId: true,
+            memberId: true,
+            reaction: true,
+          },
+        },
         replies: {
-          include: { member: { select: memberSelect } },
+          include: {
+            member: { select: memberSelect },
+            postCommentReactions: {
+              select: {
+                postCommentId: true,
+                memberId: true,
+                reaction: true,
+              },
+            },
+          },
           orderBy: { createdAt: "asc" },
         },
       },
@@ -130,19 +190,38 @@ class PostCommentService {
     const existing = await prisma.postComment.findUnique({
       where: { id },
     });
+
     if (!existing) {
       throw new NotFoundException("Post comment not found");
     }
+
     if (existing.memberId !== memberId) {
       throw new ForbiddenException("You can only update your own comments");
     }
+
     const updated = await prisma.postComment.update({
       where: { id },
       data: { comment },
       include: {
         member: { select: memberSelect },
+        postCommentReactions: {
+          select: {
+            postCommentId: true,
+            memberId: true,
+            reaction: true,
+          },
+        },
         replies: {
-          include: { member: { select: memberSelect } },
+          include: {
+            member: { select: memberSelect },
+            postCommentReactions: {
+              select: {
+                postCommentId: true,
+                memberId: true,
+                reaction: true,
+              },
+            },
+          },
           orderBy: { createdAt: "asc" },
         },
       },

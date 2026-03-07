@@ -8,11 +8,19 @@ function toCommentNode(c: any): any {
         profile: c.member.profile ?? null,
       }
     : null;
+
+  const reactions = (c.postCommentReactions ?? []).map((r: any) => ({
+    memberId: r.memberId,
+    reaction: r.reaction,
+  }));
+
   return {
     id: c.id,
     comment: c.comment,
     parentId: c.parentId,
     member,
+    reactions,
+    reactionsCount: reactions.length,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
     replies: (c.replies ?? []).map(toCommentNode),

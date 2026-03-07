@@ -27,6 +27,11 @@ class MessageService {
                         }
                     }
                 },
+                _count: {
+                    select: {
+                        messageReactions: true
+                    }
+                }
             }
         });
 
@@ -65,6 +70,11 @@ class MessageService {
                         }
                     }
                 },
+                _count: {
+                    select: {
+                        messageReactions: true
+                    }
+                }
             }
         });
 
@@ -119,8 +129,19 @@ class MessageService {
                                 profilePhoto: true,
                             }
                         }
+                    },
+                },
+                messageReactions: {
+                    select: {
+                        memberId: true,
+                        reaction: true
                     }
                 },
+                _count: {
+                    select: {
+                        messageReactions: true
+                    }
+                }
             }
         });
 

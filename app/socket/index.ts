@@ -5,6 +5,7 @@ import prisma from "../../prisma/client";
 import { ConversationStatus, ConversationType, Status } from "@prisma/client";
 import { validater } from "../helpers/validator";
 import { createMessageReactionSchema, createMessageSchema, deleteMessageReactionSchema } from "../schemas/member/v1/message.schema";
+import { createPostCommentReactionSchema, deletePostCommentReactionSchema } from "../schemas/member/v1/post-comment.schema";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -348,6 +349,121 @@ export function initializeSocket(server: HttpServer) {
                     message: "Reaction removed",
                     data: {
                         messageId: message.id,
+                        memberId
+                    }
+                });
+            });
+        });
+
+        // Post Comment Reaction 
+        socket.on("reaction:post-comment", async (payload: { postCommentId: number; reaction: string }) => {
+            const { data, success } = await validater(createPostCommentReactionSchema, payload);
+
+            if (!success) {
+                socket.emit("reaction:post-comment", {
+                    status: false,
+                    message: "Payload is required"
+                });
+                return;
+            }
+
+            const { postCommentId, reaction } = data;
+
+            const comment = await prisma.postComment.findUnique({
+                where: { id: +postCommentId },
+                include: {
+                    member: {
+                        select: { id: true }
+                    }
+                }
+            });
+
+            if (!comment) {
+                socket.emit("reaction:post-comment", {
+                    status: false,
+                    message: "Post comment not found"
+                });
+                return;
+            }
+
+            const reactionRecord = await (prisma as any).postCommentReaction.upsert({
+                where: {
+                    postCommentId_memberId: {
+                        postCommentId: comment.id,
+                        memberId
+                    }
+                },
+                create: {
+                    postCommentId: comment.id,
+                    memberId,
+                    reaction
+                },
+                update: {
+                    reaction
+                }
+            });
+
+            const receiverIds = new Set<number>();
+            receiverIds.add(memberId);
+            receiverIds.add(comment.memberId);
+
+            receiverIds.forEach((id) => {
+                io.to(`member_${id}`).emit("reaction:post-comment", {
+                    status: true,
+                    message: "Post comment reaction updated",
+                    data: reactionRecord
+                });
+            });
+        });
+
+        // Remove Post Comment Reaction 
+        socket.on("reaction:post-comment:remove", async (payload: { postCommentId: number }) => {
+            const { data, success } = await validater(deletePostCommentReactionSchema, payload);
+
+            if (!success) {
+                socket.emit("reaction:post-comment:remove", {
+                    status: false,
+                    message: "Payload is required"
+                });
+                return;
+            }
+
+            const { postCommentId } = data;
+
+            const comment = await prisma.postComment.findUnique({
+                where: { id: +postCommentId },
+                include: {
+                    member: {
+                        select: { id: true }
+                    }
+                }
+            });
+
+            if (!comment) {
+                socket.emit("reaction:post-comment:remove", {
+                    status: false,
+                    message: "Post comment not found"
+                });
+                return;
+            }
+
+            await (prisma as any).postCommentReaction.deleteMany({
+                where: {
+                    postCommentId: comment.id,
+                    memberId
+                }
+            });
+
+            const receiverIds = new Set<number>();
+            receiverIds.add(memberId);
+            receiverIds.add(comment.memberId);
+
+            receiverIds.forEach((id) => {
+                io.to(`member_${id}`).emit("reaction:post-comment:remove", {
+                    status: true,
+                    message: "Post comment reaction removed",
+                    data: {
+                        postCommentId: comment.id,
                         memberId
                     }
                 });

@@ -8,6 +8,8 @@ export class MessageResource {
       "readAt": message.readAt,
       "conversation": message.conversation,
       "sender": message.sender,
+      "reactionCount": message._count.messageReactions,
+      "reactions": message.messageReactions,
       "createdAt": message.createdAt,
       "updatedAt": message.updatedAt
     };

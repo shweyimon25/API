@@ -280,6 +280,7 @@ model Member {
   messages                 Message[]
   attendances              Attendance[]
   messageReactions         MessageReaction[]
+  postCommentReactions     PostCommentReaction[]
 }
 
 model MemberFcmToken {
@@ -580,6 +581,25 @@ model PostComment {
   replies   PostComment[] @relation("CommentReplies")
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+
+  postCommentReactions PostCommentReaction[]
+}
+
+model PostCommentReaction {
+  id Int @id @default(autoincrement())
+
+  postCommentId Int
+  postComment   PostComment @relation(fields: [postCommentId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
+  reaction String // 👍 ❤️ 😂 😢 😮
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([postCommentId, memberId])
 }
 
 model BodyGoal {
