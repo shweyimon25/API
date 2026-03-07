@@ -16,6 +16,15 @@ export const updateMessageSchema = z.object({
     attachments: z.array(attachmentSchema).optional()
 });
 
+export const createMessageReactionSchema = z.object({
+    messageId: z.number(),
+    reaction: z.string()
+});
+
+export const deleteMessageReactionSchema = z.object({
+    messageId: z.number()
+});
+
 export const uploadMessageSchema = z.object({
     type: z.enum([
         'IMAGE',
@@ -27,3 +36,5 @@ export const uploadMessageSchema = z.object({
 export type CreateMessageInput = z.infer<typeof createMessageSchema>;
 export type UpdateMessageInput = z.infer<typeof updateMessageSchema>;
 export type UploadMessageInput = z.infer<typeof uploadMessageSchema>;
+export type CreateMessageReactionInput = z.infer<typeof createMessageReactionSchema>;
+export type DeleteMessageReactionInput = z.infer<typeof deleteMessageReactionSchema>;

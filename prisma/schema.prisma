@@ -279,6 +279,7 @@ model Member {
   conversationParticipants ConversationParticipant[]
   messages                 Message[]
   attendances              Attendance[]
+  messageReactions         MessageReaction[]
 }
 
 model MemberFcmToken {
@@ -936,7 +937,7 @@ model Conversation {
   bodyGoalId Int?
   bodyGoal   BodyGoal? @relation(fields: [bodyGoalId], references: [id])
 
-  status  ConversationStatus @default(REQUESTED)
+  status ConversationStatus @default(REQUESTED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -986,6 +987,25 @@ model Message {
   readAt         DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
+
+  messageReactions MessageReaction[]
+}
+
+model MessageReaction {
+  id Int @id @default(autoincrement())
+
+  messageId Int
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
+  reaction String // 👍 ❤️ 😂 😢 😮
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([messageId, memberId])
 }
 
 enum NotificationType {

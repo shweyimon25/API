@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import prisma from "../../prisma/client";
 import { ConversationStatus, ConversationType, Status } from "@prisma/client";
 import { validater } from "../helpers/validator";
-import { createMessageSchema } from "../schemas/member/v1/message.schema";
+import { createMessageReactionSchema, createMessageSchema, deleteMessageReactionSchema } from "../schemas/member/v1/message.schema";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -200,6 +200,157 @@ export function initializeSocket(server: HttpServer) {
                 status: true,
                 message: "Message sent successfully",
                 data: message
+            });
+        });
+
+        // Message Reaction 
+        socket.on("reaction:message", async (payload: { messageId: number, reaction: string }) => {
+
+            const { data, success } = await validater(createMessageReactionSchema, payload);
+
+            if (!success) {
+                socket.emit("message:reaction", {
+                    status: false,
+                    message: "Payload is required"
+                });
+                return;
+            }
+
+            const { messageId, reaction } = data;
+
+            const message = await prisma.message.findUnique({
+                where: {
+                    id: +messageId,
+                },
+                include: {
+                    conversation: {
+                        include: {
+                            participants: {
+                                select: { memberId: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (!message) {
+                socket.emit("reaction:message", {
+                    status: false,
+                    message: "Message not found"
+                });
+                return;
+            }
+
+            // Check current member is participant of this conversation
+            const isParticipant = message.conversation.participants.some(
+                (p) => p.memberId === memberId
+            );
+
+            if (!isParticipant) {
+                socket.emit("message:reaction", {
+                    status: false,
+                    message: "You are not a participant of this conversation"
+                });
+                return;
+            }
+
+            const reactionRecord = await prisma.messageReaction.upsert({
+                where: {
+                    messageId_memberId: {
+                        messageId: message.id,
+                        memberId
+                    }
+                },
+                create: {
+                    messageId: message.id,
+                    memberId,
+                    reaction
+                },
+                update: {
+                    reaction
+                }
+            });
+
+            const participantIds = message.conversation.participants.map(
+                (p) => p.memberId
+            );
+
+            participantIds.forEach((id) => {
+                io.to(`member_${id}`).emit("reaction:message", {
+                    status: true,
+                    message: "Reaction updated",
+                    data: reactionRecord
+                });
+            });
+        });
+
+        // Remove Message Reaction 
+        socket.on("reaction:message:remove", async (payload: { messageId: number }) => {
+            const { data, success } = await validater(deleteMessageReactionSchema, payload);
+
+            if (!success) {
+                socket.emit("reaction:message:remove", {
+                    status: false,
+                    message: "Payload is required"
+                });
+                return;
+            }
+
+            const { messageId } = data;
+
+            const message = await prisma.message.findUnique({
+                where: { id: +messageId },
+                include: {
+                    conversation: {
+                        include: {
+                            participants: {
+                                select: { memberId: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (!message) {
+                socket.emit("reaction:message:remove", {
+                    status: false,
+                    message: "Message not found"
+                });
+                return;
+            }
+
+            const isParticipant = message.conversation.participants.some(
+                (p) => p.memberId === memberId
+            );
+
+            if (!isParticipant) {
+                socket.emit("reaction:message:remove", {
+                    status: false,
+                    message: "You are not a participant of this conversation"
+                });
+                return;
+            }
+
+            await prisma.messageReaction.deleteMany({
+                where: {
+                    messageId: message.id,
+                    memberId
+                }
+            });
+
+            const participantIds = message.conversation.participants.map(
+                (p) => p.memberId
+            );
+
+            participantIds.forEach((id) => {
+                io.to(`member_${id}`).emit("reaction:message:remove", {
+                    status: true,
+                    message: "Reaction removed",
+                    data: {
+                        messageId: message.id,
+                        memberId
+                    }
+                });
             });
         });
 
