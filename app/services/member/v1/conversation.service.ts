@@ -29,7 +29,6 @@ class ConversationService {
                                 }
                             }
                         },
-                        type: true,
                         readAt: true,
                         createdAt: true,
                     },
@@ -70,7 +69,6 @@ class ConversationService {
                                 }
                             }
                         },
-                        type: true,
                         readAt: true,
                         createdAt: true,
                     },
@@ -157,7 +155,6 @@ class ConversationService {
                                 }
                             }
                         },
-                        type: true,
                         readAt: true,
                         createdAt: true,
                     },

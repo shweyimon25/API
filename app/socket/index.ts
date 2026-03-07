@@ -2,7 +2,9 @@ import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import jwt from "jsonwebtoken";
 import prisma from "../../prisma/client";
-import { ConversationStatus, ConversationType, MessageType, Status } from "@prisma/client";
+import { ConversationStatus, ConversationType, Status } from "@prisma/client";
+import { validater } from "../helpers/validator";
+import { createMessageSchema } from "../schemas/member/v1/message.schema";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -44,12 +46,17 @@ export function initializeSocket(server: HttpServer) {
         // Private Message 
         socket.on("private:message", async (payload: { to: number, content: string }) => {
             try {
-                const { to, content } = payload;
+                const { data, success } = await validater(createMessageSchema, payload);
 
-                if (!to || !content) {
-                    socket.emit("private:message", { message: "Recipient and content are required" });
+                if (!success) {
+                    socket.emit("private:message", {
+                        status: false,
+                        message: "Payload are required"
+                    });
                     return;
                 }
+
+                const { to, content, attachments } = data;
 
                 const existingToMember = await prisma.member.findUnique({
                     where: { id: +to, NOT: { id: memberId }, status: Status.ACTIVE },
@@ -69,7 +76,7 @@ export function initializeSocket(server: HttpServer) {
                 // Get or create private conversation
                 const conversation = await prisma.conversation.findFirst({
                     where: {
-                        type: "PRIVATE",
+                        type: ConversationType.PRIVATE,
                         participants: {
                             every: {
                                 memberId: { in: [memberId, to] }
@@ -129,7 +136,7 @@ export function initializeSocket(server: HttpServer) {
                         conversationId,
                         senderId: memberId,
                         content,
-                        type: MessageType.TEXT
+                        attachments
                     }
                 });
 
@@ -154,7 +161,17 @@ export function initializeSocket(server: HttpServer) {
 
         // Group Message 
         socket.on("group:message", async (payload: { conversationId: number; content: string }) => {
-            const { conversationId, content } = payload;
+            const { data, success } = await validater(createMessageSchema, payload);
+
+            if (!success) {
+                socket.emit("group:message", {
+                    status: false,
+                    message: "Payload is required"
+                });
+                return;
+            }
+
+            const { conversationId, content, attachments } = data;
 
             // Check if the user is a participant of the group
             const participant = await prisma.conversationParticipant.findFirst({
@@ -170,7 +187,7 @@ export function initializeSocket(server: HttpServer) {
             }
 
             const message = await prisma.message.create({
-                data: { conversationId: +conversationId, senderId: memberId, content }
+                data: { conversationId: +conversationId, senderId: memberId, content, attachments }
             });
 
             socket.emit("group:message", {

@@ -55,6 +55,7 @@ import memberFriendRequestRoute from "./member/v1/friend-request.route";
 import memberFriendRoute from "./member/v1/friend.route";
 import memberPostReactionRoute from "./member/v1/post-reaction.route";
 import memberConversationRoute from "./member/v1/conversation.route";
+import memberMessageRoute from "./member/v1/message.route";
 import memberMember from "./member/v1/member.route";
 
 const router = Router();
@@ -114,6 +115,7 @@ router.use("/member/v1/friend-requests", memberFriendRequestRoute);
 router.use("/member/v1/friends", memberFriendRoute);
 router.use("/member/v1/post-reactions", memberPostReactionRoute);
 router.use("/member/v1/conversations", memberConversationRoute);
+router.use("/member/v1/messages", memberMessageRoute);
 router.use("/member/v1/members", memberMember);    
 
 export default router;

@@ -982,16 +982,10 @@ model Message {
   senderId       Int
   sender         Member       @relation(fields: [senderId], references: [id])
   content        String       @db.Text()
-  type           MessageType  @default(TEXT)
+  attachments    Json
   readAt         DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-}
-
-enum MessageType {
-  TEXT
-  IMAGE
-  FILE
 }
 
 enum NotificationType {
