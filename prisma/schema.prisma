@@ -936,6 +936,8 @@ model Conversation {
   bodyGoalId Int?
   bodyGoal   BodyGoal? @relation(fields: [bodyGoalId], references: [id])
 
+  status  ConversationStatus @default(REQUESTED)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -947,6 +949,12 @@ enum ConversationType {
   PRIVATE
   GROUP
   TRAINER_GROUP
+}
+
+enum ConversationStatus {
+  REQUESTED
+  ACCEPTED
+  CANCELED
 }
 
 model ConversationParticipant {

@@ -32,6 +32,14 @@ router.route("/common")
         ),
     ]);
 
+router.post("/:id/request-accept", [
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+        async (req: Request, res: Response) =>
+            await conversationController.requestAccept(req, res)
+    ),
+]);
+
 router.route("/:id")
     .get([
         passport.authenticate("jwt", { session: false }),

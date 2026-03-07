@@ -4,7 +4,7 @@ import ConversationService from "../../../services/member/v1/conversation.servic
 import { successResponse } from "../../../helpers/response";
 import { conversationScope } from "../../../scopes/member/v1/conversation.scope";
 import { validater } from "../../../helpers/validator";
-import { createConversationSchema, updateConversationSchema } from "../../../schemas/member/v1/conversation.schema";
+import { createConversationSchema, requestAcceptConversationSchema, updateConversationSchema } from "../../../schemas/member/v1/conversation.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import { ConversationCollection } from "../../../resources/member/v1/conversation/conversation.collection";
 import { ConversationResource } from "../../../resources/member/v1/conversation/conversation.resource";
@@ -116,6 +116,20 @@ class ConversationController {
         return successResponse(res, "Conversation updated successfully",
             ConversationResource.toResource(conversation)
         );
+    }
+
+    async requestAccept(req: Request, res: Response) {
+        const { data, success, error } = await validater(requestAcceptConversationSchema, req.body);
+
+        if (!success) {
+            throw new ValidationException("Failed to change status conversation request", error);
+        }
+
+        const { id } = req.params;
+        const memberId = (req.user as Member).id;
+        const conversation = await this.conversationService.requestAccept(+id, data, memberId);
+
+        return successResponse(res, "Conversation update status successfully", conversation);
     }
 
     async destroy(req: Request, res: Response) {

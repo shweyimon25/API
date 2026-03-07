@@ -20,7 +20,22 @@ CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'BOTH');
 CREATE TYPE "Day" AS ENUM ('SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY');
 
 -- CreateEnum
+CREATE TYPE "ConversationType" AS ENUM ('PRIVATE', 'GROUP', 'TRAINER_GROUP');
+
+-- CreateEnum
+CREATE TYPE "ConversationStatus" AS ENUM ('REQUESTED', 'ACCEPTED', 'CANCELED');
+
+-- CreateEnum
+CREATE TYPE "ParticipantRole" AS ENUM ('ADMIN', 'MEMBER');
+
+-- CreateEnum
+CREATE TYPE "MessageType" AS ENUM ('TEXT', 'IMAGE', 'FILE');
+
+-- CreateEnum
 CREATE TYPE "NotificationType" AS ENUM ('INFO', 'WARNING', 'ERROR');
+
+-- CreateEnum
+CREATE TYPE "FriendRequestStatus" AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED');
 
 -- CreateEnum
 CREATE TYPE "PaymentRequestType" AS ENUM ('MEMBER_PLAN_UPGRADE', 'SHOP_LEVEL_UPGRADE');
@@ -33,6 +48,9 @@ CREATE TYPE "PaymentStatus" AS ENUM ('DRAFT', 'CONFIRMED', 'CANCELLED', 'PAID');
 
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('ACTIVE', 'INACTIVE');
+
+-- CreateEnum
+CREATE TYPE "DeviceType" AS ENUM ('ANDROID', 'IOS', 'WEB');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -196,6 +214,18 @@ CREATE TABLE "Member" (
 );
 
 -- CreateTable
+CREATE TABLE "MemberFcmToken" (
+    "id" SERIAL NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "token" TEXT NOT NULL,
+    "deviceType" "DeviceType" NOT NULL DEFAULT 'ANDROID',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "MemberFcmToken_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "OTP" (
     "id" SERIAL NOT NULL,
     "email" TEXT,
@@ -331,11 +361,23 @@ CREATE TABLE "ShopPost" (
     "id" SERIAL NOT NULL,
     "caption" TEXT NOT NULL,
     "images" JSONB NOT NULL,
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
     "shopId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ShopPost_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ShopPostReaction" (
+    "id" SERIAL NOT NULL,
+    "shopPostId" INTEGER NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ShopPostReaction_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -372,11 +414,23 @@ CREATE TABLE "Post" (
     "privencyType" "PrivencyType" NOT NULL DEFAULT 'PUBLIC',
     "timeAgo" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "media" JSONB NOT NULL,
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
     "memberId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Post_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PostReaction" (
+    "id" SERIAL NOT NULL,
+    "postId" INTEGER NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PostReaction_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -612,6 +666,42 @@ CREATE TABLE "Payment" (
 );
 
 -- CreateTable
+CREATE TABLE "Attendance" (
+    "id" SERIAL NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "date" TEXT NOT NULL,
+    "createdById" INTEGER,
+    "updatedById" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Attendance_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "FriendRequest" (
+    "id" SERIAL NOT NULL,
+    "senderId" INTEGER NOT NULL,
+    "receiverId" INTEGER NOT NULL,
+    "status" "FriendRequestStatus" NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "FriendRequest_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Friend" (
+    "id" SERIAL NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "friendId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Friend_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Notification" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
@@ -622,6 +712,49 @@ CREATE TABLE "Notification" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Conversation" (
+    "id" SERIAL NOT NULL,
+    "image" TEXT,
+    "type" "ConversationType" NOT NULL DEFAULT 'PRIVATE',
+    "name" TEXT,
+    "memberPlanId" INTEGER,
+    "proficientLevelId" INTEGER,
+    "gender" "Gender",
+    "bodyGoalId" INTEGER,
+    "status" "ConversationStatus" NOT NULL DEFAULT 'REQUESTED',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Conversation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ConversationParticipant" (
+    "id" SERIAL NOT NULL,
+    "conversationId" INTEGER NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "role" "ParticipantRole" NOT NULL DEFAULT 'MEMBER',
+    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastReadAt" TIMESTAMP(3),
+
+    CONSTRAINT "ConversationParticipant_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Message" (
+    "id" SERIAL NOT NULL,
+    "conversationId" INTEGER NOT NULL,
+    "senderId" INTEGER NOT NULL,
+    "content" TEXT NOT NULL,
+    "type" "MessageType" NOT NULL DEFAULT 'TEXT',
+    "readAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -677,6 +810,12 @@ CREATE UNIQUE INDEX "Member_email_key" ON "Member"("email");
 CREATE UNIQUE INDEX "Member_phone_key" ON "Member"("phone");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "MemberFcmToken_memberId_key" ON "MemberFcmToken"("memberId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MemberFcmToken_memberId_token_key" ON "MemberFcmToken"("memberId", "token");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "OTP_email_otp_key" ON "OTP"("email", "otp");
 
 -- CreateIndex
@@ -701,7 +840,13 @@ CREATE UNIQUE INDEX "Shop_memberId_key" ON "Shop"("memberId");
 CREATE UNIQUE INDEX "ShopRating_memberId_shopId_key" ON "ShopRating"("memberId", "shopId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ShopPostReaction_shopPostId_memberId_key" ON "ShopPostReaction"("shopPostId", "memberId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PostReaction_postId_memberId_key" ON "PostReaction"("postId", "memberId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BodyGoal_name_key" ON "BodyGoal"("name");
@@ -732,6 +877,18 @@ CREATE UNIQUE INDEX "BadHabit_name_key" ON "BadHabit"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "WaterTracker_memberId_date_key" ON "WaterTracker"("memberId", "date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Attendance_memberId_date_key" ON "Attendance"("memberId", "date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "FriendRequest_senderId_receiverId_key" ON "FriendRequest"("senderId", "receiverId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Friend_memberId_friendId_key" ON "Friend"("memberId", "friendId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ConversationParticipant_conversationId_memberId_key" ON "ConversationParticipant"("conversationId", "memberId");
 
 -- CreateIndex
 CREATE INDEX "_MemberPlanToPros_B_index" ON "_MemberPlanToPros"("B");
@@ -809,6 +966,9 @@ ALTER TABLE "Member" ADD CONSTRAINT "Member_createdById_fkey" FOREIGN KEY ("crea
 ALTER TABLE "Member" ADD CONSTRAINT "Member_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "MemberFcmToken" ADD CONSTRAINT "MemberFcmToken_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "MemberProviderType" ADD CONSTRAINT "MemberProviderType_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -857,6 +1017,12 @@ ALTER TABLE "ShopRating" ADD CONSTRAINT "ShopRating_shopId_fkey" FOREIGN KEY ("s
 ALTER TABLE "ShopPost" ADD CONSTRAINT "ShopPost_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "ShopPostReaction" ADD CONSTRAINT "ShopPostReaction_shopPostId_fkey" FOREIGN KEY ("shopPostId") REFERENCES "ShopPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ShopPostReaction" ADD CONSTRAINT "ShopPostReaction_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "ShopPostComment" ADD CONSTRAINT "ShopPostComment_shopPostId_fkey" FOREIGN KEY ("shopPostId") REFERENCES "ShopPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -876,6 +1042,12 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_tagId_fkey" FOREIGN KEY ("tagId") REFERE
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PostReaction" ADD CONSTRAINT "PostReaction_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PostReaction" ADD CONSTRAINT "PostReaction_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PostComment" ADD CONSTRAINT "PostComment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -999,6 +1171,48 @@ ALTER TABLE "Payment" ADD CONSTRAINT "Payment_approvedById_fkey" FOREIGN KEY ("a
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_cancelledById_fkey" FOREIGN KEY ("cancelledById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_updatedById_fkey" FOREIGN KEY ("updatedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FriendRequest" ADD CONSTRAINT "FriendRequest_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "FriendRequest" ADD CONSTRAINT "FriendRequest_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Friend" ADD CONSTRAINT "Friend_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Friend" ADD CONSTRAINT "Friend_friendId_fkey" FOREIGN KEY ("friendId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_memberPlanId_fkey" FOREIGN KEY ("memberPlanId") REFERENCES "MemberPlan"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_proficientLevelId_fkey" FOREIGN KEY ("proficientLevelId") REFERENCES "ProficientLevel"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Conversation" ADD CONSTRAINT "Conversation_bodyGoalId_fkey" FOREIGN KEY ("bodyGoalId") REFERENCES "BodyGoal"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Message" ADD CONSTRAINT "Message_conversationId_fkey" FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Message" ADD CONSTRAINT "Message_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_MemberPlanToPros" ADD CONSTRAINT "_MemberPlanToPros_A_fkey" FOREIGN KEY ("A") REFERENCES "MemberPlan"("id") ON DELETE CASCADE ON UPDATE CASCADE;

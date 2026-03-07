@@ -1,7 +1,7 @@
-import { ConversationType, ParticipantRole, Prisma } from "@prisma/client";
-import { CreateConversationInput } from "../../../schemas/member/v1/conversation.schema";
+import { ConversationStatus, ConversationType, ParticipantRole, Prisma, Status } from "@prisma/client";
+import { CreateConversationInput, RequestAcceptConversationInput } from "../../../schemas/member/v1/conversation.schema";
 import prisma from "../../../../prisma/client";
-import { BadRequestException, NotFoundException } from "../../../helpers/exceptions";
+import { BadRequestException, NotFoundException, UnauthorizedException } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
 
 class ConversationService {
@@ -12,11 +12,37 @@ class ConversationService {
                 id: "desc"
             },
             include: {
+                messages: {
+                    select: {
+                        id: true,
+                        senderId: true,
+                        sender: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                                profile: {
+                                    select: {
+                                        profilePhoto: true
+                                    }
+                                }
+                            }
+                        },
+                        type: true,
+                        readAt: true,
+                        createdAt: true,
+                    },
+                    orderBy: {
+                        id: "desc"
+                    },
+                    take: 1,
+                },
                 _count: {
                     select: {
                         participants: true,
                     }
-                }
+                },
             }
         });
 
@@ -27,6 +53,32 @@ class ConversationService {
         const conversations = await prisma.conversation.findMany({
             where,
             include: {
+                messages: {
+                    select: {
+                        id: true,
+                        senderId: true,
+                        sender: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                                profile: {
+                                    select: {
+                                        profilePhoto: true
+                                    }
+                                }
+                            }
+                        },
+                        type: true,
+                        readAt: true,
+                        createdAt: true,
+                    },
+                    orderBy: {
+                        id: "desc"
+                    },
+                    take: 1,
+                },
                 _count: {
                     select: {
                         participants: true,
@@ -88,6 +140,32 @@ class ConversationService {
                 }
             },
             include: {
+                messages: {
+                    select: {
+                        id: true,
+                        senderId: true,
+                        sender: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                phone: true,
+                                profile: {
+                                    select: {
+                                        profilePhoto: true
+                                    }
+                                }
+                            }
+                        },
+                        type: true,
+                        readAt: true,
+                        createdAt: true,
+                    },
+                    orderBy: {
+                        id: "desc"
+                    },
+                    take: 1,
+                },
                 bodyGoal: {
                     select: {
                         id: true,
@@ -357,6 +435,57 @@ class ConversationService {
 
         await prisma.conversation.delete({
             where: { id },
+        });
+    }
+
+    async requestAccept(id: number, requestAcceptConversationInput: RequestAcceptConversationInput, memberId: number) {
+        const conversation = await prisma.conversation.findFirst({
+            where: {
+                id,
+                status: ConversationStatus.REQUESTED
+            }
+        });
+
+        if (!conversation) {
+            throw new NotFoundException("Conversation not found");
+        }
+
+        const currentMember = await prisma.member.findUnique({
+            where: { id: memberId, status: Status.ACTIVE },
+            include: { friends: true, friendsOf: true },
+        });
+
+        if (!currentMember) {
+            throw new UnauthorizedException();
+        }
+
+        // Check if friend 
+        const isFriend =
+            currentMember.friends.some(f => f.friendId === memberId) ||
+            currentMember.friendsOf.some(f => f.memberId === memberId);
+
+        const firstMessage = await prisma.message.findFirst({
+            where: { conversationId: conversation.id },
+            orderBy: { id: "asc" },
+            select: { senderId: true }
+        });
+
+        const shouldAcceptRequest =
+            isFriend || !firstMessage || firstMessage.senderId !== memberId;
+
+        if (!shouldAcceptRequest) {
+            throw new BadRequestException(
+                "Only the recipient can accept or cancel this conversation request."
+            );
+        }
+
+        return await prisma.conversation.update({
+            where: {
+                id: conversation.id
+            },
+            data: {
+                status: requestAcceptConversationInput.status
+            }
         });
     }
 }

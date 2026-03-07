@@ -2,7 +2,7 @@ import { Server, Socket } from "socket.io";
 import { Server as HttpServer } from "http";
 import jwt from "jsonwebtoken";
 import prisma from "../../prisma/client";
-import { MessageType, Status } from "@prisma/client";
+import { ConversationStatus, ConversationType, MessageType, Status } from "@prisma/client";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -52,7 +52,8 @@ export function initializeSocket(server: HttpServer) {
                 }
 
                 const existingToMember = await prisma.member.findUnique({
-                    where: { id: +to, NOT: { id: memberId }, status: Status.ACTIVE }
+                    where: { id: +to, NOT: { id: memberId }, status: Status.ACTIVE },
+                    include: { friends: true, friendsOf: true },
                 });
 
                 if (!existingToMember) {
@@ -77,14 +78,49 @@ export function initializeSocket(server: HttpServer) {
                     }
                 });
 
-                // If conversation not found, create a new one
+                // Check if friend 
+                const isFriend =
+                    existingToMember.friends.some(f => f.friendId === memberId) ||
+                    existingToMember.friendsOf.some(f => f.memberId === memberId);
+
+                // If conversation not found, create a new one & add participants
                 if (!conversation) {
-                    const newConversation = await prisma.conversation.create({
-                        data: { type: "PRIVATE" }
+                    const { conversation } = await prisma.$transaction(async (tx) => {
+                        const conversation = await tx.conversation.create({
+                            data: { type: ConversationType.PRIVATE, status: isFriend ? ConversationStatus.ACCEPTED : ConversationStatus.REQUESTED },
+                        });
+
+                        await tx.conversationParticipant.create({
+                            data: { conversationId: conversation.id, memberId: memberId }
+                        });
+
+                        await tx.conversationParticipant.create({
+                            data: { conversationId: conversation.id, memberId: to }
+                        });
+
+                        return { conversation };
                     });
-                    conversationId = newConversation.id;
+
+                    conversationId = conversation.id;
                 } else {
                     conversationId = conversation.id;
+                }
+
+                // If request true. Need to update false by send to member id
+                if (conversation?.status === ConversationStatus.REQUESTED) {
+                    const firstMessage = await prisma.message.findFirst({
+                        where: { conversationId },
+                        orderBy: { id: "asc" },
+                        select: { senderId: true }
+                    });
+
+                    const shouldAcceptRequest =
+                        isFriend || !firstMessage || firstMessage.senderId !== memberId;
+
+                    if (shouldAcceptRequest) {
+                        socket.emit("private:message", { message: "If you want to return message.You need to accept the conversation first!" });
+                        return;
+                    }
                 }
 
                 // Create message 
@@ -102,6 +138,7 @@ export function initializeSocket(server: HttpServer) {
                     message: "Message sent successfully",
                     data: message
                 });
+
                 socket.emit("private:message", {
                     status: true,
                     message: "Message sent successfully",

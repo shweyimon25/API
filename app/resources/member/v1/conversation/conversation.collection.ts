@@ -9,6 +9,8 @@ export class ConversationCollection {
         bodyGoal: conversation.bodyGoal,
         gender: conversation.gender,
         proficientLevel: conversation.proficientLevel,
+        isRequest: conversation.isRequest,
+        latestMessage: conversation.messages > 0 ? null : conversation.messages[0],
         memberPlan: conversation.memberPlan,
         participantCount: conversation._count?.participants,
         createdAt: conversation.createdAt,
@@ -23,7 +25,7 @@ export class ConversationCollection {
         id: conversation.id,
         name: conversation.name,
         type: conversation.type,
-        image: conversation.image
+        image: conversation.image,
       }
     });
   }

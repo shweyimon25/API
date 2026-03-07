@@ -43,6 +43,17 @@ class ProfileService {
                     select: {
                         id: true,
                         name: true,
+                        memberPlans: {
+                            select: {
+                                id: true,
+                                name: true,
+                                image: true,
+                                price: true,
+                                duration: true,
+                                isVideoGroup: true,
+                                status: true,
+                            }
+                        }
                     }
                 },
                 providerTypes: {
