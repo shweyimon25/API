@@ -245,6 +245,12 @@ model Member {
   memberType   MemberType? @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int?
 
+  bodyGoalId Int?
+  bodyGoal   BodyGoal? @relation(fields: [bodyGoalId], references: [id])
+
+  proficientLevelId Int?
+  proficientLevel   ProficientLevel? @relation(fields: [proficientLevelId], references: [id])
+
   profile MemberProfile?
 
   language Language @default(ENG)
@@ -616,6 +622,7 @@ model BodyGoal {
 
   workouts      Workout[]
   conversations Conversation[]
+  members       Member[]
 }
 
 model ProficientLevel {
@@ -631,6 +638,7 @@ model ProficientLevel {
   updatedAt     DateTime       @updatedAt
   workouts      Workout[]
   conversations Conversation[]
+  members       Member[]
 }
 
 model Category {

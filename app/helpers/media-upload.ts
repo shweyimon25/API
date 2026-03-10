@@ -1,4 +1,5 @@
 import path from "path";
+import { promises as fs } from "node:fs";
 import { v4 as uuidv4 } from "uuid";
 import { BadRequestException } from "./exceptions";
 import AWS from "aws-sdk";
@@ -50,6 +51,26 @@ export const upload = async (file: any, folderName: string = "temp") => {
   const key = `${folderName}/${uniqueName}`;
   const bucketName = "yc-fitness-uat";
 
+  if (process.env.NODE_ENV === "development") {
+    const relativePath = path.join("public", "uploads", folderName);
+    const absolutePath = path.join(process.cwd(), relativePath);
+    await fs.mkdir(absolutePath, { recursive: true });
+
+    const fileDiskPath = path.join(absolutePath, uniqueName);
+    await fs.writeFile(fileDiskPath, file.buffer);
+
+    const rawBaseUrl =
+      process.env.APP_URL || `http://localhost:${process.env.PORT || 3030}`;
+    const baseUrl = rawBaseUrl.replace(/\/+$/, "");
+
+    return {
+      fileSize: file.size,
+      fileMimeType: file.mimetype,
+      fileName: uniqueName,
+      fileUrl: `${baseUrl}/public/uploads/${key}`,
+    };
+  }
+
   const s3Client = getS3Client();
   await s3Client
     .putObject({
@@ -62,8 +83,6 @@ export const upload = async (file: any, folderName: string = "temp") => {
     .promise();
 
   const fileUrl = `https://${bucketName}.sgp1.digitaloceanspaces.com/${bucketName}/${key}`;
-
-  console.log(fileUrl);
 
   return {
     fileSize: file.size,

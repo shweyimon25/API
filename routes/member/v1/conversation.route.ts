@@ -40,6 +40,14 @@ router.post("/:id/request-accept", [
     ),
 ]);
 
+router.post("/:id/add-participants", [
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+        async (req: Request, res: Response) =>
+            await conversationController.addParticipants(req, res)
+    ),
+]);
+
 router.route("/:id")
     .get([
         passport.authenticate("jwt", { session: false }),

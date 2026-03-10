@@ -10,7 +10,6 @@ export const createConversationSchema = z.object({
     gender: z.enum(["MALE", "FEMALE", "BOTH"]).optional(),
     proficiencLevelId: z.number().int().positive().optional(),
     bodyGoalId: z.number().int().positive().optional(),
-    participantIds: z.array(z.number().int().positive()).optional()
 }).superRefine((data, ctx) => {
     // Logic for Trainer Groups
     if (data.type === ConversationType.TRAINER_GROUP) {
@@ -40,7 +39,10 @@ export const createConversationSchema = z.object({
 
 export const updateConversationSchema = z.object({
     name: z.string().optional(),
-    participantIds: z.array(z.number().int().positive()).optional() // Only for GROUP conversations
+});
+
+export const addParticipantsSchema = z.object({
+    participantIds: z.array(z.number().int().positive())
 });
 
 export const requestAcceptConversationSchema = z.object({
@@ -50,4 +52,5 @@ export const requestAcceptConversationSchema = z.object({
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type RequestAcceptConversationInput = z.infer<typeof requestAcceptConversationSchema>;
+export type AddParticipantsInput = z.infer<typeof addParticipantsSchema>;
 

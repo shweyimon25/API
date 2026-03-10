@@ -1,10 +1,17 @@
 import { ConversationStatus, ConversationType, ParticipantRole, Prisma, Status } from "@prisma/client";
-import { CreateConversationInput, RequestAcceptConversationInput } from "../../../schemas/member/v1/conversation.schema";
+import { AddParticipantsInput, CreateConversationInput, RequestAcceptConversationInput } from "../../../schemas/member/v1/conversation.schema";
 import prisma from "../../../../prisma/client";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
+import ProfileService from "./profile.service";
 
 class ConversationService {
+    private profileService: ProfileService;
+
+    constructor() {
+        this.profileService = new ProfileService();
+    }
+
     async findAll(memberId: number, where: Prisma.ConversationWhereInput) {
         const conversations = await prisma.conversation.findMany({
             where,
@@ -214,8 +221,9 @@ class ConversationService {
         return conversation;
     }
 
-    async create(member: any, createConversationInput: CreateConversationInput, files: Express.Multer.File[]) {
-        const { name, type, bodyGoalId, gender, proficiencLevelId: proficientLevelId, participantIds } = createConversationInput;
+    async create(memberId: number, createConversationInput: CreateConversationInput, files: Express.Multer.File[]) {
+        const currentMember = await this.profileService.profile(memberId);
+        const { name, type, bodyGoalId, gender, proficiencLevelId: proficientLevelId } = createConversationInput;
 
         // Image Upload
         let imageUrl;
@@ -231,10 +239,9 @@ class ConversationService {
 
         let conversation: any;
 
-        // Create Social Group
+        // Create Social Group (no participants auto-added)
         if (type === ConversationType.GROUP) {
 
-            // Create conversation with participants
             conversation = await prisma.conversation.create({
                 data: {
                     name,
@@ -242,56 +249,21 @@ class ConversationService {
                     image: imageUrl
                 },
             });
-
-            // Create participants for the conversation
-            if (participantIds && participantIds.length > 0) {
-
-                // Check participants exist
-                const existingParticipants = await prisma.member.findMany({
-                    where: {
-                        id: {
-                            in: participantIds,
-                            not: member.id
-                        }
-                    }
-                });
-
-                if (existingParticipants.length !== participantIds.length) {
-                    throw new BadRequestException("One or more participants do not exist");
-                }
-
-                await prisma.conversationParticipant.createMany({
-                    data: participantIds.map(pid => ({
-                        memberId: pid,
-                        conversationId: conversation.id,
-                        role: ParticipantRole.MEMBER
-                    }))
-                });
-            }
-
-            // Create participant for the creator
-            await prisma.conversationParticipant.create({
-                data: {
-                    memberId: member.id,
-                    conversationId: conversation.id,
-                    role: ParticipantRole.ADMIN
-                }
-            });
         }
 
-        // Create Trainer Group
+        // Create Trainer Group (no participants auto-added)
         if (type === ConversationType.TRAINER_GROUP) {
 
-            // Check currenct member is tranier 
-            const isTrainer = member.memberType.id === 2
+            const isTrainer = currentMember?.memberType?.id === 2;
 
             if (!isTrainer) {
                 throw new BadRequestException("Only trainers can create trainer groups");
             }
 
-            const existingBodyGoalId = await prisma.bodyGoal.findUnique({
+            const existingBodyGoalId = await prisma.bodyGoal.findFirst({
                 where: {
-                    id: bodyGoalId
+                    id: bodyGoalId,
+                    status: Status.ACTIVE
                 }
             });
 
@@ -299,14 +271,20 @@ class ConversationService {
                 throw new BadRequestException("Body goal does not exist");
             }
 
-            const existingProficientLevel = await prisma.proficientLevel.findUnique({
+            const existingProficientLevel = await prisma.proficientLevel.findFirst({
                 where: {
-                    id: proficientLevelId
+                    id: proficientLevelId,
+                    status: Status.ACTIVE
                 }
             });
 
             if (!existingProficientLevel) {
                 throw new BadRequestException("Proficient level does not exist");
+            }
+
+            const memberPlanId = currentMember?.memberType?.memberPlans?.[0]?.id;
+            if (!memberPlanId) {
+                throw new BadRequestException("Trainer has no active member plan");
             }
 
             conversation = await prisma.conversation.create({
@@ -317,51 +295,16 @@ class ConversationService {
                     bodyGoalId: bodyGoalId,
                     gender: gender,
                     proficientLevelId: proficientLevelId,
-                    memberPlanId: member.memberType.memberPlans[0].id
+                    memberPlanId,
                 },
             });
-
-            // Create participant for the creator
-            await prisma.conversationParticipant.create({
-                data: {
-                    memberId: member.id,
-                    conversationId: conversation.id,
-                    role: ParticipantRole.ADMIN
-                }
-            });
-
-            // Create participants for the conversation
-            if (participantIds && participantIds.length > 0) {
-
-                // Check participants exist
-                const existingParticipants = await prisma.member.findMany({
-                    where: {
-                        id: {
-                            in: participantIds,
-                            not: member.id
-                        }
-                    }
-                });
-
-                if (existingParticipants.length !== participantIds.length) {
-                    throw new BadRequestException("One or more participants do not exist");
-                }
-
-                await prisma.conversationParticipant.createMany({
-                    data: participantIds.map(pid => ({
-                        memberId: pid,
-                        conversationId: conversation.id,
-                        role: ParticipantRole.MEMBER
-                    }))
-                });
-            }
         }
 
-        return this.findOne(member.id, conversation.id);
+        return conversation;
     }
 
     async update(memberId: number, id: number, updateConversationInput: CreateConversationInput, files: Express.Multer.File[]) {
-        const { name, participantIds } = updateConversationInput;
+        const { name } = updateConversationInput;
         const conversation = await this.findOne(memberId, id);
 
         // Image Upload
@@ -387,36 +330,138 @@ class ConversationService {
         }
 
         if (conversation.type === ConversationType.GROUP) {
-            // Check participants exist 
-            if (participantIds && participantIds.length > 0) {
-                const existingParticipants = await prisma.member.findMany({
-                    where: {
-                        id: {
-                            in: participantIds,
-                            not: memberId
-                        }
-                    }
-                });
-
-                if (existingParticipants.length !== participantIds.length) {
-                    throw new BadRequestException("One or more participants do not exist");
-                }
-            }
-
             await prisma.conversation.update({
                 where: { id },
                 data: {
                     name: name ?? conversation.name,
-                    participants: participantIds ? {
-                        deleteMany: {},
-                        create: participantIds.map(pid => ({ memberId: pid }))
-                    } : undefined,
                     image: imageUrl ?? conversation.image
                 },
             });
         }
 
         return await this.findOne(memberId, id);
+    }
+
+    async addedParticipant(memberId: number, id: number, addParticipantsInput: AddParticipantsInput) {
+        const { participantIds } = addParticipantsInput;
+        
+        if (participantIds.includes(memberId)) {
+            throw new BadRequestException("You cannot add yourself as a participant");
+        }
+
+        const conversation = await prisma.conversation.findUnique({
+            where: { id },
+            include: {
+                participants: true,
+            },
+        });
+
+        if (!conversation) {
+            throw new NotFoundException("Conversation not found");
+        }
+
+        let currentParticipant = conversation.participants.find(
+            (p) => p.memberId === memberId,
+        );
+
+        if(!currentParticipant) {
+            throw new BadRequestException("You are not a participant of this conversation");
+        }
+
+        // GROUP: any participant can add others
+        // TRAINER_GROUP: only admins can add and must be a trainer
+        if (conversation.type === ConversationType.TRAINER_GROUP) {
+            if (currentParticipant.role !== ParticipantRole.ADMIN) {
+                throw new BadRequestException("Only conversation admins can add participants");
+            }
+
+            const isTrainer = currentParticipant.memberId === memberId && (await prisma.member.findFirst({
+                where: { id: memberId, status: Status.ACTIVE },
+                select: { memberTypeId: true, memberType: { select: { id: true } } },
+            }))?.memberType?.id === 2;
+
+            if (!isTrainer) {
+                throw new BadRequestException("Only trainers can add participants to trainer groups");
+            }
+        }
+
+        // Exclude current member and already-added participants
+        const existingIds = new Set(conversation.participants.map((p) => p.memberId));
+
+        const targetIds = participantIds.filter(
+            (pid) => !existingIds.has(pid),
+        );
+
+        if (targetIds.length === 0) {
+            // Nothing new to add; just return current state
+            return this.findOne(memberId, id);
+        }
+
+        // Ensure all target members exist
+        const existingMembers = await prisma.member.findMany({
+            where: {
+                id: {
+                    in: targetIds,
+                },
+            },
+            select: {
+                id: true,
+                status: true,
+                bodyGoalId: true,
+                proficientLevelId: true,
+                profile: { select: { gender: true } },
+                memberType: { select: { memberPlans: { select: { id: true } } } },
+            }
+        });
+
+        if (existingMembers.length !== targetIds.length) {
+            throw new BadRequestException("One or more participants do not exist");
+        }
+
+        if (conversation.type === ConversationType.TRAINER_GROUP) {
+            const requiredPlanId = conversation.memberPlanId;
+            const requiredGender = conversation.gender;
+            const requiredBodyGoalId = conversation.bodyGoalId;
+            const requiredProficientLevelId = conversation.proficientLevelId;
+
+            if (!requiredPlanId || !requiredGender || !requiredBodyGoalId || !requiredProficientLevelId) {
+                throw new BadRequestException("Trainer group is missing required filters");
+            }
+
+            const invalid = existingMembers.find((m) => {
+                if (m.status !== Status.ACTIVE) return true;
+
+                const memberGender = m.profile?.gender ?? null;
+                const genderOk =
+                    requiredGender === "BOTH" ||
+                    memberGender === requiredGender ||
+                    memberGender === "BOTH";
+
+                const planIds = m.memberType?.memberPlans?.map((p) => p.id) ?? [];
+                const planOk = planIds.includes(requiredPlanId);
+
+                const bodyGoalOk = m.bodyGoalId === requiredBodyGoalId;
+                const proficientOk = m.proficientLevelId === requiredProficientLevelId;
+
+                return !genderOk || !planOk || !bodyGoalOk || !proficientOk;
+            });
+
+            if (invalid) {
+                throw new BadRequestException(
+                    "One or more participants do not match this trainer group's gender, body goal, proficient level, or member plan"
+                );
+            }
+        }
+
+        await prisma.conversationParticipant.createMany({
+            data: targetIds.map((pid) => ({
+                memberId: pid,
+                conversationId: id,
+                role: ParticipantRole.MEMBER,
+            })),
+        });
+
+        return this.findOne(memberId, id);
     }
 
     async destroy(memberId: number, id: number) {

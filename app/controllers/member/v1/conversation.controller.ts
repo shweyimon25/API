@@ -4,11 +4,15 @@ import ConversationService from "../../../services/member/v1/conversation.servic
 import { successResponse } from "../../../helpers/response";
 import { conversationScope } from "../../../scopes/member/v1/conversation.scope";
 import { validater } from "../../../helpers/validator";
-import { createConversationSchema, requestAcceptConversationSchema, updateConversationSchema } from "../../../schemas/member/v1/conversation.schema";
+import {
+    addParticipantsSchema,
+    createConversationSchema,
+    requestAcceptConversationSchema,
+    updateConversationSchema
+} from "../../../schemas/member/v1/conversation.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import { ConversationCollection } from "../../../resources/member/v1/conversation/conversation.collection";
 import { ConversationResource } from "../../../resources/member/v1/conversation/conversation.resource";
-import prisma from "../../../../prisma/client";
 
 class ConversationController {
     private conversationService: ConversationService;
@@ -69,30 +73,16 @@ class ConversationController {
             throw new ValidationException("Create Conversation Failed", error);
         }
 
-        const currentMember: any = await prisma.member.findFirst({
-            where: {
-                id: (req.user as Member).id,
-            },
-            include: {
-                memberType: {
-                    include: {
-                        memberPlans: true
-                    }
-                }
-            }
-        });
-
         const files = req.files as Express.Multer.File[];
+        const memberId = (req.user as Member).id;
 
         const conversation = await this.conversationService.create(
-            currentMember,
+            memberId,
             data,
             files
         );
 
-        return successResponse(res, "Conversation created successfully",
-            ConversationResource.toResource(conversation)
-        );
+        return successResponse(res, "Conversation created successfully", conversation)
     }
 
     async update(req: Request, res: Response) {
@@ -115,6 +105,29 @@ class ConversationController {
 
         return successResponse(res, "Conversation updated successfully",
             ConversationResource.toResource(conversation)
+        );
+    }
+
+    async addParticipants(req: Request, res: Response) {
+        const { data, success, error } = await validater(addParticipantsSchema, req.body);
+
+        if (!success) {
+            throw new ValidationException("Add participants failed", error);
+        }
+
+        const { id } = req.params;
+        const memberId = (req.user as Member).id;
+
+        const conversation = await this.conversationService.addedParticipant(
+            memberId,
+            +id,
+            data
+        );
+
+        return successResponse(
+            res,
+            "Conversation participants added successfully",
+            ConversationResource.toResource(conversation),
         );
     }
 
