@@ -56,6 +56,22 @@ router.delete("/:id/remove-participants/:participantId", [
     ),
 ]);
 
+router.delete("/:id/leave", [
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+        async (req: Request, res: Response) =>
+            await conversationController.leave(req, res)
+    ),
+]);
+
+router.put("/:id/participants/:participantId/update-role", [
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+        async (req: Request, res: Response) =>
+            await conversationController.updateParticipantRole(req, res)
+    ),
+]);
+
 router.route("/:id")
     .get([
         passport.authenticate("jwt", { session: false }),

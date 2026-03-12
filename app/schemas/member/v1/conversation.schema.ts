@@ -1,4 +1,4 @@
-import { ConversationStatus, ConversationType } from "@prisma/client";
+import { ConversationStatus, ConversationType, ParticipantRole } from "@prisma/client";
 import { z } from "zod";
 
 export const createConversationSchema = z.object({
@@ -45,6 +45,10 @@ export const addParticipantsSchema = z.object({
     participantIds: z.array(z.number().int().positive())
 });
 
+export const updateParticipantRoleSchema = z.object({
+    role: z.enum([ParticipantRole.ADMIN, ParticipantRole.MEMBER])
+});
+
 export const requestAcceptConversationSchema = z.object({
     status : z.enum([ConversationStatus.ACCEPTED, ConversationStatus.REQUESTED])
 });
@@ -53,4 +57,4 @@ export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type RequestAcceptConversationInput = z.infer<typeof requestAcceptConversationSchema>;
 export type AddParticipantsInput = z.infer<typeof addParticipantsSchema>;
-
+export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSchema>;

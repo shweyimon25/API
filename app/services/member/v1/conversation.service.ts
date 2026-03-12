@@ -1,5 +1,5 @@
 import { ConversationStatus, ConversationType, ParticipantRole, Prisma, Status } from "@prisma/client";
-import { AddParticipantsInput, CreateConversationInput, RequestAcceptConversationInput } from "../../../schemas/member/v1/conversation.schema";
+import { AddParticipantsInput, CreateConversationInput, RequestAcceptConversationInput, UpdateParticipantRoleInput } from "../../../schemas/member/v1/conversation.schema";
 import prisma from "../../../../prisma/client";
 import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
@@ -359,7 +359,7 @@ class ConversationService {
 
     async addedParticipants(memberId: number, id: number, addParticipantsInput: AddParticipantsInput) {
         const { participantIds } = addParticipantsInput;
-        
+
         if (participantIds.includes(memberId)) {
             throw new BadRequestException("You cannot add yourself as a participant");
         }
@@ -370,7 +370,7 @@ class ConversationService {
             (p) => p.memberId === memberId,
         );
 
-        if(!currentParticipant) {
+        if (!currentParticipant) {
             throw new BadRequestException("You are not a participant of this conversation");
         }
 
@@ -513,6 +513,40 @@ class ConversationService {
         return this.findOne(memberId, id);
     }
 
+    async leave(memberId: number, id: number) {
+        const conversation = await this.findOne(memberId, id);
+        const currentParticipant = conversation.participants.find(
+            (p) => p.memberId === memberId,
+        );
+
+        if (!currentParticipant) {
+            throw new BadRequestException("You are not a participant of this conversation");
+        }
+
+        if (currentParticipant.role === ParticipantRole.ADMIN) {
+            const otherAdminExists = conversation.participants.some(
+                (p) => p.role === ParticipantRole.ADMIN && p.memberId !== memberId,
+            );
+
+            if (!otherAdminExists) {
+                throw new BadRequestException(
+                    "You cannot leave as the only admin. Assign another admin first.",
+                );
+            }
+        }
+
+        await prisma.conversationParticipant.delete({
+            where: {
+                conversationId_memberId: {
+                    conversationId: id,
+                    memberId: memberId,
+                },
+            },
+        });
+
+        return this.findOne(memberId, id);
+    }
+
     async destroy(memberId: number, id: number) {
         const conversation = await this.findOne(memberId, id);
 
@@ -539,6 +573,45 @@ class ConversationService {
         await prisma.conversation.delete({
             where: { id },
         });
+    }
+
+    async updateParticipantRole(memberId: number, id: number, participantId: number, updateParticipantRoleInput: UpdateParticipantRoleInput) {
+        const conversation = await this.findOne(memberId, id);
+        const currentParticipant = conversation.participants.find(
+            (p) => p.memberId === memberId,
+        );
+
+        if (!currentParticipant) {
+            throw new BadRequestException("You are not a participant of this conversation");
+        }
+
+        if (currentParticipant.role !== ParticipantRole.ADMIN) {
+            throw new ForbiddenException("Only conversation admins can update participant role");
+        }
+
+        const participant = conversation.participants.find((p) => p.memberId === participantId);
+
+        if (!participant) {
+            throw new BadRequestException("Participant not found");
+        }
+
+        if (participantId === memberId) {
+            throw new BadRequestException("You cannot update your own role");
+        }
+
+        await prisma.conversationParticipant.update({
+            where: {
+                conversationId_memberId: {
+                    conversationId: id,
+                    memberId: participantId,
+                },
+            },
+            data: {
+                role: updateParticipantRoleInput.role
+            },
+        });
+
+        return this.findOne(memberId, id);
     }
 
     async requestAccept(id: number, requestAcceptConversationInput: RequestAcceptConversationInput, memberId: number) {
