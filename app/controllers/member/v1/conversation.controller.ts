@@ -118,7 +118,7 @@ class ConversationController {
         const { id } = req.params;
         const memberId = (req.user as Member).id;
 
-        const conversation = await this.conversationService.addedParticipant(
+        const conversation = await this.conversationService.addedParticipants(
             memberId,
             +id,
             data
@@ -127,6 +127,16 @@ class ConversationController {
         return successResponse(
             res,
             "Conversation participants added successfully",
+            ConversationResource.toResource(conversation),
+        );
+    }
+
+    async removeParticipants(req: Request, res: Response) {
+        const { id, participantId } = req.params;
+        const memberId = (req.user as Member).id; 
+        const conversation = await this.conversationService.removeParticipant(memberId, +id, +participantId);
+
+        return successResponse(res, "Conversation participants removed successfully",
             ConversationResource.toResource(conversation),
         );
     }

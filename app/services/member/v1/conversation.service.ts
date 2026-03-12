@@ -1,7 +1,7 @@
 import { ConversationStatus, ConversationType, ParticipantRole, Prisma, Status } from "@prisma/client";
 import { AddParticipantsInput, CreateConversationInput, RequestAcceptConversationInput } from "../../../schemas/member/v1/conversation.schema";
 import prisma from "../../../../prisma/client";
-import { BadRequestException, NotFoundException, UnauthorizedException } from "../../../helpers/exceptions";
+import { BadRequestException, ForbiddenException, NotFoundException, UnauthorizedException } from "../../../helpers/exceptions";
 import { upload } from "../../../helpers/media-upload";
 import ProfileService from "./profile.service";
 
@@ -137,12 +137,7 @@ class ConversationService {
     async findOne(memberId: number, id: number) {
         const conversation = await prisma.conversation.findUnique({
             where: {
-                id,
-                participants: {
-                    some: {
-                        memberId
-                    }
-                }
+                id
             },
             include: {
                 messages: {
@@ -249,6 +244,14 @@ class ConversationService {
                     image: imageUrl
                 },
             });
+
+            await prisma.conversationParticipant.create({
+                data: {
+                    memberId,
+                    conversationId: conversation.id,
+                    role: ParticipantRole.ADMIN,
+                },
+            });
         }
 
         // Create Trainer Group (no participants auto-added)
@@ -307,6 +310,18 @@ class ConversationService {
         const { name } = updateConversationInput;
         const conversation = await this.findOne(memberId, id);
 
+        const currentParticipant = conversation.participants.find(
+            (p) => p.memberId === memberId,
+        );
+
+        if (!currentParticipant) {
+            throw new BadRequestException("You are not a participant of this conversation");
+        }
+
+        if (currentParticipant.role !== ParticipantRole.ADMIN) {
+            throw new ForbiddenException("Only conversation admins can update the conversation");
+        }
+
         // Image Upload
         let imageUrl;
 
@@ -342,23 +357,14 @@ class ConversationService {
         return await this.findOne(memberId, id);
     }
 
-    async addedParticipant(memberId: number, id: number, addParticipantsInput: AddParticipantsInput) {
+    async addedParticipants(memberId: number, id: number, addParticipantsInput: AddParticipantsInput) {
         const { participantIds } = addParticipantsInput;
         
         if (participantIds.includes(memberId)) {
             throw new BadRequestException("You cannot add yourself as a participant");
         }
 
-        const conversation = await prisma.conversation.findUnique({
-            where: { id },
-            include: {
-                participants: true,
-            },
-        });
-
-        if (!conversation) {
-            throw new NotFoundException("Conversation not found");
-        }
+        const conversation = await this.findOne(memberId, id);
 
         let currentParticipant = conversation.participants.find(
             (p) => p.memberId === memberId,
@@ -387,6 +393,12 @@ class ConversationService {
 
         // Exclude current member and already-added participants
         const existingIds = new Set(conversation.participants.map((p) => p.memberId));
+
+        const alreadyInConversation = participantIds.filter((pid) => existingIds.has(pid));
+
+        if (alreadyInConversation.length > 0) {
+            throw new BadRequestException("One or more participants are already in this conversation");
+        }
 
         const targetIds = participantIds.filter(
             (pid) => !existingIds.has(pid),
@@ -464,8 +476,57 @@ class ConversationService {
         return this.findOne(memberId, id);
     }
 
+    async removeParticipant(memberId: number, id: number, participantId: number) {
+        const conversation = await this.findOne(memberId, id);
+
+        const currentParticipant = conversation.participants.find(
+            (p) => p.memberId === memberId,
+        );
+
+        if (!currentParticipant) {
+            throw new BadRequestException("You are not a participant of this conversation");
+        }
+
+        if (currentParticipant.role !== ParticipantRole.ADMIN) {
+            throw new ForbiddenException("Only conversation admins can remove participants");
+        }
+
+        const participant = conversation.participants.find((p) => p.memberId === participantId);
+
+        if (!participant) {
+            throw new BadRequestException("Participant not found");
+        }
+
+        if (participantId === memberId) {
+            throw new BadRequestException("You cannot remove yourself");
+        }
+
+        await prisma.conversationParticipant.delete({
+            where: {
+                conversationId_memberId: {
+                    conversationId: id,
+                    memberId: participantId,
+                },
+            },
+        });
+
+        return this.findOne(memberId, id);
+    }
+
     async destroy(memberId: number, id: number) {
         const conversation = await this.findOne(memberId, id);
+
+        const currentParticipant = conversation.participants.find(
+            (p) => p.memberId === memberId,
+        );
+
+        if (!currentParticipant) {
+            throw new BadRequestException("You are not a participant of this conversation");
+        }
+
+        if (currentParticipant.role !== ParticipantRole.ADMIN) {
+            throw new ForbiddenException("Only conversation admins can delete the conversation");
+        }
 
         if (conversation.participants.length > 0) {
             await prisma.conversationParticipant.deleteMany({

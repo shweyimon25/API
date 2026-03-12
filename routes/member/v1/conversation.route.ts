@@ -48,6 +48,14 @@ router.post("/:id/add-participants", [
     ),
 ]);
 
+router.delete("/:id/remove-participants/:participantId", [
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+        async (req: Request, res: Response) =>
+            await conversationController.removeParticipants(req, res)
+    ),
+]);
+
 router.route("/:id")
     .get([
         passport.authenticate("jwt", { session: false }),
