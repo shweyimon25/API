@@ -286,6 +286,7 @@ class ConversationService {
             }
 
             const memberPlanId = currentMember?.memberType?.memberPlans?.[0]?.id;
+
             if (!memberPlanId) {
                 throw new BadRequestException("Trainer has no active member plan");
             }
@@ -301,9 +302,17 @@ class ConversationService {
                     memberPlanId,
                 },
             });
+
+            await prisma.conversationParticipant.create({
+                data: {
+                    memberId,
+                    conversationId: conversation.id,
+                    role: ParticipantRole.ADMIN,
+                },
+            });
         }
 
-        return conversation;
+        return await this.findOne(memberId, conversation.id);
     }
 
     async update(memberId: number, id: number, updateConversationInput: CreateConversationInput, files: Express.Multer.File[]) {
@@ -358,9 +367,9 @@ class ConversationService {
     }
 
     async addedParticipants(memberId: number, id: number, addParticipantsInput: AddParticipantsInput) {
-        const { participantIds } = addParticipantsInput;
+        const { participantId } = addParticipantsInput;
 
-        if (participantIds.includes(memberId)) {
+        if (participantId === memberId) {
             throw new BadRequestException("You cannot add yourself as a participant");
         }
 
@@ -394,27 +403,14 @@ class ConversationService {
         // Exclude current member and already-added participants
         const existingIds = new Set(conversation.participants.map((p) => p.memberId));
 
-        const alreadyInConversation = participantIds.filter((pid) => existingIds.has(pid));
-
-        if (alreadyInConversation.length > 0) {
-            throw new BadRequestException("One or more participants are already in this conversation");
-        }
-
-        const targetIds = participantIds.filter(
-            (pid) => !existingIds.has(pid),
-        );
-
-        if (targetIds.length === 0) {
-            // Nothing new to add; just return current state
-            return this.findOne(memberId, id);
+        if (existingIds.has(participantId)) {
+            throw new BadRequestException("Participant is already in this conversation");
         }
 
         // Ensure all target members exist
         const existingMembers = await prisma.member.findMany({
             where: {
-                id: {
-                    in: targetIds,
-                },
+                id: participantId,
             },
             select: {
                 id: true,
@@ -426,10 +422,11 @@ class ConversationService {
             }
         });
 
-        if (existingMembers.length !== targetIds.length) {
-            throw new BadRequestException("One or more participants do not exist");
+        if (existingMembers.length === 0) {
+            throw new BadRequestException("Participant does not exist");
         }
 
+        // Check if the participants match the trainer group filters
         if (conversation.type === ConversationType.TRAINER_GROUP) {
             const requiredPlanId = conversation.memberPlanId;
             const requiredGender = conversation.gender;
@@ -440,8 +437,10 @@ class ConversationService {
                 throw new BadRequestException("Trainer group is missing required filters");
             }
 
-            const invalid = existingMembers.find((m) => {
-                if (m.status !== Status.ACTIVE) return true;
+            for (const m of existingMembers) {
+                if (m.status !== Status.ACTIVE) {
+                    throw new BadRequestException(`Participant ${m.id} is not active`);
+                }
 
                 const memberGender = m.profile?.gender ?? null;
                 const genderOk =
@@ -449,28 +448,43 @@ class ConversationService {
                     memberGender === requiredGender ||
                     memberGender === "BOTH";
 
+                if (!genderOk) {
+                    throw new BadRequestException(
+                        `Participant ${m.id} gender does not match this trainer group`,
+                    );
+                }
+
                 const planIds = m.memberType?.memberPlans?.map((p) => p.id) ?? [];
                 const planOk = planIds.includes(requiredPlanId);
 
+                if (!planOk) {
+                    throw new BadRequestException(
+                        `Participant ${m.id} does not match this trainer group's member plan`,
+                    );
+                }
+
                 const bodyGoalOk = m.bodyGoalId === requiredBodyGoalId;
+                if (!bodyGoalOk) {
+                    throw new BadRequestException(
+                        `Participant ${m.id} does not match this trainer group's body goal`,
+                    );
+                }
+
                 const proficientOk = m.proficientLevelId === requiredProficientLevelId;
-
-                return !genderOk || !planOk || !bodyGoalOk || !proficientOk;
-            });
-
-            if (invalid) {
-                throw new BadRequestException(
-                    "One or more participants do not match this trainer group's gender, body goal, proficient level, or member plan"
-                );
+                if (!proficientOk) {
+                    throw new BadRequestException(
+                        `Participant ${m.id} does not match this trainer group's proficient level`,
+                    );
+                }
             }
         }
 
-        await prisma.conversationParticipant.createMany({
-            data: targetIds.map((pid) => ({
-                memberId: pid,
+        await prisma.conversationParticipant.create({
+            data: {
+                memberId: participantId,
                 conversationId: id,
                 role: ParticipantRole.MEMBER,
-            })),
+            },
         });
 
         return this.findOne(memberId, id);
@@ -655,7 +669,7 @@ class ConversationService {
             );
         }
 
-        return await prisma.conversation.update({
+        await prisma.conversation.update({
             where: {
                 id: conversation.id
             },
@@ -663,6 +677,8 @@ class ConversationService {
                 status: requestAcceptConversationInput.status
             }
         });
+
+        return await this.findOne(memberId, conversation.id);
     }
 }
 

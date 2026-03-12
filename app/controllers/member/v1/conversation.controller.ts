@@ -83,7 +83,9 @@ class ConversationController {
             files
         );
 
-        return successResponse(res, "Conversation created successfully", conversation)
+        return successResponse(res, "Conversation created successfully",
+            ConversationResource.toResource(conversation)
+        );
     }
 
     async update(req: Request, res: Response) {
@@ -153,14 +155,18 @@ class ConversationController {
         const memberId = (req.user as Member).id;
         const conversation = await this.conversationService.requestAccept(+id, data, memberId);
 
-        return successResponse(res, "Conversation update status successfully", conversation);
+        return successResponse(res, "Conversation update status successfully",
+            ConversationResource.toResource(conversation)
+        );
     }
 
     async leave(req: Request, res: Response) {
         const { id } = req.params;
         const memberId = (req.user as Member).id;
         const conversation = await this.conversationService.leave(memberId, +id);
-        return successResponse(res, "Conversation left successfully", conversation);
+        return successResponse(res, "Conversation left successfully",
+            ConversationResource.toResource(conversation)
+        );
     }
 
     async updateParticipantRole(req: Request, res: Response) {
@@ -173,7 +179,9 @@ class ConversationController {
         const { id, participantId } = req.params;
         const memberId = (req.user as Member).id;
         const conversation = await this.conversationService.updateParticipantRole(memberId, +id, +participantId, data);
-        return successResponse(res, "Conversation participant role updated successfully", conversation);
+        return successResponse(res, "Conversation participant role updated successfully",
+            ConversationResource.toResource(conversation)
+        );
     }
 
     async destroy(req: Request, res: Response) {

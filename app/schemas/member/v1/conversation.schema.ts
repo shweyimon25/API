@@ -42,7 +42,7 @@ export const updateConversationSchema = z.object({
 });
 
 export const addParticipantsSchema = z.object({
-    participantIds: z.array(z.number().int().positive())
+    participantId: z.number().int().positive(),
 });
 
 export const updateParticipantRoleSchema = z.object({
