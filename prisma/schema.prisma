@@ -287,6 +287,8 @@ model Member {
   attendances              Attendance[]
   messageReactions         MessageReaction[]
   postCommentReactions     PostCommentReaction[]
+  blocks                   Block[]                   @relation("MemberBlocked")
+  blockedBy                Block[]                   @relation("MemberBlockedBy")
 }
 
 model MemberFcmToken {
@@ -1034,6 +1036,18 @@ model MessageReaction {
   updatedAt DateTime @updatedAt
 
   @@unique([messageId, memberId])
+}
+
+model Block {
+  id              Int      @id @default(autoincrement())
+  memberId        Int
+  member          Member   @relation("MemberBlocked", fields: [memberId], references: [id])
+  blockedMemberId Int
+  blockedMember   Member   @relation("MemberBlockedBy", fields: [blockedMemberId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([memberId, blockedMemberId])
 }
 
 enum NotificationType {

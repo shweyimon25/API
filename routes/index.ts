@@ -57,6 +57,7 @@ import memberPostReactionRoute from "./member/v1/post-reaction.route";
 import memberConversationRoute from "./member/v1/conversation.route";
 import memberMessageRoute from "./member/v1/message.route";
 import memberMember from "./member/v1/member.route";
+import memberBlockRoute from "./member/v1/block.route";
 
 const router = Router();
 
@@ -117,5 +118,6 @@ router.use("/member/v1/post-reactions", memberPostReactionRoute);
 router.use("/member/v1/conversations", memberConversationRoute);
 router.use("/member/v1/messages", memberMessageRoute);
 router.use("/member/v1/members", memberMember);    
+router.use("/member/v1/blocks", memberBlockRoute);
 
 export default router;
