@@ -346,17 +346,19 @@ class UserService {
     });
 
     if (roleId) {
-      await prisma.userRole.deleteMany({
-        where: {
-          id,
-        },
-      });
-      await prisma.userRole.create({
-        data: {
-          userId: id,
-          roleId,
-        },
-      });
+      await prisma.$transaction([
+        prisma.userRole.deleteMany({
+          where: {
+            userId: id,
+          },
+        }),
+        prisma.userRole.create({
+          data: {
+            userId: id,
+            roleId,
+          },
+        }),
+      ]);
     }
 
     return this.findOne(id);

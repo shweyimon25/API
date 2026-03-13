@@ -140,6 +140,7 @@ class AuthService {
                     otp: otp,
                     expiresAt: expiresAt,
                     isUsed: false,
+                    isVerified: false,
                 },
             });
         } else {
@@ -277,10 +278,16 @@ class AuthService {
 
         const member = await this.findActivatedMember(providerType, providerValue);
 
-        await prisma.member.update({
-            where: { id: member.id },
-            data: { password: hashPassword(newPassword) },
-        });
+        await prisma.$transaction([
+            prisma.member.update({
+                where: { id: member.id },
+                data: { password: hashPassword(newPassword) },
+            }),
+            prisma.oTP.update({
+                where: { id: existingOtp.id },
+                data: { isUsed: true },
+            }),
+        ]);
 
         return member;
     }

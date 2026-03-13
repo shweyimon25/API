@@ -106,7 +106,8 @@ class ProficientLevelController {
   }
 
   async destroy(req: Request, res: Response) {
-    await this.proficientLevelService.destroy(+req);
+    const id = req.params.id;
+    await this.proficientLevelService.destroy(+id);
     return successResponse(res, "Proficient level deleted successfully");
   }
 }

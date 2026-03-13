@@ -75,7 +75,7 @@ class BodyGoalController {
 
         return successResponse(
             res,
-            "Cons created successfully",
+            "Body goal created successfully",
             BodyGoalResource.toResource(cons)
         );
     }
