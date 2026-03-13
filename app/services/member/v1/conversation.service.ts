@@ -561,6 +561,30 @@ class ConversationService {
         return this.findOne(memberId, id);
     }
 
+    async archive(memberId: number, id: number, archived: boolean) {
+        const conversation = await this.findOne(memberId, id);
+        const participant = conversation.participants.find((p) => p.memberId === memberId);
+
+        if (!participant) {
+            throw new BadRequestException("You are not a participant of this conversation");
+        }
+
+        await prisma.conversationParticipant.update({
+            where: {
+                conversationId_memberId: {
+                    conversationId: id,
+                    memberId,
+                },
+            },
+            data: {
+                isArchived: archived,
+                archivedAt: archived ? new Date() : null,
+            },
+        });
+
+        return this.findOne(memberId, id);
+    }
+
     async destroy(memberId: number, id: number) {
         const conversation = await this.findOne(memberId, id);
 

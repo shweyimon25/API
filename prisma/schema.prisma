@@ -997,6 +997,8 @@ model ConversationParticipant {
   role           ParticipantRole @default(MEMBER)
   joinedAt       DateTime        @default(now())
   lastReadAt     DateTime?
+  isArchived     Boolean         @default(false)
+  archivedAt     DateTime?
 
   @@unique([conversationId, memberId])
 }

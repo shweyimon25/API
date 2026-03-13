@@ -1,11 +1,13 @@
+import { Prisma } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { BadRequestException, ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
 import { BlockInput } from "../../../schemas/member/v1/block.schema";
 
 class BlockService {
-    async findAll(memberId: number) {
+    async findAll(memberId: number, where: Prisma.BlockWhereInput) {
         const blocks = await prisma.block.findMany({
             where: {
+                ...where,
                 memberId,
             },
             include: {
@@ -29,10 +31,11 @@ class BlockService {
         return blocks;
     }
 
-    async findByPaginate(memberId: number, page: number, perPage: number) {
+    async findByPaginate(memberId: number, page: number, perPage: number, where: Prisma.BlockWhereInput) {
         const blocks = await prisma.block.findMany({
             where: {
                 memberId,
+                ...where,
             },
             orderBy: {
                 id: "desc",
@@ -78,10 +81,11 @@ class BlockService {
         };
     }
 
-    async findCommonAll(memberId: number) {
+    async findCommonAll(memberId: number, where: Prisma.BlockWhereInput) {
         const blocks = await prisma.block.findMany({
             where: {
                 memberId,
+                ...where,
             },
             select: {
                 id: true,

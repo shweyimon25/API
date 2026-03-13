@@ -6,10 +6,11 @@ import { conversationScope } from "../../../scopes/member/v1/conversation.scope"
 import { validater } from "../../../helpers/validator";
 import {
     addParticipantsSchema,
+    archiveConversationSchema,
     createConversationSchema,
     requestAcceptConversationSchema,
     updateConversationSchema,
-    updateParticipantRoleSchema
+    updateParticipantRoleSchema,
 } from "../../../schemas/member/v1/conversation.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import { ConversationCollection } from "../../../resources/member/v1/conversation/conversation.collection";
@@ -181,6 +182,21 @@ class ConversationController {
         const conversation = await this.conversationService.updateParticipantRole(memberId, +id, +participantId, data);
         return successResponse(res, "Conversation participant role updated successfully",
             ConversationResource.toResource(conversation)
+        );
+    }
+
+    async archive(req: Request, res: Response) {
+        const { data, success, error } = await validater(archiveConversationSchema, req.body);
+        if (!success) {
+            throw new ValidationException("Archive conversation failed", error);
+        }
+        const { id } = req.params;
+        const memberId = (req.user as Member).id;
+        const conversation = await this.conversationService.archive(memberId, +id, data.archived);
+        return successResponse(
+            res,
+            data.archived ? "Conversation archived successfully" : "Conversation unarchived successfully",
+            ConversationResource.toResource(conversation),
         );
     }
 

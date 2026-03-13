@@ -50,7 +50,11 @@ export const updateParticipantRoleSchema = z.object({
 });
 
 export const requestAcceptConversationSchema = z.object({
-    status : z.enum([ConversationStatus.ACCEPTED, ConversationStatus.REQUESTED])
+    status: z.enum([ConversationStatus.ACCEPTED, ConversationStatus.CANCELED]),
+});
+
+export const archiveConversationSchema = z.object({
+    archived: z.boolean(),
 });
 
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
@@ -58,3 +62,4 @@ export type UpdateConversationInput = z.infer<typeof updateConversationSchema>;
 export type RequestAcceptConversationInput = z.infer<typeof requestAcceptConversationSchema>;
 export type AddParticipantsInput = z.infer<typeof addParticipantsSchema>;
 export type UpdateParticipantRoleInput = z.infer<typeof updateParticipantRoleSchema>;
+export type ArchiveConversationInput = z.infer<typeof archiveConversationSchema>;

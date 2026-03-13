@@ -72,6 +72,14 @@ router.put("/:id/participants/:participantId/update-role", [
     ),
 ]);
 
+router.post("/:id/archive", [
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+        async (req: Request, res: Response) =>
+            await conversationController.archive(req, res)
+    ),
+]);
+
 router.route("/:id")
     .get([
         passport.authenticate("jwt", { session: false }),

@@ -5,6 +5,9 @@ import { successResponse } from "../../../helpers/response";
 import { ValidationException } from "../../../helpers/exceptions";
 import { validater } from "../../../helpers/validator";
 import { BlockSchema } from "../../../schemas/member/v1/block.schema";
+import { blockScope } from "../../../scopes/member/v1/block.scope";
+import { BlockCollection } from "../../../resources/member/v1/block/block.collection";
+import { BlockResource } from "../../../resources/member/v1/block/block.resource";
 
 class BlockController {
     private blockService: BlockService;
@@ -17,20 +20,22 @@ class BlockController {
         const { page, perPage } = req.query;
 
         const memberId = (req.user as Member).id;
+        const where = blockScope(req.query, memberId);
 
         if (page && perPage) {
-            const blocks = await this.blockService.findByPaginate(memberId, +page, +perPage);
-            return successResponse(res, "Blocks retrieved successfully", blocks);
+            const blocks = await this.blockService.findByPaginate(memberId, +page, +perPage, where);
+            return successResponse(res, "Blocks retrieved successfully", BlockCollection.withPagination(blocks));
         }
 
-        const blocks = await this.blockService.findAll(memberId);
-        return successResponse(res, "Blocks retrieved successfully", blocks);
+        const blocks = await this.blockService.findAll(memberId, where);
+        return successResponse(res, "Blocks retrieved successfully", BlockCollection.toCollection(blocks));
     }
 
     async findCommonAll(req: Request, res: Response) {
         const memberId = (req.user as Member).id;
-        const blocks = await this.blockService.findCommonAll(memberId);
-        return successResponse(res, "Common blocks retrieved successfully", blocks);
+        const where = blockScope(req.query, memberId);
+        const blocks = await this.blockService.findCommonAll(memberId, where);
+        return successResponse(res, "Common blocks retrieved successfully", BlockCollection.toCommonCollection(blocks));
     }
 
     async findOne(req: Request, res: Response) {
@@ -40,7 +45,7 @@ class BlockController {
 
         return successResponse(res,
             "Block details successfully",
-            block
+            BlockResource.toResource(block)
         );
     }
 
@@ -55,7 +60,7 @@ class BlockController {
 
         const block = await this.blockService.block(memberId, data);
 
-        return successResponse(res, "Member blocked successfully", block);
+        return successResponse(res, "Member blocked successfully", BlockResource.toResource(block));
     }
 
     async unblock(req: Request, res: Response) {

@@ -3,12 +3,23 @@ import { Prisma, ConversationType } from "@prisma/client";
 interface ConversationScopeQuery {
     name?: string;
     type?: string;
+    archived?: string;
 }
 
 export const conversationScope = (query: ConversationScopeQuery, memberId: number): Prisma.ConversationWhereInput => {
-    const { name, type } = query;
+    const { name, type, archived } = query;
 
-    const where: Prisma.ConversationWhereInput = {};
+    const showArchived = archived === "true";
+    const showUnarchivedOnly = archived !== "true";
+
+    const where: Prisma.ConversationWhereInput = {
+        participants: {
+            some: {
+                memberId,
+                ...(showArchived ? { isArchived: true } : showUnarchivedOnly ? { isArchived: false } : {}),
+            },
+        },
+    };
 
     if (name) {
         where.name = {
@@ -18,9 +29,9 @@ export const conversationScope = (query: ConversationScopeQuery, memberId: numbe
     }
 
     if (type) {
-        where.type = type as ConversationType
+        where.type = type as ConversationType;
     }
 
     return where;
-}
+};
 
