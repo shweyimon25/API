@@ -9,8 +9,6 @@ export class MealResource {
       fat: meal.fat,
       mealType: meal.mealType,
       status: meal.status,
-      createdBy: meal.createdBy,
-      updatedBy: meal.updatedBy,
       createdAt: meal.createdAt,
       updatedAt: meal.updatedAt,
     };

@@ -1,18 +1,16 @@
 import prisma from "../../../../prisma/client";
 import {
   NotFoundException,
-  ValidationException,
 } from "../../../helpers/exceptions";
-import {
-  CreateMealInput,
-  UpdateMealInput,
-} from "../../../schemas/admin/v1/meal.schema";
 import { Prisma, Status } from "@prisma/client";
 
 class MealService {
   async findAll(where?: Prisma.MealWhereInput) {
     const meals = await prisma.meal.findMany({
-      where,
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+      },
       orderBy: {
         id: "desc",
       },
@@ -41,7 +39,10 @@ class MealService {
 
   async findByPaginate(page: number, perPage: number, where?: Prisma.MealWhereInput) {
     const meals = await prisma.meal.findMany({
-      where,
+      where: {
+        ...where,
+        status: Status.ACTIVE,
+      },
       orderBy: {
         id: "desc",
       },
@@ -90,6 +91,7 @@ class MealService {
     const meal = await prisma.meal.findUnique({
       where: {
         id,
+        status: Status.ACTIVE,
       },
       include: {
         createdBy: {
@@ -134,77 +136,6 @@ class MealService {
     });
 
     return meals;
-  }
-
-  async create(createMealInput: CreateMealInput, userId: number) {
-    const { name, cal, carb, protein, fat, mealType, status } =
-      createMealInput;
-
-    // Check meal name exists
-    const existingMealName = await prisma.meal.findFirst({
-      where: {
-        name,
-      },
-    });
-
-    if (existingMealName) {
-      throw new ValidationException("Failed to create meal", [
-        {
-          field: "name",
-          issue: "Name already exists",
-        },
-      ]);
-    }
-
-    const meal = await prisma.meal.create({
-      data: {
-        name,
-        cal,
-        carb,
-        protein,
-        fat,
-        mealType,
-        status: status ?? Status.ACTIVE,
-        createdById: userId,
-      },
-    });
-
-    return this.findOne(meal.id);
-  }
-
-  async update(id: number, updateMealInput: UpdateMealInput, userId: number) {
-    const { name, cal, carb, protein, fat, mealType, status } =
-      updateMealInput;
-
-    const existingMeal = await this.findOne(id);
-
-    await prisma.meal.update({
-      where: {
-        id,
-      },
-      data: {
-        name: name ?? existingMeal.name,
-        cal: cal ?? existingMeal.cal,
-        carb: carb ?? existingMeal.carb,
-        protein: protein ?? existingMeal.protein,
-        fat: fat ?? existingMeal.fat,
-        mealType: mealType ?? existingMeal.mealType,
-        status: status ?? existingMeal.status,
-        updatedById: userId,
-      },
-    });
-
-    return this.findOne(id);
-  }
-
-  async destroy(id: number) {
-    const meal = await this.findOne(id);
-
-    await prisma.meal.delete({
-      where: { id },
-    });
-
-    return meal;
   }
 }
 

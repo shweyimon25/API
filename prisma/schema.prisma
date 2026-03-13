@@ -66,8 +66,6 @@ model User {
   dietTypeUpdated             DietType[]           @relation("DietTypeUpdatedBy")
   bodyAttentionAreasCreated   BodyAttentionArea[]  @relation("BodyAttentionAreaCreatedBy")
   bodyAttentionAreasUpdated   BodyAttentionArea[]  @relation("BodyAttentionAreaUpdatedBy")
-  mealTypesCreated            MealType[]           @relation("MealTypeCreatedBy")
-  mealTypesUpdated            MealType[]           @relation("MealTypeUpdatedBy")
   mealsCreated                Meal[]               @relation("MealCreatedBy")
   mealsUpdated                Meal[]               @relation("MealUpdatedBy")
   badHabitsCreated            BadHabit[]           @relation("BadHabitCreatedBy")
@@ -289,6 +287,7 @@ model Member {
   postCommentReactions     PostCommentReaction[]
   blocks                   Block[]                   @relation("MemberBlocked")
   blockedBy                Block[]                   @relation("MemberBlockedBy")
+  mealTrackers             MealTracker[]
 }
 
 model MemberFcmToken {
@@ -770,39 +769,39 @@ model BodyAttentionArea {
   updatedAt   DateTime @updatedAt
 }
 
-model MealType {
-  id     Int    @id @default(autoincrement())
-  name   String @unique
-  status Status @default(ACTIVE)
+model Meal {
+  id       Int     @id @default(autoincrement())
+  name     String
+  cal      Float   @default(0.00)
+  carb     Float   @default(0.00)
+  protein  Float   @default(0.00)
+  fat      Float   @default(0.00)
+  mealType String?
+  status   Status  @default(ACTIVE)
 
-  createdById Int?
-  updatedById Int?
-  createdBy   User?    @relation("MealTypeCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("MealTypeUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  meals       Meal[]
+  createdById  Int?
+  updatedById  Int?
+  createdBy    User?         @relation("MealCreatedBy", fields: [createdById], references: [id])
+  updatedBy    User?         @relation("MealUpdatedBy", fields: [updatedById], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  mealTrackers MealTracker[]
 }
 
-model Meal {
-  id      Int    @id @default(autoincrement())
-  name    String
-  cal     Float  @default(0.00)
-  carb    Float  @default(0.00)
-  protein Float  @default(0.00)
-  fat     Float  @default(0.00)
-
-  mealTypeId Int
-  mealType   MealType @relation(fields: [mealTypeId], references: [id])
-
-  status Status @default(ACTIVE)
-
-  createdById Int?
-  updatedById Int?
-  createdBy   User?    @relation("MealCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("MealUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model MealTracker {
+  id           Int      @id @default(autoincrement())
+  mealId       Int
+  meal         Meal     @relation(fields: [mealId], references: [id])
+  memberId     Int
+  member       Member   @relation(fields: [memberId], references: [id])
+  date         String
+  totalCal     Float    @default(0.00)
+  totalCarb    Float    @default(0.00)
+  totalProtein Float    @default(0.00)
+  totalFat     Float    @default(0.00)
+  quantity     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model BadHabit {

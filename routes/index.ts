@@ -20,7 +20,6 @@ import adminPhysicalLimitationRoute from "./admin/v1/physical-limitation.route";
 import adminPlaceRoute from "./admin/v1/place.route";
 import adminDietTypeRoute from "./admin/v1/diet-type.route";
 import adminBodyAttentionAreaRoute from "./admin/v1/body-attention-area.route";
-import adminMealTypeRoute from "./admin/v1/meal-type.route";
 import adminMealRoute from "./admin/v1/meal.route";
 import adminBadHabitRoute from "./admin/v1/bad-habit.route";
 import adminWaterTrackerRoute from "./admin/v1/water-tracker.route";
@@ -58,6 +57,8 @@ import memberConversationRoute from "./member/v1/conversation.route";
 import memberMessageRoute from "./member/v1/message.route";
 import memberMember from "./member/v1/member.route";
 import memberBlockRoute from "./member/v1/block.route";
+import memberMealRoute from "./member/v1/meal.route";
+import memberMealTrackerRoute from "./member/v1/meal-tracker.route";
 
 const router = Router();
 
@@ -81,7 +82,6 @@ router.use("/admin/v1/physical-limitations", adminPhysicalLimitationRoute);
 router.use("/admin/v1/places", adminPlaceRoute);
 router.use("/admin/v1/diet-types", adminDietTypeRoute);
 router.use("/admin/v1/body-attention-areas", adminBodyAttentionAreaRoute);
-router.use("/admin/v1/meal-types", adminMealTypeRoute);
 router.use("/admin/v1/meals", adminMealRoute);
 router.use("/admin/v1/bad-habits", adminBadHabitRoute);
 router.use("/admin/v1/body-goals", adminBodyGoalRoute);
@@ -119,5 +119,7 @@ router.use("/member/v1/conversations", memberConversationRoute);
 router.use("/member/v1/messages", memberMessageRoute);
 router.use("/member/v1/members", memberMember);    
 router.use("/member/v1/blocks", memberBlockRoute);
+router.use("/member/v1/meals", memberMealRoute);
+router.use("/member/v1/meal-trackers", memberMealTrackerRoute);
 
 export default router;

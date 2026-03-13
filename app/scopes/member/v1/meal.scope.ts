@@ -2,14 +2,15 @@ import { Prisma, Status } from "@prisma/client";
 
 interface MealScopeQuery {
     name?: string;
-    status?: string;
     mealType?: string;
 }
 
 export const mealScope = (query: MealScopeQuery): Prisma.MealWhereInput => {
-    const { name, status, mealType } = query;
+    const { name, mealType } = query;
 
-    const where: Prisma.MealWhereInput = {};
+    const where: Prisma.MealWhereInput = {
+        status: Status.ACTIVE,
+    };
 
     if (name) {
         where.name = {
@@ -18,9 +19,6 @@ export const mealScope = (query: MealScopeQuery): Prisma.MealWhereInput => {
         };
     }
 
-    if (status) {
-        where.status = status as Status;
-    }
 
     if (mealType) {
         where.mealType = {

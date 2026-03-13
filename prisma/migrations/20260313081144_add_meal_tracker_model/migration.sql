@@ -1,0 +1,22 @@
+-- CreateTable
+CREATE TABLE "MealTracker" (
+    "id" SERIAL NOT NULL,
+    "mealId" INTEGER NOT NULL,
+    "memberId" INTEGER NOT NULL,
+    "date" TEXT NOT NULL,
+    "totalCal" DOUBLE PRECISION NOT NULL DEFAULT 0.00,
+    "totalCarb" DOUBLE PRECISION NOT NULL DEFAULT 0.00,
+    "totalProtein" DOUBLE PRECISION NOT NULL DEFAULT 0.00,
+    "totalFat" DOUBLE PRECISION NOT NULL DEFAULT 0.00,
+    "quantity" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "MealTracker_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "MealTracker" ADD CONSTRAINT "MealTracker_mealId_fkey" FOREIGN KEY ("mealId") REFERENCES "Meal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MealTracker" ADD CONSTRAINT "MealTracker_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

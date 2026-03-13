@@ -7,7 +7,7 @@ export const createMealSchema = z.object({
   carb: z.coerce.number().optional().default(0.00),
   protein: z.coerce.number().optional().default(0.00),
   fat: z.coerce.number().optional().default(0.00),
-  mealTypeId: z.coerce.number().min(1, { message: "Meal type is required" }),
+  mealType: z.string().min(1, { message: "Meal type is required" }),
   status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
@@ -17,7 +17,7 @@ export const updateMealSchema = z.object({
   carb: z.coerce.number().optional(),
   protein: z.coerce.number().optional(),
   fat: z.coerce.number().optional(),
-  mealTypeId: z.coerce.number().optional(),
+  mealType: z.string().optional(),
   status: z.enum([Status.ACTIVE, Status.INACTIVE], { message: "Status must be ACTIVE or INACTIVE" }).optional(),
 });
 
