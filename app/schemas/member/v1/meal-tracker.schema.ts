@@ -4,14 +4,10 @@ export const createMealTrackerSchema = z.object({
     mealId: z.coerce.number().min(1, { message: "Meal is required" }),
     date: z.string().min(1, { message: "Date is required" }), // e.g. 2026-03-13
     quantity: z.coerce.number().min(1).default(1),
-    note: z.string().optional(),
 });
 
 export const updateMealTrackerSchema = z.object({
-    mealId: z.coerce.number().min(1).optional(),
-    date: z.string().min(1).optional(),
     quantity: z.coerce.number().min(1).optional(),
-    note: z.string().optional(),
 });
 
 export type CreateMealTrackerInput = z.infer<typeof createMealTrackerSchema>;

@@ -78,18 +78,11 @@ class MealTrackerService {
     async update(memberId: number, id: number, input: UpdateMealTrackerInput) {
         const existing = await this.findOne(memberId, id);
 
-        const mealId = input.mealId ?? existing.mealId;
-        const quantity = input.quantity ?? existing.quantity;
-
-        const totals = await this.computeTotals(mealId, quantity);
-
         const tracker = await prisma.mealTracker.update({
             where: { id: existing.id },
             data: {
-                mealId,
-                date: input.date ?? existing.date,
-                quantity,
-                ...totals,
+                mealId: existing.mealId,
+                quantity: input.quantity ?? existing.quantity,
             },
             include: { meal: true },
         });
