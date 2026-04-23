@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { BadRequestException, ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
 import { CreateShopPostCommentInput, UpdateShopPostCommentInput } from "../../../schemas/member/v1/shop-post-comment.schema";
@@ -7,6 +8,11 @@ const memberSelect = {
     name: true,
     email: true,
     code: true,
+};
+
+const isShopPostWhere = {
+    shopId: { not: null },
+    shop: { status: Status.ACTIVE },
 };
 
 function mapComment(c: any): any {
@@ -25,25 +31,25 @@ class ShopPostCommentService {
     async give(input: CreateShopPostCommentInput, memberId: number) {
         const { shopPostId, comment, parentId } = input;
 
-        const post = await prisma.shopPost.findUnique({
-            where: { id: shopPostId },
+        const post = await prisma.post.findFirst({
+            where: { id: shopPostId, ...isShopPostWhere },
         });
         if (!post) {
             throw new NotFoundException("Shop post not found");
         }
 
         if (parentId != null) {
-            const parent = await prisma.shopPostComment.findFirst({
-                where: { id: parentId, shopPostId },
+            const parent = await prisma.postComment.findFirst({
+                where: { id: parentId, postId: shopPostId },
             });
             if (!parent) {
                 throw new BadRequestException("Parent comment not found or does not belong to this post");
             }
         }
 
-        const created = await prisma.shopPostComment.create({
+        const created = await prisma.postComment.create({
             data: {
-                shopPostId,
+                postId: shopPostId,
                 memberId,
                 comment,
                 parentId: parentId ?? null,
@@ -53,7 +59,7 @@ class ShopPostCommentService {
             },
         });
 
-        const withReplies = await prisma.shopPostComment.findUnique({
+        const withReplies = await prisma.postComment.findUnique({
             where: { id: created.id },
             include: {
                 member: { select: memberSelect },
@@ -67,8 +73,11 @@ class ShopPostCommentService {
     }
 
     async findOne(id: number) {
-        const comment = await prisma.shopPostComment.findUnique({
-            where: { id },
+        const comment = await prisma.postComment.findFirst({
+            where: {
+                id,
+                post: isShopPostWhere,
+            },
             include: {
                 member: { select: memberSelect },
                 replies: {
@@ -84,15 +93,15 @@ class ShopPostCommentService {
     }
 
     async listByShopPostId(shopPostId: number) {
-        const post = await prisma.shopPost.findUnique({
-            where: { id: shopPostId },
+        const post = await prisma.post.findFirst({
+            where: { id: shopPostId, ...isShopPostWhere },
         });
         if (!post) {
             throw new NotFoundException("Shop post not found");
         }
 
-        const topLevel = await prisma.shopPostComment.findMany({
-            where: { shopPostId, parentId: null },
+        const topLevel = await prisma.postComment.findMany({
+            where: { postId: shopPostId, parentId: null },
             include: {
                 member: { select: memberSelect },
                 replies: {
@@ -108,8 +117,8 @@ class ShopPostCommentService {
 
     async update(id: number, input: UpdateShopPostCommentInput, memberId: number) {
         const { comment } = input;
-        const existing = await prisma.shopPostComment.findUnique({
-            where: { id },
+        const existing = await prisma.postComment.findFirst({
+            where: { id, post: isShopPostWhere },
         });
         if (!existing) {
             throw new NotFoundException("Shop post comment not found");
@@ -117,7 +126,7 @@ class ShopPostCommentService {
         if (existing.memberId !== memberId) {
             throw new ForbiddenException("You can only update your own comments");
         }
-        const updated = await prisma.shopPostComment.update({
+        return prisma.postComment.update({
             where: { id },
             data: { comment },
             include: {
@@ -128,12 +137,11 @@ class ShopPostCommentService {
                 },
             },
         });
-        return updated;
     }
 
     async destroy(id: number, memberId: number) {
-        const existing = await prisma.shopPostComment.findUnique({
-            where: { id },
+        const existing = await prisma.postComment.findFirst({
+            where: { id, post: isShopPostWhere },
         });
         if (!existing) {
             throw new NotFoundException("Shop post comment not found");
@@ -141,7 +149,7 @@ class ShopPostCommentService {
         if (existing.memberId !== memberId) {
             throw new ForbiddenException("You can only delete your own comments");
         }
-        await prisma.shopPostComment.delete({
+        await prisma.postComment.delete({
             where: { id },
         });
     }

@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
 import { CreateShopPostReactionInput } from "../../../schemas/member/v1/shop-post-reaction.schema";
@@ -10,10 +11,18 @@ const memberSelect = {
     profile: { select: { profilePhoto: true } },
 };
 
+const isShopPostWhere = {
+    shopId: { not: null },
+    shop: { status: Status.ACTIVE },
+};
+
 class ShopPostReactionService {
-    async findAll(shopPostId: string | number) {
-        const reactions = await prisma.shopPostReaction.findMany({
-            where: { shopPostId: +shopPostId },
+    async findAll(postId: string | number) {
+        const reactions = await prisma.postReaction.findMany({
+            where: {
+                postId: +postId,
+                post: isShopPostWhere,
+            },
             include: { member: { select: memberSelect } },
             orderBy: { createdAt: "desc" },
         });
@@ -21,8 +30,11 @@ class ShopPostReactionService {
     }
 
     async findOne(id: number) {
-        const reaction = await prisma.shopPostReaction.findUnique({
-            where: { id },
+        const reaction = await prisma.postReaction.findFirst({
+            where: {
+                id,
+                post: isShopPostWhere,
+            },
             include: { member: { select: memberSelect } },
         });
         if (!reaction) {
@@ -34,35 +46,38 @@ class ShopPostReactionService {
     async give(input: CreateShopPostReactionInput, memberId: number) {
         const { shopPostId } = input;
 
-        const post = await prisma.shopPost.findUnique({ where: { id: shopPostId } });
+        const post = await prisma.post.findFirst({
+            where: { id: shopPostId, ...isShopPostWhere },
+        });
         if (!post) {
             throw new NotFoundException("Shop post not found");
         }
 
-        const existing = await prisma.shopPostReaction.findFirst({ where: { shopPostId, memberId } });
+        const existing = await prisma.postReaction.findFirst({
+            where: { postId: shopPostId, memberId },
+        });
         if (existing) {
-            // Toggle: if exists, delete it (remove heart)
-            await prisma.shopPostReaction.delete({ where: { id: existing.id } });
+            await prisma.postReaction.delete({ where: { id: existing.id } });
             return null;
         }
 
-        // Create reaction (add heart)
-        const created = await prisma.shopPostReaction.create({
-            data: { shopPostId, memberId },
+        return prisma.postReaction.create({
+            data: { postId: shopPostId, memberId },
             include: { member: { select: memberSelect } },
         });
-        return created;
     }
 
     async destroy(id: number, memberId: number) {
-        const existing = await prisma.shopPostReaction.findUnique({ where: { id } });
+        const existing = await prisma.postReaction.findFirst({
+            where: { id, post: isShopPostWhere },
+        });
         if (!existing) {
             throw new NotFoundException("Shop post reaction not found");
         }
         if (existing.memberId !== memberId) {
             throw new ForbiddenException("You can only delete your own reaction");
         }
-        await prisma.shopPostReaction.delete({ where: { id } });
+        await prisma.postReaction.delete({ where: { id } });
     }
 }
 

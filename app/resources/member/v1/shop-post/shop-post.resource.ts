@@ -1,13 +1,22 @@
 export class ShopPostResource {
-    static toResource(shopPost: any) {
+    static toResource(row: any) {
+        const content = row.content;
+        const caption =
+            content && typeof content === "object" && !Array.isArray(content) && "caption" in content
+                ? String((content as Record<string, unknown>).caption ?? "")
+                : "";
+
+        const rawMedia = row.media;
+        const images = Array.isArray(rawMedia) ? rawMedia : [];
+
         return {
-            id: shopPost.id,
-            caption: shopPost.caption,
-            images: shopPost.images,
-            shop: shopPost.shop ?? null,
-            viewCount: shopPost.viewCount ?? 0,
-            createdAt: shopPost.createdAt,
-            updatedAt: shopPost.updatedAt,
+            id: row.id,
+            caption,
+            images,
+            shop: row.shop ?? null,
+            viewCount: row.viewCount ?? 0,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt,
         };
     }
 }

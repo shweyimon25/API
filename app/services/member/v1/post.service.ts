@@ -15,8 +15,10 @@ const feedWhere = {
   privencyType: PrivencyType.PUBLIC,
 } as const;
 
+/** Shop listings use `shop-post` APIs (`Post` rows with `shopId` set). */
 const memberPostWhere = (where?: Prisma.PostWhereInput) => ({
   ...feedWhere,
+  shopId: null,
   ...where,
 });
 
@@ -81,8 +83,8 @@ class PostService {
   }
 
   async findOne(id: number) {
-    const post = await prisma.post.findUnique({
-      where: { id, ...feedWhere },
+    const post = await prisma.post.findFirst({
+      where: { id, ...feedWhere, shopId: null },
       include: {
         ...tagInclude,
         ...memberInclude,
@@ -183,8 +185,8 @@ class PostService {
   ) {
     const { content, tagId, privencyType } = updatePostInput;
 
-    const existingPost = await prisma.post.findUnique({
-      where: { id },
+    const existingPost = await prisma.post.findFirst({
+      where: { id, shopId: null },
     });
 
     if (!existingPost) {
@@ -234,7 +236,7 @@ class PostService {
 
   async destroy(id: number, memberId: number) {
     const post = await prisma.post.findFirst({
-      where: { id },
+      where: { id, shopId: null },
     });
 
     if (!post) {
