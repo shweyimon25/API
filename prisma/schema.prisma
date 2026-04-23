@@ -1051,6 +1051,14 @@ model Block {
   @@unique([memberId, blockedMemberId])
 }
 
+model SystemParameter {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 enum NotificationType {
   INFO
   WARNING

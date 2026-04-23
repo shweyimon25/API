@@ -60,6 +60,7 @@ import memberBlockRoute from "./member/v1/block.route";
 import memberMealRoute from "./member/v1/meal.route";
 import memberMealTrackerRoute from "./member/v1/meal-tracker.route";
 import memberWaterTrackerRoute from "./member/v1/water-tracker.route";
+import systemParameterRoute from "./member/v1/system-parameter.route";
 
 const router = Router();
 
@@ -123,5 +124,5 @@ router.use("/member/v1/blocks", memberBlockRoute);
 router.use("/member/v1/meals", memberMealRoute);
 router.use("/member/v1/meal-trackers", memberMealTrackerRoute);
 router.use("/member/v1/water-trackers", memberWaterTrackerRoute);
-
+router.use("/member/v1/api/info", systemParameterRoute);
 export default router;
