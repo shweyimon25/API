@@ -9,7 +9,7 @@ import {
 import { comparePassword, generateToken } from "../../../helpers/helper";
 import { successResponse } from "../../../helpers/response";
 import {
-  sigInSchema,
+  signInSchema,
   signUpSchema,
   requestOtpSchema,
   verifyOtpSchema,
@@ -19,7 +19,7 @@ import {
   signInWithGoogleSchema,
   signInWithFacebookSchema,
 } from "../../../schemas/member/v1/auth.schema";
-import { ProviderType, Status } from "@prisma/client";
+import { DeviceType, ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
 import { ProfileResource } from "../../../resources/member/v1/profile/profile.resource";
 import { sendSms } from "../../../helpers/send-sms";
@@ -179,16 +179,21 @@ class AuthController {
   }
 
   async signIn(req: Request, res: Response) {
-    const { data, error, success } = await validater(sigInSchema, req.body);
+    const { data, error, success } = await validater(signInSchema, req.body.params);
 
     if (!success) {
       throw new ValidationException("Unauthorized", error);
     }
 
-    const member = await this.authService.findActivatedMember(data.providerType, data.providerValue);
+    const member = await this.authService.findActivatedMember(
+      ProviderType.EMAIL,
+      data.phone
+    );
 
-    // Create or Update FCM Token
-    await this.authService.upsertFcmToken(member.id, data.fcmToken, data.deviceType);
+    const deviceType = data.device_info.includes("android") ? DeviceType.ANDROID : DeviceType.IOS;
+
+    // // Create or Update FCM Token
+    await this.authService.upsertFcmToken(member.id, data.firebase_token, deviceType);
 
     const passwordCompress = comparePassword(data.password, member.password);
 
@@ -196,17 +201,54 @@ class AuthController {
       throw new UnauthorizedException();
     }
 
-    const token: string = generateToken(
-      {
-        id: member.id,
-        loginType: "member",
-      },
-      "30d"
-    );
+    // const token: string = generateToken(
+    //   {
+    //     id: member.id,
+    //     loginType: "member",
+    //   },
+    //   "30d"
+    // );
 
-    return successResponse(res, "User sign in successfully", {
-      user: ProfileResource.toResource(member),
-      token,
+    console.log(member)
+
+    return res.json({
+      "jsonrpc": "2.0",
+      "id": null,
+      "result": {
+        "isFullFilled": true,
+        "message": "login success",
+        "data": {
+          "user": {
+            "id": member.id,
+            "login": member.email,
+            "name": member.name,
+            "partner_id": member.id,
+            "image": "",
+            "member_info": {
+              "id": member.id,
+              "member_plan": member.memberRequests[0]?.memberPlan?.name,
+              "member_type_level": null,
+              "data_type": "trainer",
+              "plan_duration": member.memberRequests[0]?.memberPlan?.duration,
+              "expired_date": member.memberRequests[0]?.memberPlan?.expiredAt,
+              "shop_plan": member.shop?.shopLevel?.name ?? null,
+              "shop_duration": member.shop?.shopLevel?.duration ?? null,
+              "shop_expired_date": null,
+              "res_video_group": member.memberRequests[0]?.memberPlan?.isVideoGroup ?? false
+            },
+            "age": member.profile?.age,
+            "gender": member.profile?.gender,
+            "client_type": member.memberType?.name,
+            "client_code": member.code,
+            "proficient_level": member.proficientLevel?.name,
+            "main_goal_body_type": member.bodyGoal?.name,
+            "need_info": false
+          },
+          "partner_id": {
+            "id": member.id     
+          }
+        }
+      }
     });
   }
 

@@ -1,4 +1,4 @@
-import { Prisma, Status } from "@prisma/client";
+import { Prisma, PrivencyType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { ForbiddenException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { CreateShopPostInput, UpdateShopPostInput } from "../../../schemas/member/v1/shop-post.schema";
@@ -12,27 +12,28 @@ const shopPostInclude = {
             },
         },
     },
+} satisfies Prisma.PostInclude;
+
+const shopPostBaseWhere: Prisma.PostWhereInput = {
+    shopId: { not: null },
+    shop: { status: Status.ACTIVE },
 };
 
-/** Member API: only posts from ACTIVE shops */
-const memberShopPostWhere = (where?: Prisma.ShopPostWhereInput): Prisma.ShopPostWhereInput => ({
-    ...where,
-    shop: { status: Status.ACTIVE },
+const memberShopPostWhere = (where?: Prisma.PostWhereInput): Prisma.PostWhereInput => ({
+    AND: [shopPostBaseWhere, ...(where && Object.keys(where).length ? [where] : [])],
 });
 
 class ShopPostService {
-    async findAll(where?: Prisma.ShopPostWhereInput) {
-        const shopPosts = await prisma.shopPost.findMany({
+    async findAll(where?: Prisma.PostWhereInput) {
+        return prisma.post.findMany({
             where: memberShopPostWhere(where),
             orderBy: { id: "desc" },
             include: shopPostInclude,
         });
-
-        return shopPosts;
     }
 
-    async findByPaginate(page: number, perPage: number, where?: Prisma.ShopPostWhereInput) {
-        const shopPosts = await prisma.shopPost.findMany({
+    async findByPaginate(page: number, perPage: number, where?: Prisma.PostWhereInput) {
+        const shopPosts = await prisma.post.findMany({
             where: memberShopPostWhere(where),
             orderBy: { id: "desc" },
             skip: (page - 1) * perPage,
@@ -40,7 +41,7 @@ class ShopPostService {
             include: shopPostInclude,
         });
 
-        const totalShopPosts = await prisma.shopPost.count({
+        const totalShopPosts = await prisma.post.count({
             where: memberShopPostWhere(where),
         });
 
@@ -60,21 +61,20 @@ class ShopPostService {
     }
 
     async findOne(id: number) {
-        const shopPost = await prisma.shopPost.findUnique({
-            where: { id },
+        const post = await prisma.post.findFirst({
+            where: { id, ...shopPostBaseWhere },
             include: shopPostInclude,
         });
 
-        if (!shopPost) {
+        if (!post) {
             throw new NotFoundException("Shop post not found");
         }
 
-        const updated = await prisma.shopPost.update({
+        return prisma.post.update({
             where: { id },
             data: { viewCount: { increment: 1 } },
             include: shopPostInclude,
         });
-        return updated;
     }
 
     async create(createShopPostInput: CreateShopPostInput, files: Express.Multer.File[], memberId: number) {
@@ -90,6 +90,12 @@ class ShopPostService {
 
         if (shop.memberId !== memberId) {
             throw new ForbiddenException("You can only create posts for your own shop");
+        }
+
+        if (shop.memberId == null) {
+            throw new ValidationException("Failed to create post", [
+                { field: "shopId", issue: "Shop has no owner member" },
+            ]);
         }
 
         const imageFiles = (files ?? []).filter(
@@ -109,18 +115,24 @@ class ShopPostService {
             })
         );
 
-        const shopPost = await prisma.shopPost.create({
-            data: { caption, images: imageUrls, shopId },
+        const created = await prisma.post.create({
+            data: {
+                content: { caption } as object,
+                media: imageUrls as object,
+                shopId,
+                memberId: shop.memberId,
+                privencyType: PrivencyType.PUBLIC,
+            },
         });
 
-        return this.findOne(shopPost.id);
+        return this.findOne(created.id);
     }
 
     async update(id: number, updateShopPostInput: UpdateShopPostInput, files: Express.Multer.File[], memberId: number) {
         const { caption } = updateShopPostInput;
 
-        const existing = await prisma.shopPost.findUnique({
-            where: { id },
+        const existing = await prisma.post.findFirst({
+            where: { id, ...shopPostBaseWhere },
             include: { shop: true },
         });
 
@@ -128,7 +140,7 @@ class ShopPostService {
             throw new NotFoundException("Shop post not found");
         }
 
-        if (existing.shop.memberId !== memberId) {
+        if (existing.shop?.memberId !== memberId) {
             throw new ForbiddenException("You can only update your own shop posts");
         }
 
@@ -136,41 +148,47 @@ class ShopPostService {
             (f: Express.Multer.File) => f.fieldname === "images"
         );
 
-        if (imageFiles.length === 0) {
-            throw new ValidationException("Failed to update shop post", [
-                { field: "images", issue: "Images files are required" },
-            ]);
+        const prevContent =
+            existing.content && typeof existing.content === "object" && !Array.isArray(existing.content)
+                ? (existing.content as Record<string, unknown>)
+                : {};
+        const nextCaption = caption ?? (typeof prevContent.caption === "string" ? prevContent.caption : "");
+
+        let nextMedia: unknown = existing.media;
+        if (imageFiles.length > 0) {
+            nextMedia = await Promise.all(
+                imageFiles.map(async (file: Express.Multer.File) => {
+                    const { fileUrl } = await upload(file, "shop-post");
+                    return fileUrl;
+                })
+            );
         }
 
-        const imageUrls = await Promise.all(
-            imageFiles.map(async (file: Express.Multer.File) => {
-                const { fileUrl } = await upload(file, "shop-post");
-                return fileUrl;
-            })
-        );
-
-        await prisma.shopPost.update({
+        await prisma.post.update({
             where: { id },
-            data: { caption: caption ?? existing.caption, images: imageUrls },
+            data: {
+                content: { ...prevContent, caption: nextCaption } as object,
+                media: nextMedia as object,
+            },
         });
 
         return this.findOne(id);
     }
 
     async destroy(id: number, memberId: number) {
-        const existing = await prisma.shopPost.findUnique({
-            where: { id },
+        const existing = await prisma.post.findFirst({
+            where: { id, ...shopPostBaseWhere },
             include: { shop: true },
         });
 
         if (!existing) {
             throw new NotFoundException("Shop post not found");
         }
-        if (existing.shop.memberId !== memberId) {
+        if (existing.shop?.memberId !== memberId) {
             throw new ForbiddenException("You can only delete your own shop posts");
         }
 
-        await prisma.shopPost.delete({
+        await prisma.post.delete({
             where: { id },
         });
     }

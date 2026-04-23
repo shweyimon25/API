@@ -91,26 +91,34 @@ export const signUpSchema = z
     message: "Passwords don't match",
   });
 
-export const sigInSchema = z
-  .object({
-    providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
-    providerValue: z.string(),
-    password: z.string({ message: "Password is required" }),
-    fcmToken: z.string({ message: "FCM token is required" }),
-    deviceType: z.nativeEnum(DeviceType, { message: "Device type must be ANDROID | IOS | WEB" }),
-  })
-  .refine((data) => {
-    if (data.providerType === ProviderType.EMAIL) {
-      return z.string({ message: "Email is required" }).email({
-        message: "Invalid email address",
-      });
-    } else {
-      return z
-        .string()
-        .min(9, { message: "Phone number is required" })
-        .max(15, { message: "Phone number must be at most 15 characters" });
-    }
-  });
+// export const sigInSchema = z
+//   .object({
+//     providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
+//     providerValue: z.string(),
+//     password: z.string({ message: "Password is required" }),
+//     fcmToken: z.string({ message: "FCM token is required" }),
+//     deviceType: z.nativeEnum(DeviceType, { message: "Device type must be ANDROID | IOS | WEB" }),
+//   })
+//   .refine((data) => {
+//     if (data.providerType === ProviderType.EMAIL) {
+//       return z.string({ message: "Email is required" }).email({
+//         message: "Invalid email address",
+//       });
+//     } else {
+//       return z
+//         .string()
+//         .min(9, { message: "Phone number is required" })
+//         .max(15, { message: "Phone number must be at most 15 characters" });
+//     }
+//   });
+
+export const signInSchema = z.object({
+  phone: z.string(),
+  password: z.string(),
+  firebase_token: z.string(),
+  voip_token: z.string(),
+  device_info: z.string(),
+});
 
 export const updateBodyMeasurementsSchema = z.object({
   heightFeet: z.string({ message: "Height in feet is required" }),
@@ -193,7 +201,7 @@ export const signInWithFacebookSchema = z.object({
 
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
-export type SignInInput = z.infer<typeof sigInSchema>;
+export type SignInInput = z.infer<typeof signInSchema>;
 export type SignInWithGoogleInput = z.infer<typeof signInWithGoogleSchema>;
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type UpdateBodyMeasurementsInput = z.infer<typeof updateBodyMeasurementsSchema>;

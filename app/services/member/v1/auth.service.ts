@@ -53,6 +53,31 @@ class AuthService {
                         token: true,
                     },
                 },
+                proficientLevel: {
+                    select: {
+                        name: true,
+                    },
+                },
+                bodyGoal: {
+                    select: {
+                        name: true,
+                    },
+                },
+                memberRequests: {
+                    select: {
+                        id: true,
+                        memberPlan: {
+                            select: {
+                                name: true,
+                                duration: true,
+                                price: true,
+                                isVideoGroup: true,
+                                expiredAt: true,
+                                status: true,
+                            },
+                        },
+                    },
+                }
             },
         });
 

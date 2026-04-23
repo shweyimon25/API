@@ -7,15 +7,15 @@ export interface MemberShopPostScopeQuery {
     toDate?: string;
 }
 
-export const memberShopPostScope = (query: MemberShopPostScopeQuery): Prisma.ShopPostWhereInput => {
+export const memberShopPostScope = (query: MemberShopPostScopeQuery): Prisma.PostWhereInput => {
     const { caption, shopId, fromDate, toDate } = query;
 
-    const where: Prisma.ShopPostWhereInput = {};
+    const where: Prisma.PostWhereInput = {};
 
     if (caption) {
-        where.caption = {
-            contains: caption,
-            mode: "insensitive",
+        where.content = {
+            path: ["caption"],
+            string_contains: caption,
         };
     }
     if (shopId) {

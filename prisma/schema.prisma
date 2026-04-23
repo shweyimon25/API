@@ -154,6 +154,7 @@ model MemberPlan {
   pros         Pros[]
   cons         Cons[]
   duration     Int        @default(1)
+  expiredAt    String?
   isVideoGroup Boolean    @default(false)
   status       Status     @default(ACTIVE)
 
@@ -267,7 +268,6 @@ model Member {
   payments                 Payment[]
   shop                     Shop?
   shopRatings              ShopRating[]
-  shopPostComments         ShopPostComment[]
   waterTrackers            WaterTracker[]
   memberRequests           MemberRequest[]
   bodyMeasurement          BodyMeasurement?
@@ -279,7 +279,6 @@ model Member {
   friendRequestsOf         FriendRequest[]           @relation("MemberFriendRequestReceiver")
   fcmToken                 MemberFcmToken?
   postReactions            PostReaction[]
-  shopPostReactions        ShopPostReaction[]
   conversationParticipants ConversationParticipant[]
   messages                 Message[]
   attendances              Attendance[]
@@ -436,8 +435,8 @@ model Shop {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  shopPosts   ShopPost[]
   shopRatings ShopRating[]
+  posts       Post[]
 }
 
 model ShopUpgradeRequest {
@@ -479,49 +478,6 @@ model ShopRating {
   @@unique([memberId, shopId])
 }
 
-model ShopPost {
-  id        Int    @id @default(autoincrement())
-  caption   String
-  images    Json
-  viewCount Int    @default(0)
-
-  shop   Shop @relation(fields: [shopId], references: [id])
-  shopId Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  shopPostComments  ShopPostComment[]
-  shopPostReactions ShopPostReaction[]
-}
-
-model ShopPostReaction {
-  id         Int      @id @default(autoincrement())
-  shopPost   ShopPost @relation(fields: [shopPostId], references: [id], onDelete: Cascade)
-  shopPostId Int
-  memberId   Int
-  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([shopPostId, memberId])
-}
-
-model ShopPostComment {
-  id         Int               @id @default(autoincrement())
-  shopPost   ShopPost          @relation(fields: [shopPostId], references: [id], onDelete: Cascade)
-  shopPostId Int
-  memberId   Int
-  member     Member            @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  comment    String            @db.Text()
-  parentId   Int?
-  parent     ShopPostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies    ShopPostComment[] @relation("CommentReplies")
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-}
-
 model Tag {
   id     Int    @id @default(autoincrement())
   name   String @unique
@@ -538,14 +494,17 @@ model Tag {
 }
 
 model Post {
-  id           Int          @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   content      Json
-  tag          Tag          @relation(fields: [tagId], references: [id])
-  tagId        Int
-  privencyType PrivencyType @default(PUBLIC)
-  timeAgo      DateTime     @default(now())
+  tag          Tag?          @relation(fields: [tagId], references: [id])
+  tagId        Int?
+  privencyType PrivencyType? @default(PUBLIC)
+  timeAgo      DateTime      @default(now())
   media        Json
-  viewCount    Int          @default(0)
+  viewCount    Int           @default(0)
+
+  shop   Shop? @relation(fields: [shopId], references: [id])
+  shopId Int?
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id])
