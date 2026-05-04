@@ -16,6 +16,9 @@ export const createMemberSchema = z
       .max(15, {
         message: "Phone must be at most 15 digits long",
       }),
+    appleId: z
+      .string()
+      .optional(),
     address: z
       .string().optional(),
     bio: z
@@ -56,6 +59,9 @@ export const updateMemberSchema = z
       .max(15, {
         message: "Phone must be at most 15 characters",
       })
+      .optional(),
+    appleId: z
+      .string()
       .optional(),
     address: z
       .string()

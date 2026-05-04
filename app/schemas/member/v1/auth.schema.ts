@@ -199,6 +199,18 @@ export const signInWithFacebookSchema = z.object({
   }),
 });
 
+export const SSOSchema = z.object({
+  name: z.string(),
+  login: z.string().min(1, { message: "Login is required" }),
+  provider_type: z.string(),
+  email: z.string(),
+  firebase_token : z.string(),
+  voip_token : z.string(),
+  device_info: z.string(),
+  profile_photo : z.string()
+});
+
+
 export type RequestOtpInput = z.infer<typeof requestOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
@@ -208,3 +220,4 @@ export type UpdateBodyMeasurementsInput = z.infer<typeof updateBodyMeasurementsS
 export type ForgotPasswordRequestOtpInput = z.infer<typeof forgotPasswordRequestOtpSchema>;
 export type ForgotPasswordVerifyOtpInput = z.infer<typeof forgotPasswordVerifyOtpSchema>;
 export type ForgotPasswordResetPasswordInput = z.infer<typeof forgotPasswordResetPasswordSchema>;
+export type SSOInput = z.infer<typeof SSOSchema>;

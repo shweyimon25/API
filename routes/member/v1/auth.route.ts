@@ -66,4 +66,17 @@ router.post("/sign-in/facebook", [
   )
 ]);
 
+router.post("/sso/login", [
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await authController.SSOLogin(req, res)
+  )
+]);
+
+router.post("/firebase/update_token", [
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await authController.updateToken(req, res)
+  )
+]);
 export default router;

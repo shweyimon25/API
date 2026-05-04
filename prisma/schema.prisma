@@ -240,6 +240,7 @@ model Member {
   code         String      @unique // YC0244
   email        String?     @unique
   phone        String?     @unique
+  appleId      String?     @unique
   password     String
   memberType   MemberType? @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)
   memberTypeId Int?
@@ -255,6 +256,7 @@ model Member {
   language Language @default(ENG)
   theme    Theme    @default(LIGHT)
   status   Status   @default(ACTIVE)
+  clientType ClientType @default(user)
 
   createdById Int?
   updatedById Int?
@@ -1056,4 +1058,13 @@ enum DeviceType {
   ANDROID
   IOS
   WEB
+}
+
+enum ClientType{
+  user
+  gym_member
+  trainer
+  king
+  queen
+  admin
 }

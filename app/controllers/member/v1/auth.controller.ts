@@ -9,6 +9,7 @@ import {
 import { comparePassword, generateToken } from "../../../helpers/helper";
 import { successResponse } from "../../../helpers/response";
 import {
+  SSOSchema,
   signInSchema,
   signUpSchema,
   requestOtpSchema,
@@ -23,6 +24,8 @@ import { DeviceType, ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
 import { ProfileResource } from "../../../resources/member/v1/profile/profile.resource";
 import { sendSms } from "../../../helpers/send-sms";
+import { Member } from "@prisma/client";
+
 
 class AuthController {
   private authService: AuthService;
@@ -238,10 +241,10 @@ class AuthController {
             },
             "age": member.profile?.age,
             "gender": member.profile?.gender,
-            "client_type": member.memberType?.name,
+            "client_type": member.clientType,
             "client_code": member.code,
-            "proficient_level": member.proficientLevel?.name,
-            "main_goal_body_type": member.bodyGoal?.name,
+            "proficient_level": member.proficientLevel?.name ?? null,
+            "main_goal_body_type": member.bodyGoal?.name ?? null,
             "need_info": false
           },
           "partner_id": {
@@ -530,6 +533,196 @@ class AuthController {
     return successResponse(res, "Password reset successfully", {
       user: ProfileResource.toResource(member),
     });
+  }
+
+  async SSOLogin(req: Request, res: Response) {
+    const { data, error, success } = await validater(SSOSchema, req.body.params);
+
+    if (!success) {
+      throw new ValidationException("Authentication failed", error);
+    }
+
+    // 1. Provider-to-Field Mapping 
+    const providerMapping: Record<string, { enum: ProviderType; searchField: string }> = {
+      google: { enum: ProviderType.GOOGLE, searchField: 'email' },
+      facebook: { enum: ProviderType.FACEBOOK, searchField: 'phone' },
+      apple: { enum: ProviderType.APPLE, searchField: 'appleId' } 
+    };
+    const currentProvider = providerMapping[data.provider_type];
+    if (!currentProvider) {
+      throw new ValidationException("Invalid provider type", error);
+    }
+
+    const includeRelations = {
+      profile: {
+        select: {
+            id: true,
+            memberId: true,
+            address: true,
+            bio: true,
+            gender: true,
+            profilePhoto: true,
+            coverPhoto: true,
+            age: true,
+            yearOfExp: true,
+            reason: true,
+            certificates: true,
+            photos: true,
+        },
+      },
+      memberType: {
+        select: {
+            id: true,
+            name: true,
+        },
+      },
+      shop: {
+        include: {
+            shopLevel: true,
+        },
+      },
+      providerTypes: {
+        select: {
+            providerType: true,
+        },
+      },
+      fcmToken: {
+        select: {
+            deviceType: true,
+            token: true,
+        },
+      },
+      proficientLevel: {
+        select: {
+            name: true,
+        },
+      },
+      bodyGoal: {
+        select: {
+          name: true,
+        },
+      },
+      memberRequests: {
+        select: {
+          id: true,
+          memberPlan: {
+              select: {
+                  id: true,
+                  name: true,
+                  duration: true,
+                  price: true,
+                  isVideoGroup: true,
+                  expiredAt: true,
+                  status: true,
+                  memberTypeId: true
+              },
+          },
+        },
+      }
+    };
+
+    // 2. Dynamic Search member depends on provider_type
+    let member = await prisma.member.findFirst({
+      where: { 
+        [currentProvider.searchField]: data.login 
+      },
+      include: includeRelations
+    });
+
+    if (member) {
+      // 3. Check if they already have linked with provider
+      const hasLinked = member.providerTypes.some(p => p.providerType === currentProvider.enum);
+
+      if (!hasLinked) {
+        member = await prisma.member.update({
+          where: { id: member.id },
+          data: {
+            providerTypes: {
+              create: { providerType: currentProvider.enum }
+            }
+          },
+          include: includeRelations
+        });
+      }
+    } else {
+      // 4. Create new member
+      member = await prisma.member.create({
+        data: {
+          name: data.name,
+          email: data.provider_type === 'google' ? data.login : data.email,
+          phone: data.provider_type === 'facebook' ? data.login : null,
+          appleId: data.provider_type === 'apple' ? data.login : null, 
+          code: await generateMemberCode(),
+          password: hashPassword(process.env.DEFAULT_MEMBER_PASSWORD || "P@55w0rd"),
+          status: Status.ACTIVE,
+          providerTypes: {
+            create: { providerType: currentProvider.enum }
+          }
+        },
+        include: includeRelations
+      });
+    }
+    // 5. Create or Update FCM Token    
+    await this.authService.upsertFcmToken(member.id, data.firebase_token, data.device_info.toUpperCase());
+
+
+    return res.json({
+      "jsonrpc": "2.0",
+      "id": null,
+      "result": {
+        "isFullFilled": true,
+        "message": "login success",
+        "data": {
+          "user": {
+            "id": member.id,
+            "login": member.email,
+            "name": member.name,
+            "partner_id": member.id,
+            "image": "",
+            "member_info": {
+              "id": member.memberRequests[0]?.memberPlan?.id ?? null,
+              "member_plan": member.memberRequests[0]?.memberPlan?.name,
+              "member_type_level": null,
+              "data_type": member.memberType?.name ?? null,
+              "plan_duration": member.memberRequests[0]?.memberPlan?.duration,
+              "expired_date": member.memberRequests[0]?.memberPlan?.expiredAt,
+              "shop_plan": member.shop?.shopLevel?.name ?? null,
+              "shop_duration": member.shop?.shopLevel?.duration ?? null,
+              "shop_expired_date": null,
+              "res_video_group": member.memberRequests[0]?.memberPlan?.isVideoGroup ?? false
+            },
+            "age": member.profile?.age,
+            "gender": member.profile?.gender,
+            "client_type": member.clientType,
+            "client_code": member.code,
+            "proficient_level": member.proficientLevel?.name ?? null,
+            "main_goal_body_type": member.bodyGoal?.name ?? null,
+            "need_info": false
+          },
+          "partner_id": {
+            "id": member.id     
+          }
+        }
+      }
+    });
+  }
+
+  async updateToken(req: Request, res: Response){
+    const memberId = (req.user as Member).id;
+    if(req.body.params.device_info === 'ios'){
+      await this.authService.upsertFcmToken(memberId, req.body.params.voip_token, req.body.params.device_info.toUpperCase());
+    }else{
+      await this.authService.upsertFcmToken(memberId, req.body.params.firebase_token, req.body.params.device_info.toUpperCase());
+    }
+
+    return res.json({
+      "jsonrpc": "2.0",
+      "result": {
+        "isFullFilled": true,
+        "message": "Firebase Token Updated",
+      }
+    });
+    
   }
 }
 
