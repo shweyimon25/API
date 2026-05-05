@@ -210,7 +210,15 @@ class AuthController {
     const passwordCompress = comparePassword(data.password, member.password);
 
     if (!passwordCompress) {
-      throw new UnauthorizedException();
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": "Invalid password",
+          "data": {}
+        }
+      })
     }
 
     return res.json({
