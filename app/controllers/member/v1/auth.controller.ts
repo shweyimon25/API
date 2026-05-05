@@ -19,13 +19,14 @@ import {
   forgotPasswordResetPasswordSchema,
   signInWithGoogleSchema,
   signInWithFacebookSchema,
+  registerSchema,
+  otpValidateSchema,
 } from "../../../schemas/member/v1/auth.schema";
 import { DeviceType, ProviderType, Status } from "@prisma/client";
 import AuthService from "../../../services/member/v1/auth.service";
 import { ProfileResource } from "../../../resources/member/v1/profile/profile.resource";
-import { sendSms } from "../../../helpers/send-sms";
 import { Member } from "@prisma/client";
-
+import { sendMail } from "../../../helpers/send-mail";
 
 class AuthController {
   private authService: AuthService;
@@ -181,11 +182,19 @@ class AuthController {
     });
   }
 
-  async signIn(req: Request, res: Response) {
+  async login(req: Request, res: Response) {
     const { data, error, success } = await validater(signInSchema, req.body.params);
 
     if (!success) {
-      throw new ValidationException("Unauthorized", error);
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": error[0].issue,
+          "data": {}
+        }
+      })
     }
 
     const member = await this.authService.findActivatedMember(
@@ -203,16 +212,6 @@ class AuthController {
     if (!passwordCompress) {
       throw new UnauthorizedException();
     }
-
-    // const token: string = generateToken(
-    //   {
-    //     id: member.id,
-    //     loginType: "member",
-    //   },
-    //   "30d"
-    // );
-
-    console.log(member)
 
     return res.json({
       "jsonrpc": "2.0",
@@ -248,11 +247,193 @@ class AuthController {
             "need_info": false
           },
           "partner_id": {
-            "id": member.id     
+            "id": member.id
           }
         }
       }
     });
+  }
+
+  async register(req: Request, res: Response) {
+    const { data, error, success } = await validater(registerSchema, req.body.params);
+
+    if (!success) {
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": error[0].issue,
+          "data": {}
+        }
+      })
+    }
+
+    if (data.password !== data.confirm_password) {
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": "Password Not Match.",
+          "data": {}
+        }
+      })
+    }
+
+    const deviceType = data.device_info.includes("android") ? DeviceType.ANDROID : DeviceType.IOS;
+
+    const { otp, expiresAt } = generateOTP();
+
+    const existingOtp = await prisma.oTP.findFirst({
+      where: {
+        email: data.email,
+        isVerified: false,
+        isUsed: false,
+      },
+    })
+
+    if (!existingOtp) {
+      await prisma.oTP.create({
+        data: {
+          email: data.email,
+          name: data.name,
+          phone: data.login,
+          password: hashPassword(data.password),
+          address: data.address,
+          firebase_token: data.firebase_token,
+          voip_token: data.voip_token,
+          device_info: deviceType,
+          otp: otp,
+          expiresAt,
+          isVerified: false,
+          isUsed: false,
+        },
+      });
+    } else {
+      await prisma.oTP.update({
+        where: { id: existingOtp.id },
+        data: {
+          email: data.email,
+          name: data.name,
+          phone: data.login,
+          password: hashPassword(data.password),
+          address: data.address,
+          firebase_token: data.firebase_token,
+          voip_token: data.voip_token,
+          device_info: deviceType,
+          otp: otp,
+          expiresAt: expiresAt
+        },
+      });
+    }
+
+    sendMail({
+      from: process.env.MAIL_FROM || process.env.MAIL_USERNAME || "noreply@example.com",
+      to: data.email,
+      subject: "Register OTP",
+      text: `Your OTP is ${otp}`,
+    });
+
+    return res.json({
+      "jsonrpc": "2.0",
+      "id": null,
+      "result": {
+        "isFullFilled": true,
+        "message": "Registered OTP. ",
+        "data": {
+          "status": {
+            "ok": true
+          },
+          "otp": otp
+        }
+      }
+    })
+  }
+
+  async otpValidate(req: Request, res: Response) {
+    const { data, error, success } = await validater(otpValidateSchema, req.body.params);
+
+    if (!success) {
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": error[0].issue,
+          "data": {}
+        }
+      })
+    }
+
+    const existingOtp = await prisma.oTP.findFirst({
+      where: { email: data.email, otp: data.otp, isVerified: false, isUsed: false },
+    });
+
+    if (!existingOtp) {
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": "Invalid OTP",
+        }
+      })
+    }
+
+    if (existingOtp.expiresAt < new Date()) {
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": "OTP expired",
+        }
+      })
+    }
+
+    await prisma.oTP.update({
+      where: { id: existingOtp.id },
+      data: { isVerified: true, isUsed: true },
+    });
+
+    const member = await prisma.member.create({
+      data: {
+        name: existingOtp.name ?? "",
+        email: existingOtp.email,
+        phone: existingOtp.phone,
+        password: existingOtp.password ?? "",
+        status: Status.ACTIVE,
+        code: await generateMemberCode(),
+        profile: {
+          create: {
+            address: existingOtp.address ?? "",
+          },
+        },
+        bodyMeasurement: {
+          create: {},
+        },
+        providerTypes: {
+          create: {
+            providerType: ProviderType.EMAIL,
+          },
+        },
+      },
+    });
+
+    return res.json({
+      "jsonrpc": "2.0",
+      "id": null,
+      "result": {
+        "isFullFilled": true,
+        "message": "OTP validated successfully",
+        "data": {
+          "user": {
+            "id": member.id // member_id
+          }
+        }
+      }
+    })
   }
 
   async requestOTP(req: Request, res: Response) {
@@ -546,7 +727,7 @@ class AuthController {
     const providerMapping: Record<string, { enum: ProviderType; searchField: string }> = {
       google: { enum: ProviderType.GOOGLE, searchField: 'email' },
       facebook: { enum: ProviderType.FACEBOOK, searchField: 'phone' },
-      apple: { enum: ProviderType.APPLE, searchField: 'appleId' } 
+      apple: { enum: ProviderType.APPLE, searchField: 'appleId' }
     };
     const currentProvider = providerMapping[data.provider_type];
     if (!currentProvider) {
@@ -556,45 +737,45 @@ class AuthController {
     const includeRelations = {
       profile: {
         select: {
-            id: true,
-            memberId: true,
-            address: true,
-            bio: true,
-            gender: true,
-            profilePhoto: true,
-            coverPhoto: true,
-            age: true,
-            yearOfExp: true,
-            reason: true,
-            certificates: true,
-            photos: true,
+          id: true,
+          memberId: true,
+          address: true,
+          bio: true,
+          gender: true,
+          profilePhoto: true,
+          coverPhoto: true,
+          age: true,
+          yearOfExp: true,
+          reason: true,
+          certificates: true,
+          photos: true,
         },
       },
       memberType: {
         select: {
-            id: true,
-            name: true,
+          id: true,
+          name: true,
         },
       },
       shop: {
         include: {
-            shopLevel: true,
+          shopLevel: true,
         },
       },
       providerTypes: {
         select: {
-            providerType: true,
+          providerType: true,
         },
       },
       fcmToken: {
         select: {
-            deviceType: true,
-            token: true,
+          deviceType: true,
+          token: true,
         },
       },
       proficientLevel: {
         select: {
-            name: true,
+          name: true,
         },
       },
       bodyGoal: {
@@ -606,16 +787,16 @@ class AuthController {
         select: {
           id: true,
           memberPlan: {
-              select: {
-                  id: true,
-                  name: true,
-                  duration: true,
-                  price: true,
-                  isVideoGroup: true,
-                  expiredAt: true,
-                  status: true,
-                  memberTypeId: true
-              },
+            select: {
+              id: true,
+              name: true,
+              duration: true,
+              price: true,
+              isVideoGroup: true,
+              expiredAt: true,
+              status: true,
+              memberTypeId: true
+            },
           },
         },
       }
@@ -623,8 +804,8 @@ class AuthController {
 
     // 2. Dynamic Search member depends on provider_type
     let member = await prisma.member.findFirst({
-      where: { 
-        [currentProvider.searchField]: data.login 
+      where: {
+        [currentProvider.searchField]: data.login
       },
       include: includeRelations
     });
@@ -651,7 +832,7 @@ class AuthController {
           name: data.name,
           email: data.provider_type === 'google' ? data.login : data.email,
           phone: data.provider_type === 'facebook' ? data.login : null,
-          appleId: data.provider_type === 'apple' ? data.login : null, 
+          appleId: data.provider_type === 'apple' ? data.login : null,
           code: await generateMemberCode(),
           password: hashPassword(process.env.DEFAULT_MEMBER_PASSWORD || "P@55w0rd"),
           status: Status.ACTIVE,
@@ -700,18 +881,18 @@ class AuthController {
             "need_info": false
           },
           "partner_id": {
-            "id": member.id     
+            "id": member.id
           }
         }
       }
     });
   }
 
-  async updateToken(req: Request, res: Response){
+  async updateToken(req: Request, res: Response) {
     const memberId = (req.user as Member).id;
-    if(req.body.params.device_info === 'ios'){
+    if (req.body.params.device_info === 'ios') {
       await this.authService.upsertFcmToken(memberId, req.body.params.voip_token, req.body.params.device_info.toUpperCase());
-    }else{
+    } else {
       await this.authService.upsertFcmToken(memberId, req.body.params.firebase_token, req.body.params.device_info.toUpperCase());
     }
 
@@ -722,7 +903,7 @@ class AuthController {
         "message": "Firebase Token Updated",
       }
     });
-    
+
   }
 }
 

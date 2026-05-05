@@ -5,18 +5,36 @@ import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 const router = Router();
 const authController = new AuthController();
 
-router.post("/sign-in", [
+router.post("/login", [
   asyncHandler(
-    async (req: Request, res: Response) => await authController.signIn(req, res)
+    async (req: Request, res: Response) => await authController.login(req, res)
   ),
 ]);
 
-router.post("/request-otp", [
+router.post("/register", [
   asyncHandler(
-    async (req: Request, res: Response) =>
-      await authController.requestOTP(req, res)
-  ),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await authController.register(req, res)
+    )
+  )
 ]);
+
+router.post("/otp/validate", [
+  asyncHandler(
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await authController.otpValidate(req, res)
+    )
+  )
+])
+
+// router.post("/request-otp", [
+//   asyncHandler(
+//     async (req: Request, res: Response) =>
+//       await authController.requestOTP(req, res)
+//   ),
+// ]);
 
 router.post("/verify-otp", [
   asyncHandler(
@@ -24,6 +42,8 @@ router.post("/verify-otp", [
       await authController.verifyOTP(req, res)
   ),
 ]);
+
+
 
 router.post("/sign-up", [
   asyncHandler(

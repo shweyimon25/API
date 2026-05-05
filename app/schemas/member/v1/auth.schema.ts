@@ -91,33 +91,30 @@ export const signUpSchema = z
     message: "Passwords don't match",
   });
 
-// export const sigInSchema = z
-//   .object({
-//     providerType: z.nativeEnum(ProviderType, { message: "Provider type must be EMAIL | PHONE" }),
-//     providerValue: z.string(),
-//     password: z.string({ message: "Password is required" }),
-//     fcmToken: z.string({ message: "FCM token is required" }),
-//     deviceType: z.nativeEnum(DeviceType, { message: "Device type must be ANDROID | IOS | WEB" }),
-//   })
-//   .refine((data) => {
-//     if (data.providerType === ProviderType.EMAIL) {
-//       return z.string({ message: "Email is required" }).email({
-//         message: "Invalid email address",
-//       });
-//     } else {
-//       return z
-//         .string()
-//         .min(9, { message: "Phone number is required" })
-//         .max(15, { message: "Phone number must be at most 15 characters" });
-//     }
-//   });
-
 export const signInSchema = z.object({
   phone: z.string(),
   password: z.string(),
   firebase_token: z.string(),
   voip_token: z.string(),
   device_info: z.string(),
+});
+
+export const registerSchema = z.object({
+  login: z.string().optional(),
+  email: z.string().optional(),
+  name: z.string(),
+  password: z.string(),
+  confirm_password: z.string(),
+  address: z.string().optional(),
+  firebase_token: z.string().optional(),
+  voip_token: z.string().optional(),
+  device_info: z.enum(["android", "ios"]).default("android"),
+})
+
+export const otpValidateSchema = z.object({
+  otp: z.string(),
+  to_remove_user: z.boolean(), // true or false
+  forget_pwd: z.boolean(), // true or false
 });
 
 export const updateBodyMeasurementsSchema = z.object({
@@ -204,10 +201,10 @@ export const SSOSchema = z.object({
   login: z.string().min(1, { message: "Login is required" }),
   provider_type: z.string(),
   email: z.string(),
-  firebase_token : z.string(),
-  voip_token : z.string(),
+  firebase_token: z.string(),
+  voip_token: z.string(),
   device_info: z.string(),
-  profile_photo : z.string()
+  profile_photo: z.string()
 });
 
 

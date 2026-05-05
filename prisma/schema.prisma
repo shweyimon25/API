@@ -253,9 +253,9 @@ model Member {
 
   profile MemberProfile?
 
-  language Language @default(ENG)
-  theme    Theme    @default(LIGHT)
-  status   Status   @default(ACTIVE)
+  language   Language   @default(ENG)
+  theme      Theme      @default(LIGHT)
+  status     Status     @default(ACTIVE)
   clientType ClientType @default(user)
 
   createdById Int?
@@ -304,15 +304,21 @@ model MemberFcmToken {
 }
 
 model OTP {
-  id         Int      @id @default(autoincrement())
-  email      String?
-  phone      String?
-  otp        String
-  expiresAt  DateTime
-  isVerified Boolean  @default(false)
-  isUsed     Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             Int        @id @default(autoincrement())
+  email          String?
+  name           String?
+  phone          String?
+  otp            String
+  password       String?
+  address        String?
+  firebase_token String?
+  device_info    DeviceType @default(ANDROID)
+  voip_token     String?
+  expiresAt      DateTime
+  isVerified     Boolean    @default(false)
+  isUsed         Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
   @@unique([email, otp])
   @@unique([phone, otp])
@@ -1013,11 +1019,11 @@ model Block {
 }
 
 model SystemParameter {
-  id          Int      @id @default(autoincrement())
-  key         String   @unique
-  value       String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum NotificationType {
@@ -1060,7 +1066,7 @@ enum DeviceType {
   WEB
 }
 
-enum ClientType{
+enum ClientType {
   user
   gym_member
   trainer
