@@ -221,6 +221,13 @@ class AuthController {
       })
     }
 
+    const token: string = generateToken(
+      {
+        id: member.id,
+      },
+      "30d"
+    );
+
     return res.json({
       "jsonrpc": "2.0",
       "id": null,
@@ -256,7 +263,8 @@ class AuthController {
           },
           "partner_id": {
             "id": member.id
-          }
+          },
+          "access_token": token
         }
       }
     });
@@ -728,7 +736,15 @@ class AuthController {
     const { data, error, success } = await validater(SSOSchema, req.body.params);
 
     if (!success) {
-      throw new ValidationException("Authentication failed", error);
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": error[0].issue,
+          "data": {}
+        }
+      })
     }
 
     // 1. Provider-to-Field Mapping 
@@ -737,9 +753,19 @@ class AuthController {
       facebook: { enum: ProviderType.FACEBOOK, searchField: 'phone' },
       apple: { enum: ProviderType.APPLE, searchField: 'appleId' }
     };
+
     const currentProvider = providerMapping[data.provider_type];
     if (!currentProvider) {
-      throw new ValidationException("Invalid provider type", error);
+      // throw new ValidationException("Invalid provider type", error);
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": "Invalid provider type",
+          "data": {}
+        }
+      })
     }
 
     const includeRelations = {
@@ -853,7 +879,14 @@ class AuthController {
     }
     // 5. Create or Update FCM Token    
     await this.authService.upsertFcmToken(member.id, data.firebase_token, data.device_info.toUpperCase());
-
+ 
+    // 6. Generate Token
+    const token: string = generateToken(
+      {
+        id: member.id,
+      },
+      "30d"
+    );
 
     return res.json({
       "jsonrpc": "2.0",
@@ -890,7 +923,8 @@ class AuthController {
           },
           "partner_id": {
             "id": member.id
-          }
+          },
+          "access_token": token
         }
       }
     });

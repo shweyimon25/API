@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import AuthController from "../../../app/controllers/member/v1/auth.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
+import passport from "passport";
 
 const router = Router();
 const authController = new AuthController();
@@ -94,6 +95,7 @@ router.post("/sso/login", [
 ]);
 
 router.post("/firebase/update_token", [
+  passport.authenticate("jwt", { session: false }),
   asyncHandler(
     async (req: Request, res: Response) =>
       await authController.updateToken(req, res)
