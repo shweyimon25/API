@@ -11,12 +11,16 @@ class SystemParameterController {
     const config = Object.fromEntries(systemParameter.map(s => [s.key, s.value]));
 
     res.json({
-        isFullFilled: true,
-        message: 'Hello Frontend',
-        data: {
-        ip_address: config.ip_address,
-        is_eligible_for_purchase: config.is_eligible_for_purchase 
-        }
+      "jsonrpc": "2.0",
+      "id": null,
+      "result": {
+          isFullFilled: true,
+          message: 'Hello Frontend',
+          data: {
+          ip_address: config.ip_address,
+          is_eligible_for_purchase: config.is_eligible_for_purchase 
+          }
+      }
     });
   }
 
