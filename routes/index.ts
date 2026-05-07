@@ -124,5 +124,5 @@ router.use("/member/v1/blocks", memberBlockRoute);
 router.use("/member/v1/meals", memberMealRoute);
 router.use("/member/v1/meal-trackers", memberMealTrackerRoute);
 router.use("/member/v1/water-trackers", memberWaterTrackerRoute);
-router.use("/member/v1/api/info", systemParameterRoute);
+router.use("/member/v1/info", systemParameterRoute);
 export default router;
