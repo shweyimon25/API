@@ -6,7 +6,7 @@ const router = Router();
 const systemParameterController = new SystemParameterController();
 
 router
-  .route("/")
+  .route("/info")
   .get([
     // passport.authenticate("jwt", { session: false }),
     asyncHandler(
@@ -14,6 +14,27 @@ router
         await systemParameterController.findInfo(req, res)
     ),
   ]);
+
+router
+  .route("/force-update/status")
+  .get([
+    // passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await systemParameterController.findForceUpdateStatus(req, res)
+    ),
+  ]);
+
+  router
+  .route("/version-check")
+  .get([
+    // passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await systemParameterController.findAppVersionInfo(req, res)
+    ),
+  ]);
+
 
 export default router;
 
