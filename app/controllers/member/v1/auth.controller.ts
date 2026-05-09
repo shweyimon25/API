@@ -404,17 +404,14 @@ class AuthController {
       })
     }
 
-    const existingMember = await prisma.member.findFirst({
-      where: {
-        OR: [
-          ...(existingOtp.email ? [{ email: existingOtp.email }] : []),
-          ...(existingOtp.phone ? [{ phone: existingOtp.phone }] : []),
-        ],
-      },
-      select: { id: true, email: true, phone: true },
-    });
+    const existingEmailMember = existingOtp.email
+      ? await prisma.member.findUnique({
+          where: { email: existingOtp.email },
+          select: { id: true },
+        })
+      : null;
 
-    if (existingMember) {
+    if (existingEmailMember) {
       await prisma.oTP.update({
         where: { id: existingOtp.id },
         data: { isVerified: true, isUsed: true },
@@ -425,7 +422,7 @@ class AuthController {
         "id": null,
         "result": {
           "isFullFilled": false,
-          "message": existingOtp.email ? "Email already registered" : "Phone already registered",
+          "message": "Email already registered",
           "data": {}
         }
       })
@@ -436,29 +433,44 @@ class AuthController {
       data: { isVerified: true, isUsed: true },
     });
 
-    const member = await prisma.member.create({
-      data: {
-        name: existingOtp.name ?? "",
-        email: existingOtp.email,
-        phone: existingOtp.phone,
-        password: existingOtp.password ?? "",
-        status: Status.ACTIVE,
-        code: await generateMemberCode(),
-        profile: {
-          create: {
-            address: existingOtp.address ?? "",
+    let member: any;
+    try {
+      member = await prisma.member.create({
+        data: {
+          name: existingOtp.name ?? "",
+          email: existingOtp.email,
+          password: existingOtp.password ?? "",
+          status: Status.ACTIVE,
+          code: await generateMemberCode(),
+          profile: {
+            create: {
+              address: existingOtp.address ?? "",
+            },
+          },
+          bodyMeasurement: {
+            create: {},
+          },
+          providerTypes: {
+            create: {
+              providerType: ProviderType.EMAIL,
+            },
           },
         },
-        bodyMeasurement: {
-          create: {},
-        },
-        providerTypes: {
-          create: {
-            providerType: ProviderType.EMAIL,
-          },
-        },
-      },
-    });
+      });
+    } catch (e: any) {
+      if (e?.code === "P2002") {
+        return res.json({
+          "jsonrpc": "2.0",
+          "id": null,
+          "result": {
+            "isFullFilled": false,
+            "message": "Email already registered",
+            "data": {}
+          }
+        })
+      }
+      throw e;
+    }
 
     return res.json({
       "jsonrpc": "2.0",
