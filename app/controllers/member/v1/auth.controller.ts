@@ -221,6 +221,10 @@ class AuthController {
       })
     }
 
+    const token: string = generateToken({
+      id: member.id,
+    }, "30d");
+
     return res.json({
       "jsonrpc": "2.0",
       "id": null,
@@ -396,6 +400,33 @@ class AuthController {
         "result": {
           "isFullFilled": false,
           "message": "OTP expired",
+        }
+      })
+    }
+
+    const existingMember = await prisma.member.findFirst({
+      where: {
+        OR: [
+          ...(existingOtp.email ? [{ email: existingOtp.email }] : []),
+          ...(existingOtp.phone ? [{ phone: existingOtp.phone }] : []),
+        ],
+      },
+      select: { id: true, email: true, phone: true },
+    });
+
+    if (existingMember) {
+      await prisma.oTP.update({
+        where: { id: existingOtp.id },
+        data: { isVerified: true, isUsed: true },
+      });
+
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": existingOtp.email ? "Email already registered" : "Phone already registered",
+          "data": {}
         }
       })
     }
