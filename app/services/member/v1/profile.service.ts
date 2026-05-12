@@ -1,4 +1,3 @@
-import { Member } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { comparePassword, hashPassword } from "../../../helpers/helper";

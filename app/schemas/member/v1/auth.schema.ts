@@ -113,8 +113,8 @@ export const registerSchema = z.object({
 
 export const otpValidateSchema = z.object({
   otp: z.string(),
-  to_remove_user: z.boolean(), // true or false
-  forget_pwd: z.boolean(), // true or false
+  to_remove_user: z.boolean().optional(), // true or false
+  forget_pwd: z.boolean().optional(), // true or false
 });
 
 export const updateBodyMeasurementsSchema = z.object({
