@@ -1,4 +1,4 @@
-import { Member } from "@prisma/client";
+import { Member, User } from "@prisma/client";
 import { ValidationException } from "../../../helpers/exceptions";
 import { successResponse } from "../../../helpers/response";
 import { validater } from "../../../helpers/validator";
@@ -10,6 +10,7 @@ import ProfileService from "../../../services/member/v1/profile.service";
 import { Request, Response } from "express";
 import { updateBodyMeasurementsSchema } from "../../../schemas/member/v1/auth.schema";
 import { ProfileResource } from "../../../resources/member/v1/profile/profile.resource";
+import prisma from "../../../../prisma/client";
 
 class ProfileController {
   private profileService: ProfileService;
@@ -19,8 +20,128 @@ class ProfileController {
   }
 
   async profile(req: Request, res: Response) {
-    const member = await this.profileService.profile((req.user as Member).id);
-    return successResponse(res, "Profile fetched successfully", ProfileResource.toResource(member));
+
+    const userId = (req.user as User).id;
+
+    const member = await prisma.member.findFirst({
+      where: {
+        id: userId,
+      },
+      include: {
+        profile: true,
+        shop: {
+          include: {
+            posts: true,
+            shopLevel: true,
+          },
+        },
+        posts: true,
+        friends: true,
+        bodyMeasurement: true,
+        memberType: true,
+        memberRequests: {
+          include: {
+            memberPlan: true,
+          },
+        },
+        proficientLevel: true,
+        bodyGoal: true,
+      },
+    });
+
+    if (!member) {
+      return res.json({
+        "jsonrpc": "2.0",
+        "id": null,
+        "result": {
+          "isFullFilled": false,
+          "message": "Member not found",
+          "data": null
+        }
+      })
+    }
+
+    const latestMemberRequest = member.memberRequests?.[0];
+    const memberPlan = latestMemberRequest?.memberPlan;
+
+    return res.json({
+      "jsonrpc": "2.0",
+      "id": null,
+      "result": {
+        "isFullFilled": true,
+        "message": "Profile fetched successfully",
+        "data": {
+          id: member.id,
+          client_code: member.code,
+          im_status: "online",
+          name: member.name,
+          image_1920: member.profile?.profilePhoto,
+          cover_photo: member.profile?.coverPhoto,
+          bio: member.profile?.bio,
+          total_shop_post: member.shop?.posts?.length ?? 0,
+          total_social_post: member.posts?.length ?? 0,
+          total_friend: member.friends.length || 0,
+          friend_status: "you",
+          friend_req_status: "none",
+          friend_request_id: null,
+          is_follow: null,
+          follower_count: null,
+          following_count: null,
+          follower_id: null,
+          login: member.phone,
+          partner_id: member.id,
+          company_id: 1,
+          phone: member.phone,
+          address: member.profile?.address,
+          gender: member.profile?.gender,
+          dob: member.profile?.age,
+          age: member.profile?.age,
+          height_ft: member.bodyMeasurement?.heightFeet,
+          height_in: member.bodyMeasurement?.heightInches,
+          weight: member.bodyMeasurement?.weight,
+          neck: member.bodyMeasurement?.neck,
+          calf: member.bodyMeasurement?.calf,
+          waist: member.bodyMeasurement?.waist,
+          chest: member.bodyMeasurement?.chest,
+          hip: member.bodyMeasurement?.hip,
+          shoulders: member.bodyMeasurement?.shoulders,
+          arms: member.bodyMeasurement?.arms,
+          thigh: member.bodyMeasurement?.thigh,
+          client_type: member.memberType?.name,
+          request_id: latestMemberRequest
+            ? {
+              confirm_date: latestMemberRequest.approvedAt,
+              expired_date: memberPlan?.expiredAt ?? null,
+              name: "YC/26/000011",
+              id: latestMemberRequest.id,
+            }
+            : null,
+          member_plan_id: memberPlan
+            ? {
+              id: memberPlan.id,
+              price: memberPlan.price,
+              res_video_group: memberPlan.isVideoGroup,
+              data_type: member.memberType?.name,
+              duration: memberPlan.duration,
+              member_type: memberPlan.name,
+            }
+            : null,
+          shop_plan_id: {
+            id: member.shop?.shopLevel?.id,
+            price: member.shop?.shopLevel?.price,
+            duration: member.shop?.shopLevel?.duration,
+            member_type: member.memberType?.name
+          },
+          proficient_level: member.proficientLevel?.name,
+          main_goal_body_type: member.bodyGoal?.name,
+          total_trainer_unread_count: 0,
+          total_unread_count: 0,
+          need_info: null,
+          social_unread_noti_count: 0,
+          friend_request_noti_count: 0
+        }
+      }
+    })
   }
 
   async update(req: Request, res: Response) {
