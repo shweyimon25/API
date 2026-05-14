@@ -30,6 +30,7 @@ import adminBodyGoalRoute from "./admin/v1/body-goal.route";
 import adminShopLevelRequestRoute from "./admin/v1/shop-level-request.route";
 import adminCategoryRoute from "./admin/v1/category.route";
 import adminAttendanceRoute from "./admin/v1/attendance.route";
+import adminReportCategoryRoute from "./admin/v1/report-category.route";
 
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
@@ -61,6 +62,8 @@ import memberMealRoute from "./member/v1/meal.route";
 import memberMealTrackerRoute from "./member/v1/meal-tracker.route";
 import memberWaterTrackerRoute from "./member/v1/water-tracker.route";
 import systemParameterRoute from "./member/v1/system-parameter.route";
+import memberReportCategoryRoute from "./member/v1/report-category.route";
+import memberPostReportRoute from "./member/v1/post-report.route";
 
 const router = Router();
 
@@ -94,6 +97,8 @@ router.use("/admin/v1/shop-level-requests", adminShopLevelRequestRoute);
 router.use("/admin/v1/categories", adminCategoryRoute);
 router.use("/admin/v1/payments", adminPaymentRoute);
 router.use("/admin/v1/attendances", adminAttendanceRoute);
+router.use("/admin/v1/report-category", adminReportCategoryRoute);
+
 
 // Member Routes
 router.use("/member/v1/auth", memberAuthRoute);
@@ -125,5 +130,7 @@ router.use("/member/v1/meals", memberMealRoute);
 router.use("/member/v1/meal-trackers", memberMealTrackerRoute);
 router.use("/member/v1/water-trackers", memberWaterTrackerRoute);
 router.use("/member/v1", systemParameterRoute);
+router.use("/member/v1/report-category", memberReportCategoryRoute);
+router.use("/member/v1/post-report", memberPostReportRoute);
 
 export default router;
