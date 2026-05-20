@@ -130,7 +130,7 @@ class ProfileController {
             id: member.shop?.shopLevel?.id,
             price: member.shop?.shopLevel?.price,
             duration: member.shop?.shopLevel?.duration,
-            member_type: member.memberType?.name
+            member_type: member.shop?.shopLevel?.name,
           },
           proficient_level: member.proficientLevel?.name,
           main_goal_body_type: member.bodyGoal?.name,
