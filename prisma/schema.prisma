@@ -78,6 +78,8 @@ model User {
   shopUpgradeRequestsRejected ShopUpgradeRequest[] @relation("ShopUpgradeRequestRejectedBy")
   attendancesCreated          Attendance[]         @relation("AttendanceCreatedBy")
   attendancesUpdated          Attendance[]         @relation("AttendanceUpdatedBy")
+  reportCategoryCreated       ReportCategory[]     @relation("ReportCategoryCreatedBy")
+  reportCategoryUpdated       ReportCategory[]     @relation("ReportCategoryUpdatedBy")
 }
 
 model Role {
@@ -289,6 +291,7 @@ model Member {
   blocks                   Block[]                   @relation("MemberBlocked")
   blockedBy                Block[]                   @relation("MemberBlockedBy")
   mealTrackers             MealTracker[]
+  PostReport               PostReport[]
 }
 
 model MemberFcmToken {
@@ -322,6 +325,20 @@ model OTP {
 
   @@unique([email, otp])
   @@unique([phone, otp])
+}
+
+model ReportCategory {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
+
+  createdById Int?
+  updatedById Int?
+  createdBy   User?        @relation("ReportCategoryCreatedBy", fields: [createdById], references: [id])
+  updatedBy   User?        @relation("ReportCategoryUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  postReports PostReport[]
 }
 
 enum ProviderType {
@@ -522,6 +539,8 @@ model Post {
 
   postComments  PostComment[]
   postReactions PostReaction[]
+  socialReports PostReport[]   @relation("SocialPostReports")
+  shopReports   PostReport[]   @relation("ShopPostReports")
 }
 
 model PostReaction {
@@ -1024,6 +1043,23 @@ model SystemParameter {
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PostReport {
+  id           Int    @id @default(autoincrement())
+  name         String
+  socialPostId Int?
+  socialPost   Post?  @relation("SocialPostReports", fields: [socialPostId], references: [id], onDelete: Cascade)
+
+  shopPostId Int?
+  shopPost   Post? @relation("ShopPostReports", fields: [shopPostId], references: [id], onDelete: Cascade)
+
+  memberId Int?
+  member   Member? @relation(fields: [memberId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  reportCategories ReportCategory[]
 }
 
 enum NotificationType {

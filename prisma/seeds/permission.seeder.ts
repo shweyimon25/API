@@ -602,7 +602,30 @@ const permissionSeeder = async () => {
     {
       name: "attendance:delete",
       description: "Delete an attendance",
-    }
+    },
+
+    // Report Category
+    {
+      name: "reportCategory:list",
+      description: "Show all report categories",
+    },
+    {
+      name: "reportCategory:read",
+      description: "Show report categories details",
+    },
+    {
+      name: "reportCategory:create",
+      description: "Create new report category",
+    },
+    {
+      name: "reportCategory:update",
+      description: "Update an report category",
+    },
+    {
+      name: "reportCategory:delete",
+      description: "Delete an report category",
+    },
+
   ];
 
   for (const permission of permissions) {
