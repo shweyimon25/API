@@ -12,7 +12,7 @@ router
     passport.authenticate("jwt", { session: false }),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await memberController.findAll(req, res),
+        await memberController.getAllMembers(req, res),
     ),
   ]);
 
