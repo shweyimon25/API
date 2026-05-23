@@ -36,6 +36,7 @@ import adminReportCategoryRoute from "./admin/v1/report-category.route";
 import memberAuthRoute from "./member/v1/auth.route";
 import memberProfileRoute from "./member/v1/profile.route";
 import memberPostRoute from "./member/v1/post.route";
+import memberSocialPostRoute from "./member/v1/member-social-post.route";
 import memberPostCommentRoute from "./member/v1/post-comment.route";
 import memberTagRoute from "./member/v1/tag.route";
 import memberMemberTypeRoute from "./member/v1/member-type.route";
@@ -103,6 +104,7 @@ router.use("/admin/v1/report-category", adminReportCategoryRoute);
 // Member Routes
 router.use("/member/v1/auth", memberAuthRoute);
 router.use("/member/v1/profile", memberProfileRoute);
+router.use("/member/v1", memberSocialPostRoute);
 router.use("/member/v1/posts", memberPostRoute);
 router.use("/member/v1/post-comments", memberPostCommentRoute);
 router.use("/member/v1/tags", memberTagRoute);
