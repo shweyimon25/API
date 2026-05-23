@@ -523,6 +523,63 @@ class PostController {
     });
   }
 
+  async memberSocialPostDelete(req: Request, res: Response) {
+    const memberId = (req.user as Member).id;
+    const postId = +req.params.id;
+
+    if (!postId) {
+      return res.json({
+        jsonrpc: "2.0",
+        id: null,
+        result: {
+          isFullFilled: false,
+          message: "Post not found",
+          data: null,
+        },
+      });
+    }
+
+    const existing = await prisma.post.findFirst({
+      where: { id: postId, shopId: null },
+    });
+
+    if (!existing) {
+      return res.json({
+        jsonrpc: "2.0",
+        id: null,
+        result: {
+          isFullFilled: false,
+          message: "Post not found",
+          data: null,
+        },
+      });
+    }
+
+    if (existing.memberId !== memberId) {
+      return res.json({
+        jsonrpc: "2.0",
+        id: null,
+        result: {
+          isFullFilled: false,
+          message: "You can only delete your own posts",
+          data: null,
+        },
+      });
+    }
+
+    await prisma.post.delete({ where: { id: postId } });
+
+    return res.json({
+      jsonrpc: "2.0",
+      id: null,
+      result: {
+        isFullFilled: true,
+        message: "Delete Successfully.",
+        data: null,
+      },
+    });
+  }
+
   async findAll(req: Request, res: Response) {
     const { page, perPage } = req.query;
     const where = memberPostScope(req.query);

@@ -32,6 +32,14 @@ router.post("/member.social.post/form-data/:id/update", [
   ),
 ]);
 
+router.delete("/member.social.post/:id/delete", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postController.memberSocialPostDelete(req, res)
+  ),
+]);
+
 router
   .route("/member.social.post/:id")
   .get([
