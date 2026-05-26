@@ -283,6 +283,7 @@ model Member {
   friendRequestsOf         FriendRequest[]           @relation("MemberFriendRequestReceiver")
   fcmToken                 MemberFcmToken?
   postReactions            PostReaction[]
+  postSaves                PostSave[]
   conversationParticipants ConversationParticipant[]
   messages                 Message[]
   attendances              Attendance[]
@@ -541,6 +542,27 @@ model Post {
   postReactions PostReaction[]
   socialReports PostReport[]   @relation("SocialPostReports")
   shopReports   PostReport[]   @relation("ShopPostReports")
+  socialSaves   PostSave[]     @relation("SocialPostSaves")
+  shopSaves     PostSave[]     @relation("ShopPostSaves")
+}
+
+model PostSave {
+  id Int @id @default(autoincrement())
+
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  socialPostId Int?
+  socialPost   Post? @relation("SocialPostSaves", fields: [socialPostId], references: [id], onDelete: Cascade)
+
+  shopPostId Int?
+  shopPost   Post? @relation("ShopPostSaves", fields: [shopPostId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, socialPostId])
+  @@unique([memberId, shopPostId])
 }
 
 model PostReaction {

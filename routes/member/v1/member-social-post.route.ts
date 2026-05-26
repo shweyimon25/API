@@ -16,11 +16,35 @@ router.post("/member.social.post", [
   ),
 ]);
 
+router.post("/member.social.post/create", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postController.memberSocialPostCreate(req, res)
+  ),
+]);
+
 router.post("/member.social.post/form-data/create", [
   auth,
   asyncHandler(
     async (req: Request, res: Response) =>
       await postController.memberSocialPostCreate(req, res)
+  ),
+]);
+
+router.post("/member.post.save/create", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postController.memberPostSaveCreate(req, res)
+  ),
+]);
+
+router.post("/member.post.save/:id/delete", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postController.memberPostSaveDelete(req, res)
   ),
 ]);
 
@@ -32,7 +56,7 @@ router.post("/member.social.post/form-data/:id/update", [
   ),
 ]);
 
-router.delete("/member.social.post/:id/delete", [
+router.post("/member.social.post/:id/delete", [
   auth,
   asyncHandler(
     async (req: Request, res: Response) =>
