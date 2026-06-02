@@ -144,7 +144,7 @@ class PostController {
       partner_id: {
         id: post.member?.id ?? null,
         name: post.member?.name ?? null,
-        image_1920: post.member?.profile?.profilePhoto ?? null,
+        image_1920: post.member?.profile?.profilePhoto ?? "",
       },
       view_type: this.viewType(post.privencyType),
       post_category: post.tag?.name?.toLowerCase() ?? "home",
@@ -188,7 +188,7 @@ class PostController {
       partner_id: {
         id: post.member?.id ?? null,
         name: post.member?.name ?? null,
-        image_1920: post.member?.profile?.profilePhoto ?? null,
+        image_1920: post.member?.profile?.profilePhoto ?? "",
       },
       view_type: this.viewType(post.privencyType),
       post_category: post.tag?.name?.toLowerCase() ?? "home",
@@ -265,9 +265,7 @@ class PostController {
       create_uid: {
         id: save.member.id,
         name: save.member.name,
-        image_1920:
-          save.member.profile?.profilePhoto ??
-          `http://localhost:8069/web/image/?model=res.users&id=${save.member.id}&field=image_1920`,
+        image_1920: save.member.profile?.profilePhoto ?? "",
       },
       social_post_id: {
         id: save.socialPost?.id ?? null,

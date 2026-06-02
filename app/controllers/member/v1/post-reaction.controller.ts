@@ -49,10 +49,7 @@ class PostReactionController {
         id: number;
         profile: { profilePhoto: string | null } | null;
     }) {
-        return (
-            member.profile?.profilePhoto ??
-            `http://localhost:8069/web/image/?model=res.users&id=${member.id}&field=image_1920`
-        );
+        return member.profile?.profilePhoto ?? "";
     }
 
     private formatMemberPostReact(reaction: {
