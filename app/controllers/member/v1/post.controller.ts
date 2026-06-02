@@ -193,7 +193,7 @@ class PostController {
       view_type: this.viewType(post.privencyType),
       post_category: post.tag?.name?.toLowerCase() ?? "home",
       is_save: savedPostId ? true : false,
-      saved_post_id: savedPostId ?? false,
+      saved_post_id: savedPostId ? String(savedPostId) : "",
       create_date: this.formatDate(post.createdAt),
       media_line: this.mediaLine(post.media),
       view_count: post.viewCount ?? 0,
