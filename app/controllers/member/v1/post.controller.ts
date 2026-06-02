@@ -159,23 +159,28 @@ class PostController {
     };
   }
 
-  private formatSocialPost(post: {
-    id: number;
-    content: unknown;
-    memberId: number;
-    privencyType: string | null;
-    media: unknown;
-    viewCount: number;
-    createdAt: Date;
-    member: {
+  private formatSocialPost(
+    post: {
       id: number;
-      name: string;
-      profile: { profilePhoto: string | null } | null;
-    } | null;
-    tag: { name: string } | null;
-    postReactions: { id: number }[];
-    _count: { postReactions: number; postComments: number };
-  }, sharePost?: ReturnType<PostController["formatSharedPost"]> | null, shareCount = 0) {
+      content: unknown;
+      memberId: number;
+      privencyType: string | null;
+      media: unknown;
+      viewCount: number;
+      createdAt: Date;
+      member: {
+        id: number;
+        name: string;
+        profile: { profilePhoto: string | null } | null;
+      } | null;
+      tag: { name: string } | null;
+      postReactions: { id: number }[];
+      _count: { postReactions: number; postComments: number };
+    },
+    sharePost?: ReturnType<PostController["formatSharedPost"]> | null,
+    shareCount = 0,
+    savedPostId: number | null = null
+  ) {
     return {
       id: post.id,
       caption: this.caption(post.content),
@@ -187,8 +192,8 @@ class PostController {
       },
       view_type: this.viewType(post.privencyType),
       post_category: post.tag?.name?.toLowerCase() ?? "home",
-      is_save: null,
-      saved_post_id: null,
+      is_save: savedPostId ? true : false,
+      saved_post_id: savedPostId ?? false,
       create_date: this.formatDate(post.createdAt),
       media_line: this.mediaLine(post.media),
       view_count: post.viewCount ?? 0,
@@ -206,9 +211,13 @@ class PostController {
     memberId: number
   ) {
     const sharePostId = this.sharePostId(post.content);
-    const [shareCount, sharedPost] = await Promise.all([
+    const [shareCount, savedPost, sharedPost] = await Promise.all([
       prisma.post.count({
         where: { content: { path: ["share_post_id"], equals: post.id } },
+      }),
+      prisma.postSave.findFirst({
+        where: { memberId, socialPostId: post.id },
+        select: { id: true },
       }),
       sharePostId
         ? prisma.post.findFirst({
@@ -219,7 +228,12 @@ class PostController {
     ]);
 
     if (!sharedPost) {
-      return this.formatSocialPost(post, null, shareCount);
+      return this.formatSocialPost(
+        post,
+        null,
+        shareCount,
+        savedPost?.id ?? null
+      );
     }
 
     const sharedPostShareCount = await prisma.post.count({
@@ -229,7 +243,8 @@ class PostController {
     return this.formatSocialPost(
       post,
       this.formatSharedPost(sharedPost, sharedPostShareCount),
-      shareCount
+      shareCount,
+      savedPost?.id ?? null
     );
   }
 

@@ -1,10 +1,12 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
 import PostController from "../../../app/controllers/member/v1/post.controller";
+import PostReactionController from "../../../app/controllers/member/v1/post-reaction.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
 const router = Router();
 const postController = new PostController();
+const postReactionController = new PostReactionController();
 
 const auth = passport.authenticate("jwt", { session: false });
 
@@ -45,6 +47,22 @@ router.post("/member.post.save/:id/delete", [
   asyncHandler(
     async (req: Request, res: Response) =>
       await postController.memberPostSaveDelete(req, res)
+  ),
+]);
+
+router.get("/member.post.react", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postReactionController.memberPostReacts(req, res)
+  ),
+]);
+
+router.post("/member.post.react/check", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postReactionController.memberPostReactCheck(req, res)
   ),
 ]);
 
