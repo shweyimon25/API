@@ -65,6 +65,7 @@ import memberWaterTrackerRoute from "./member/v1/water-tracker.route";
 import systemParameterRoute from "./member/v1/system-parameter.route";
 import memberReportCategoryRoute from "./member/v1/report-category.route";
 import memberPostReportRoute from "./member/v1/post-report.route";
+import memberPostViewsRoute from "./member/v1/post-views.route";
 
 const router = Router();
 
@@ -134,5 +135,6 @@ router.use("/member/v1/water-trackers", memberWaterTrackerRoute);
 router.use("/member/v1", systemParameterRoute);
 router.use("/member/v1/report-category", memberReportCategoryRoute);
 router.use("/member/v1/post-report", memberPostReportRoute);
+router.use("/member/v1", memberPostViewsRoute);
 
 export default router;

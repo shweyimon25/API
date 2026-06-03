@@ -293,6 +293,7 @@ model Member {
   blockedBy                Block[]                   @relation("MemberBlockedBy")
   mealTrackers             MealTracker[]
   PostReport               PostReport[]
+  PostViews                PostViews[]
 }
 
 model MemberFcmToken {
@@ -544,6 +545,8 @@ model Post {
   shopReports   PostReport[]   @relation("ShopPostReports")
   socialSaves   PostSave[]     @relation("SocialPostSaves")
   shopSaves     PostSave[]     @relation("ShopPostSaves")
+  socialViews   PostViews[]   @relation("SocialPostViews")
+  shopViews   PostViews[]   @relation("ShopPostViews")
 }
 
 model PostSave {
@@ -1082,6 +1085,23 @@ model PostReport {
   createdAt DateTime @default(now())
 
   reportCategories ReportCategory[]
+}
+
+model PostViews {
+  id            Int @id @default(autoincrement())
+  socialPostId  Int?
+  socialPost    Post?  @relation("SocialPostViews", fields: [socialPostId], references: [id], onDelete: Cascade)
+
+  shopPostId    Int?
+  shopPost      Post? @relation("ShopPostViews", fields: [shopPostId], references: [id], onDelete: Cascade)
+
+  memberId      Int
+  member        Member @relation(fields: [memberId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  @@unique([memberId, socialPostId])
+  @@unique([memberId, shopPostId])
+
 }
 
 enum NotificationType {
