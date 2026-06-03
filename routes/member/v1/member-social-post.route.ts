@@ -2,11 +2,13 @@ import passport from "passport";
 import { Request, Response, Router } from "express";
 import PostController from "../../../app/controllers/member/v1/post.controller";
 import PostReactionController from "../../../app/controllers/member/v1/post-reaction.controller";
+import PostCommentController from "../../../app/controllers/member/v1/post-comment.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
 const router = Router();
 const postController = new PostController();
 const postReactionController = new PostReactionController();
+const postCommentController = new PostCommentController();
 
 const auth = passport.authenticate("jwt", { session: false });
 
@@ -63,6 +65,38 @@ router.post("/member.post.react/check", [
   asyncHandler(
     async (req: Request, res: Response) =>
       await postReactionController.memberPostReactCheck(req, res)
+  ),
+]);
+
+router.post("/member.post.comment", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postCommentController.memberPostComments(req, res)
+  ),
+]);
+
+router.post("/member.post.comment/create", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postCommentController.memberPostCommentCreate(req, res)
+  ),
+]);
+
+router.post("/member.post.comment/:id/update", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postCommentController.memberPostCommentUpdate(req, res)
+  ),
+]);
+
+router.post("/member.post.comment/:id/delete", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postCommentController.memberPostCommentDelete(req, res)
   ),
 ]);
 
