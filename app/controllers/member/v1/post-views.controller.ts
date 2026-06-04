@@ -14,6 +14,38 @@ class PostViewsController {
         return String(content);
     }
 
+    private filterValue(filters: unknown, fieldName: string) {
+        const filtersStr =
+            typeof filters === "string" ? filters : JSON.stringify(filters ?? "[]");
+        const tupleRe =
+            /\(\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*(?:'([^']*)'|([^)]+))\s*\)/g;
+
+        let match: RegExpExecArray | null;
+        while ((match = tupleRe.exec(filtersStr)) !== null) {
+            const field = match[1];
+            const op = match[2];
+            const value = (match[3] ?? match[4] ?? "").trim().replace(/^'|'$/g, "");
+            if (field === fieldName && op === "=") {
+                const id = Number(value);
+                return Number.isInteger(id) && id > 0 ? id : null;
+            }
+        }
+
+        return null;
+    }
+
+    private async getPostViewsCount(socialPostId: number | null, shopPostId: number | null) {
+        const where: Prisma.PostViewsWhereInput = socialPostId
+        ? {
+            socialPostId: socialPostId,
+            }
+        : {
+            shopPostId: shopPostId ?? 0,
+            };
+
+        return await prisma.postViews.count({ where });
+    }
+
 
     private formatPostViews(view: {
         id: number;
@@ -25,7 +57,7 @@ class PostViewsController {
         socialPost: { id: number; content: unknown; media: unknown } | null;
         shopPost: { id: number; content: unknown; media: unknown } | null;
     }) {
-
+        
         return {
         id: view.id,
         create_uid: {
@@ -59,25 +91,14 @@ class PostViewsController {
         };
     }
 
-    private async getPostViewsCount(socialPostId: number | null, shopPostId: number | null) {
-        const where: Prisma.PostViewsWhereInput = socialPostId
-        ? {
-            socialPostId: socialPostId,
-            }
-        : {
-            shopPostId: shopPostId ?? 0,
-            };
-
-        return await prisma.postViews.count({ where });
-    }
 
     async memberPostViews(req: Request, res: Response) {
         const params =
             req.method === "GET" && Object.keys(req.query).length
                 ? req.query
                 : req.body?.params ?? {};
-        const socialPostId = Number(params.social_post_id) || null;
-        const shopPostId = Number(params.shop_post_id) || null;
+        const socialPostId = this.filterValue(params.filters, "social_post_id");
+        const shopPostId = this.filterValue(params.filters, "shop_post_id");
         const offset = Math.max(0, Number(params.offset) || 0);
         const limit = Math.min(100, Math.max(1, Number(params.limit) || 100));
 
