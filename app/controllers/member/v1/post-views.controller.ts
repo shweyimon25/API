@@ -34,19 +34,6 @@ class PostViewsController {
         return null;
     }
 
-    private async getPostViewsCount(socialPostId: number | null, shopPostId: number | null) {
-        const where: Prisma.PostViewsWhereInput = socialPostId
-        ? {
-            socialPostId: socialPostId,
-            }
-        : {
-            shopPostId: shopPostId ?? 0,
-            };
-
-        return await prisma.postViews.count({ where });
-    }
-
-
     private formatPostViews(view: {
         id: number;
         member: {
@@ -54,8 +41,8 @@ class PostViewsController {
         name: string;
         profile: { profilePhoto: string | null } | null;
         };
-        socialPost: { id: number; content: unknown; media: unknown } | null;
-        shopPost: { id: number; content: unknown; media: unknown } | null;
+        socialPost: { id: number; content: unknown; media: unknown, viewCount: number } | null;
+        shopPost: { id: number; content: unknown; media: unknown, viewCount: number } | null;
     }) {
         
         return {
@@ -76,7 +63,7 @@ class PostViewsController {
             id: view.socialPost?.id ?? null,
             caption: view.socialPost ? this.caption(view.socialPost.content) : null,
             react_count: 0,
-            view_count: 0,
+            view_count: view.socialPost ? view.socialPost.viewCount : 0,
             comment_count: 0,
             share_count: 0
         },
@@ -84,7 +71,7 @@ class PostViewsController {
             id: view.shopPost?.id ?? null,
             caption: view.shopPost ? this.caption(view.shopPost.content) : null,
             react_count: 0,
-            view_count: 0,
+            view_count: view.shopPost ? view.shopPost.viewCount : 0,
             comment_count: 0,
             share_count: 0
         }
@@ -154,8 +141,8 @@ class PostViewsController {
                         profile: { select: { profilePhoto: true } },
                         },
                     },
-                    socialPost: { select: { id: true, content: true, media: true } },
-                    shopPost: { select: { id: true, content: true, media: true } },
+                    socialPost: { select: { id: true, content: true, media: true, viewCount: true } },
+                    shopPost: { select: { id: true, content: true, media: true, viewCount: true } },
                 },
             }),
         ]);
@@ -192,6 +179,7 @@ class PostViewsController {
             },
         });
         }
+        const targetPostId = socialPostId || shopPostId;
 
         const post = await prisma.post.findFirst({
         where: socialPostId
@@ -223,34 +211,68 @@ class PostViewsController {
         shopPost: { select: { id: true, content: true, media: true } },
         };
 
-        const view = socialPostId
-        ? await prisma.postViews.upsert({
-            where: {
-                memberId_socialPostId: { memberId, socialPostId },
-            },
-            create: { memberId, socialPostId },
-            update: {},
-            include,
-            })
-        : await prisma.postViews.upsert({
-            where: {
-                memberId_shopPostId: { memberId, shopPostId: shopPostId ?? 0 },
-            },
-            create: { memberId, shopPostId },
-            update: {},
-            include,
+        try {
+            const existingView = socialPostId
+                ? await prisma.postViews.findUnique({
+                    where: { memberId_socialPostId: { memberId, socialPostId } },
+                    include,
+                })
+                : await prisma.postViews.findUnique({
+                    where: { memberId_shopPostId: { memberId, shopPostId: shopPostId ?? 0 } },
+                    include,
+                });
+
+            let finalView = existingView;
+            let currentViewCount = post.viewCount;
+
+            if (!existingView) {
+                const [newView, updatedPost] = await prisma.$transaction([
+                    socialPostId
+                        ? prisma.postViews.create({
+                            data: { memberId, socialPostId },
+                            include,
+                        })
+                        : prisma.postViews.create({
+                            data: { memberId, shopPostId },
+                            include,
+                        }),
+
+                    prisma.post.update({
+                        where: { id: targetPostId ?? 0 },
+                        data: { viewCount: { increment: 1 } }
+                    })
+                ]);
+
+                finalView = newView;
+                currentViewCount = updatedPost.viewCount;
+            }
+
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    data: {
+                        view_count: currentViewCount, 
+                        results: []
+                    },
+                },
             });
 
-        return res.json({
-        jsonrpc: "2.0",
-        id: null,
-        result: {
-            isFullFilled: true,
-            data: {view_count: await this.getPostViewsCount(socialPostId, shopPostId), results: []},
-        },
-        });
+        }
+        catch (error) {
+            console.error("View count update error:", error);
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: false,
+                    message: "Internal server error",
+                    data: null,
+                },
+            });
+        }
     }
-
 }
 
 export default PostViewsController;
