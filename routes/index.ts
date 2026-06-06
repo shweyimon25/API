@@ -66,6 +66,9 @@ import systemParameterRoute from "./member/v1/system-parameter.route";
 import memberReportCategoryRoute from "./member/v1/report-category.route";
 import memberPostReportRoute from "./member/v1/post-report.route";
 import memberPostViewsRoute from "./member/v1/post-views.route";
+import memberPhysicalLimitationRoute from "./member/v1/physical-limitation.route";
+import memberDietTypeRoute from "./member/v1/diet-type.route";
+import memberBadHabitRoute from "./member/v1/bad-habit.route";
 
 const router = Router();
 
@@ -136,5 +139,8 @@ router.use("/member/v1", systemParameterRoute);
 router.use("/member/v1/report-category", memberReportCategoryRoute);
 router.use("/member/v1/post-report", memberPostReportRoute);
 router.use("/member/v1", memberPostViewsRoute);
+router.use("/member/v1/physical-limitations", memberPhysicalLimitationRoute);
+router.use("/member/v1/diet-types", memberDietTypeRoute);
+router.use("/member/v1/bad-habits", memberBadHabitRoute);
 
 export default router;
