@@ -19,6 +19,7 @@ import bodyGoalSeeder from "./body-goal.seeder";
 import proficientLevelSeeder from "./proficient-level.seeder";
 import placeSeeder from "./place.seeder";
 import mealSeeder from "./meal.seeder";
+import planDurationSeeder from "./plan-duration.seeder";
 
 dotenv.config();
 
@@ -74,6 +75,7 @@ const main = async () => {
     await categorySeeder();
     await memberPlanSeeder();
     await mealSeeder();
+    await planDurationSeeder();
   } catch (error) {
     console.error(error);
     process.exit(1);

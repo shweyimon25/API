@@ -66,6 +66,9 @@ import systemParameterRoute from "./member/v1/system-parameter.route";
 import memberReportCategoryRoute from "./member/v1/report-category.route";
 import memberPostReportRoute from "./member/v1/post-report.route";
 import memberPostViewsRoute from "./member/v1/post-views.route";
+import planDurationRoute from "./member/v1/plan-duration.route";
+import memberPlanListRoute from "./member/v1/member-plan-list.route";
+import memberTypeLevelRoute from "./member/v1/member-type-level.route";
 
 const router = Router();
 
@@ -136,5 +139,8 @@ router.use("/member/v1", systemParameterRoute);
 router.use("/member/v1/report-category", memberReportCategoryRoute);
 router.use("/member/v1/post-report", memberPostReportRoute);
 router.use("/member/v1", memberPostViewsRoute);
+router.use("/member/v1", planDurationRoute);
+router.use("/member/v1", memberPlanListRoute);
+router.use("/member/v1", memberTypeLevelRoute);
 
 export default router;
