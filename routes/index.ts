@@ -66,15 +66,12 @@ import systemParameterRoute from "./member/v1/system-parameter.route";
 import memberReportCategoryRoute from "./member/v1/report-category.route";
 import memberPostReportRoute from "./member/v1/post-report.route";
 import memberPostViewsRoute from "./member/v1/post-views.route";
-<<<<<<< HEAD
 import planDurationRoute from "./member/v1/plan-duration.route";
 import memberPlanListRoute from "./member/v1/member-plan-list.route";
 import memberTypeLevelRoute from "./member/v1/member-type-level.route";
-=======
 import memberPhysicalLimitationRoute from "./member/v1/physical-limitation.route";
 import memberDietTypeRoute from "./member/v1/diet-type.route";
 import memberBadHabitRoute from "./member/v1/bad-habit.route";
->>>>>>> 62f269babb7a49da4417e37ac05d70609b50c3b0
 
 const router = Router();
 
@@ -145,14 +142,11 @@ router.use("/member/v1", systemParameterRoute);
 router.use("/member/v1/report-category", memberReportCategoryRoute);
 router.use("/member/v1/post-report", memberPostReportRoute);
 router.use("/member/v1", memberPostViewsRoute);
-<<<<<<< HEAD
 router.use("/member/v1", planDurationRoute);
 router.use("/member/v1", memberPlanListRoute);
 router.use("/member/v1", memberTypeLevelRoute);
-=======
 router.use("/member/v1/physical-limitations", memberPhysicalLimitationRoute);
 router.use("/member/v1/diet-types", memberDietTypeRoute);
 router.use("/member/v1/bad-habits", memberBadHabitRoute);
->>>>>>> 62f269babb7a49da4417e37ac05d70609b50c3b0
 
 export default router;
