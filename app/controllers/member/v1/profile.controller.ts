@@ -107,7 +107,7 @@ class ProfileController {
           shoulders: member.bodyMeasurement?.shoulders,
           arms: member.bodyMeasurement?.arms,
           thigh: member.bodyMeasurement?.thigh,
-          client_type: member.memberType?.name,
+          client_type: member.clientType,
           request_id: latestMemberRequest
             ? {
               confirm_date: latestMemberRequest.approvedAt,
