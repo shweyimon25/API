@@ -427,18 +427,18 @@ class PostController {
       });
     }
 
-    const updated = await prisma.post.update({
-      where: { id: postId },
-      data: { viewCount: { increment: 1 } },
-      include: this.socialPostInclude(memberId),
-    });
+    // const updated = await prisma.post.update({
+    //   where: { id: postId },
+    //   data: { viewCount: { increment: 1 } },
+    //   include: this.socialPostInclude(memberId),
+    // });
 
     return res.json({
       jsonrpc: "2.0",
       id: null,
       result: {
         isFullFilled: true,
-        data: await this.formatSocialPostWithShare(updated, memberId),
+        data: await this.formatSocialPostWithShare(post, memberId),
       },
     });
   }

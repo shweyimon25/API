@@ -14,6 +14,25 @@ class PostViewsController {
         return String(content);
     }
 
+    private filterValue(filters: unknown, fieldName: string) {
+        const filtersStr =
+            typeof filters === "string" ? filters : JSON.stringify(filters ?? "[]");
+        const tupleRe =
+            /\(\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*(?:'([^']*)'|([^)]+))\s*\)/g;
+
+        let match: RegExpExecArray | null;
+        while ((match = tupleRe.exec(filtersStr)) !== null) {
+            const field = match[1];
+            const op = match[2];
+            const value = (match[3] ?? match[4] ?? "").trim().replace(/^'|'$/g, "");
+            if (field === fieldName && op === "=") {
+                const id = Number(value);
+                return Number.isInteger(id) && id > 0 ? id : null;
+            }
+        }
+
+        return null;
+    }
 
     private formatPostViews(view: {
         id: number;
@@ -22,10 +41,10 @@ class PostViewsController {
         name: string;
         profile: { profilePhoto: string | null } | null;
         };
-        socialPost: { id: number; content: unknown; media: unknown } | null;
-        shopPost: { id: number; content: unknown; media: unknown } | null;
+        socialPost: { id: number; content: unknown; media: unknown, viewCount: number } | null;
+        shopPost: { id: number; content: unknown; media: unknown, viewCount: number } | null;
     }) {
-
+        
         return {
         id: view.id,
         create_uid: {
@@ -44,7 +63,7 @@ class PostViewsController {
             id: view.socialPost?.id ?? null,
             caption: view.socialPost ? this.caption(view.socialPost.content) : null,
             react_count: 0,
-            view_count: 0,
+            view_count: view.socialPost ? view.socialPost.viewCount : 0,
             comment_count: 0,
             share_count: 0
         },
@@ -52,32 +71,21 @@ class PostViewsController {
             id: view.shopPost?.id ?? null,
             caption: view.shopPost ? this.caption(view.shopPost.content) : null,
             react_count: 0,
-            view_count: 0,
+            view_count: view.shopPost ? view.shopPost.viewCount : 0,
             comment_count: 0,
             share_count: 0
         }
         };
     }
 
-    private async getPostViewsCount(socialPostId: number | null, shopPostId: number | null) {
-        const where: Prisma.PostViewsWhereInput = socialPostId
-        ? {
-            socialPostId: socialPostId,
-            }
-        : {
-            shopPostId: shopPostId ?? 0,
-            };
-
-        return await prisma.postViews.count({ where });
-    }
 
     async memberPostViews(req: Request, res: Response) {
         const params =
             req.method === "GET" && Object.keys(req.query).length
                 ? req.query
                 : req.body?.params ?? {};
-        const socialPostId = Number(params.social_post_id) || null;
-        const shopPostId = Number(params.shop_post_id) || null;
+        const socialPostId = this.filterValue(params.filters, "social_post_id");
+        const shopPostId = this.filterValue(params.filters, "shop_post_id");
         const offset = Math.max(0, Number(params.offset) || 0);
         const limit = Math.min(100, Math.max(1, Number(params.limit) || 100));
 
@@ -133,8 +141,8 @@ class PostViewsController {
                         profile: { select: { profilePhoto: true } },
                         },
                     },
-                    socialPost: { select: { id: true, content: true, media: true } },
-                    shopPost: { select: { id: true, content: true, media: true } },
+                    socialPost: { select: { id: true, content: true, media: true, viewCount: true } },
+                    shopPost: { select: { id: true, content: true, media: true, viewCount: true } },
                 },
             }),
         ]);
@@ -171,6 +179,7 @@ class PostViewsController {
             },
         });
         }
+        const targetPostId = socialPostId || shopPostId;
 
         const post = await prisma.post.findFirst({
         where: socialPostId
@@ -202,34 +211,68 @@ class PostViewsController {
         shopPost: { select: { id: true, content: true, media: true } },
         };
 
-        const view = socialPostId
-        ? await prisma.postViews.upsert({
-            where: {
-                memberId_socialPostId: { memberId, socialPostId },
-            },
-            create: { memberId, socialPostId },
-            update: {},
-            include,
-            })
-        : await prisma.postViews.upsert({
-            where: {
-                memberId_shopPostId: { memberId, shopPostId: shopPostId ?? 0 },
-            },
-            create: { memberId, shopPostId },
-            update: {},
-            include,
+        try {
+            const existingView = socialPostId
+                ? await prisma.postViews.findUnique({
+                    where: { memberId_socialPostId: { memberId, socialPostId } },
+                    include,
+                })
+                : await prisma.postViews.findUnique({
+                    where: { memberId_shopPostId: { memberId, shopPostId: shopPostId ?? 0 } },
+                    include,
+                });
+
+            let finalView = existingView;
+            let currentViewCount = post.viewCount;
+
+            if (!existingView) {
+                const [newView, updatedPost] = await prisma.$transaction([
+                    socialPostId
+                        ? prisma.postViews.create({
+                            data: { memberId, socialPostId },
+                            include,
+                        })
+                        : prisma.postViews.create({
+                            data: { memberId, shopPostId },
+                            include,
+                        }),
+
+                    prisma.post.update({
+                        where: { id: targetPostId ?? 0 },
+                        data: { viewCount: { increment: 1 } }
+                    })
+                ]);
+
+                finalView = newView;
+                currentViewCount = updatedPost.viewCount;
+            }
+
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    data: {
+                        view_count: currentViewCount, 
+                        results: []
+                    },
+                },
             });
 
-        return res.json({
-        jsonrpc: "2.0",
-        id: null,
-        result: {
-            isFullFilled: true,
-            data: {view_count: await this.getPostViewsCount(socialPostId, shopPostId), results: []},
-        },
-        });
+        }
+        catch (error) {
+            console.error("View count update error:", error);
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: false,
+                    message: "Internal server error",
+                    data: null,
+                },
+            });
+        }
     }
-
 }
 
 export default PostViewsController;
