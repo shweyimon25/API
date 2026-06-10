@@ -1,110 +1,182 @@
 import { Request, Response } from "express";
+import { Prisma } from "@prisma/client";
+import prisma from "../../../../prisma/client";
 import { Member } from "@prisma/client";
-import WaterTrackerService from "../../../services/member/v1/water-tracker.service";
-import { successResponse } from "../../../helpers/response";
-import { validater } from "../../../helpers/validator";
-import {
-    createWaterTrackerSchema,
-    updateWaterTrackerSchema,
-} from "../../../schemas/member/v1/water-tracker.schema";
-import { ValidationException } from "../../../helpers/exceptions";
-import { WaterTrackerResource } from "../../../resources/member/v1/water-tracker/water-tracker.resource";
+
 
 class WaterTrackerController {
-    private waterTrackerService: WaterTrackerService;
+    
+    // Odoo Domain Filters 
+    private filterValue(filters: unknown, fieldName: string, operator: string = "=") {
+        const filtersStr =
+            typeof filters === "string" ? filters : JSON.stringify(filters ?? "[]");
+        
+        const tupleRe =
+            /\(\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*(?:'([^']*)'|([^)]+))\s*\)/g;
 
-    constructor() {
-        this.waterTrackerService = new WaterTrackerService();
+        let match: RegExpExecArray | null;
+        while ((match = tupleRe.exec(filtersStr)) !== null) {
+            const field = match[1];
+            const op = match[2];
+            const value = (match[3] ?? match[4] ?? "").trim().replace(/^'|'$/g, "");
+            
+            if (field === fieldName && op === operator) {
+                return value;
+            }
+        }
+        return null;
     }
 
-    async findAll(req: Request, res: Response) {
-        const memberId = (req.user as Member).id;
-        const { date } = req.query;
+    // Response Format 
+    private formatWaterTracker(track: {
+        id: number;
+        date: string;
+        memberId: number;
+        dailyWater: number;
+    }) {
+        return {
+            id: track.id,
+            date: track.date,
+            partner_id: track.memberId,    
+            daily_water: track.dailyWater   
+        };
+    }
 
-        const targetDate = String(date || "");
+    async getWaterTrackers(req: Request, res: Response) {
+        const params =
+            req.method === "GET" && Object.keys(req.query).length
+                ? req.query
+                : req.body?.params ?? {};
 
-        if (!targetDate) {
-            throw new ValidationException("Date is required", [
-                {
-                    field: "date",
-                    issue: "Date is required",
-                },
+        // 1. Get Filters
+        const partnerIdStr = this.filterValue(params.filters, "partner_id", "=");
+        const exactDate = this.filterValue(params.filters, "date", "=");
+        const startDate = this.filterValue(params.filters, "date", ">=");
+        const endDate = this.filterValue(params.filters, "date", "<=");
+
+        const partnerId = partnerIdStr ? Number(partnerIdStr) : null;
+
+        // 2. Create Prisma WhereInput
+        const where: Prisma.WaterTrackerWhereInput = {};
+
+        if (partnerId && Number.isInteger(partnerId) && partnerId > 0) {
+            where.memberId = partnerId;
+        }
+
+        
+        if (exactDate) {
+            where.date = exactDate; 
+        } else if (startDate || endDate) {
+            where.date = {};
+            if (startDate) where.date.gte = startDate;
+            if (endDate) where.date.lte = endDate;
+        }
+        try {
+            // 3. Get Count and DataList
+            const [count, trackers] = await Promise.all([
+                prisma.waterTracker.count({ where }),
+                prisma.waterTracker.findMany({
+                    where,
+                    orderBy: { date: "desc" },
+                    
+                }),
             ]);
+
+            // 4. Return according to Output Response format
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    data: {
+                        count,
+                        results: trackers.map((track) => this.formatWaterTracker(track)),
+                    },
+                },
+            });
+        } catch (error) {
+            console.error("Fetch water trackers error:", error);
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: false,
+                    message: "Internal server error",
+                    data: null,
+                },
+            });
+        }
+    }
+
+    async createWaterTracker(req: Request, res: Response) {
+
+        const memberId = (req.user as Member).id;
+
+        if (!memberId) {
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: false,
+                    message: "Unauthorized access",
+                    data: null,
+                },
+            });
         }
 
-        const trackers = await this.waterTrackerService.findAll(memberId, {
-            date: targetDate,
-        });
+        const params = req.body?.params ?? {};
+        const dailyWater = Number(params.daily_water);
 
-        return successResponse(
-            res,
-            "Water tracker list successfully",
-            WaterTrackerResource.withSummary(targetDate, trackers),
-        );
-    }
-
-    async findOne(req: Request, res: Response) {
-        const memberId = (req.user as Member).id;
-        const { id } = req.params;
-
-        const tracker = await this.waterTrackerService.findOne(memberId, +id);
-
-        return successResponse(
-            res,
-            "Water tracker found successfully",
-            WaterTrackerResource.toItem(tracker),
-        );
-    }
-
-    async create(req: Request, res: Response) {
-        const { data, success, error } = await validater(
-            createWaterTrackerSchema,
-            req.body,
-        );
-
-        if (!success) {
-            throw new ValidationException("Failed to create water tracker", error);
+        if (isNaN(dailyWater) || dailyWater < 0) {
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: false,
+                    message: "Invalid daily_water value",
+                    data: null,
+                },
+            });
         }
 
-        const memberId = (req.user as Member).id;
-        const tracker = await this.waterTrackerService.create(memberId, data);
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0]; // Output: "2026-06-09" 
 
-        return successResponse(
-            res,
-            "Water tracker saved successfully",
-            WaterTrackerResource.toItem(tracker),
-        );
-    }
+        try {
+            const newTracker = await prisma.waterTracker.create({
+                data: {
+                    memberId: memberId,
+                    date: formattedDate,
+                    dailyWater: dailyWater,
+                },
+            });
 
-    async update(req: Request, res: Response) {
-        const { data, success, error } = await validater(
-            updateWaterTrackerSchema,
-            req.body,
-        );
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    data: {
+                        id: newTracker.id,
+                        date: newTracker.date,
+                        partner_id: newTracker.memberId,
+                        daily_water: newTracker.dailyWater,
+                    },
+                },
+            });
 
-        if (!success) {
-            throw new ValidationException("Failed to update water tracker", error);
+        } catch (error) {
+            console.error("Create water tracker error:", error);
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: false,
+                    message: "Internal server error",
+                    data: null,
+                },
+            });
         }
-
-        const memberId = (req.user as Member).id;
-        const { id } = req.params;
-
-        const tracker = await this.waterTrackerService.update(memberId, +id, data);
-
-        return successResponse(
-            res,
-            "Water tracker updated successfully",
-            WaterTrackerResource.toItem(tracker),
-        );
-    }
-
-    async destroy(req: Request, res: Response) {
-        const memberId = (req.user as Member).id;
-        const { id } = req.params;
-
-        await this.waterTrackerService.destroy(memberId, +id);
-
-        return successResponse(res, "Water tracker deleted successfully");
     }
 }
 

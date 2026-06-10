@@ -986,6 +986,18 @@ class AuthController {
     });
 
   }
+  
+  async logout(req: Request, res: Response){
+    return res.json({
+          jsonrpc: "2.0",
+          id: null,
+          result: {
+              isFullFilled: true,
+              message: "Logout Successful",
+              data: null
+          },
+      });
+  }
 }
 
 export default AuthController;

@@ -352,6 +352,48 @@ export async function fetchMemberFriendMeta(
   );
 }
 
+export async function fetchMemberCounts(
+  memberId: number,
+  shopId: number | null
+) {
+  const [totalShopPost, totalSocialPost, totalFriend, friendRequestNotiCount] =
+    await Promise.all([
+      shopId
+        ? prisma.post.count({ where: { shopId } })
+        : Promise.resolve(0),
+      prisma.post.count({
+        where: { memberId, shopId: null },
+      }),
+      prisma.friend.count({
+        where: {
+          OR: [{ memberId }, { friendId: memberId }],
+        },
+      }),
+      prisma.friendRequest.count({
+        where: { receiverId: memberId, status: "PENDING" },
+      }),
+    ]);
+
+  return {
+    totalShopPost,
+    totalSocialPost,
+    totalFriend,
+    friendRequestNotiCount,
+    socialUnreadNotiCount: 0,
+  };
+}
+
+export async function fetchDefaultShopLevelAndDurations() {
+  const [defaultShopLevel, planDurations] = await Promise.all([
+    prisma.shopLevel.findFirst({
+      where: { name: { equals: "Free", mode: "insensitive" } },
+    }),
+    prisma.planDuration.findMany(),
+  ]);
+
+  return { defaultShopLevel, planDurations };
+}
+
 export async function fetchMemberDetailData(
   memberId: number,
   currentMemberId: number
@@ -363,45 +405,16 @@ export async function fetchMemberDetailData(
 
   if (!member) return null;
 
-  const [
-    totalShopPost,
-    totalSocialPost,
-    totalFriend,
-    friendRequestNotiCount,
-    defaultShopLevel,
-    planDurations,
-    friendMeta,
-  ] = await Promise.all([
-    member.shop
-      ? prisma.post.count({ where: { shopId: member.shop.id } })
-      : Promise.resolve(0),
-    prisma.post.count({
-      where: { memberId: member.id, shopId: null },
-    }),
-    prisma.friend.count({
-      where: {
-        OR: [{ memberId: member.id }, { friendId: member.id }],
-      },
-    }),
-    prisma.friendRequest.count({
-      where: { receiverId: memberId, status: "PENDING" },
-    }),
-    prisma.shopLevel.findFirst({
-      where: { name: { equals: "Free", mode: "insensitive" } },
-    }),
-    prisma.planDuration.findMany(),
-    fetchMemberFriendMeta(currentMemberId, memberId),
-  ]);
+  const [{ defaultShopLevel, planDurations }, counts, friendMeta] =
+    await Promise.all([
+      fetchDefaultShopLevelAndDurations(),
+      fetchMemberCounts(memberId, member.shop?.id ?? null),
+      fetchMemberFriendMeta(currentMemberId, memberId),
+    ]);
 
   return buildMemberDetailData(
     member as MemberDetailRecord,
-    {
-      totalShopPost,
-      totalSocialPost,
-      totalFriend,
-      friendRequestNotiCount,
-      socialUnreadNotiCount: 0,
-    },
+    counts,
     friendMeta,
     defaultShopLevel,
     planDurations
