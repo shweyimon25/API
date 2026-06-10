@@ -839,8 +839,6 @@ model WaterTracker {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([memberId, date])
 }
 
 model BankInformation {
