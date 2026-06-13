@@ -31,8 +31,7 @@ class WaterTrackerService {
     }
 
     /**
-     * One row per member per date (@@unique([memberId, date])).
-     * POST with same date updates dailyWater.
+     * One row per member per date (application-level upsert).
      */
     async create(memberId: number, input: CreateWaterTrackerInput) {
         const { date, dailyWater } = input;
@@ -44,17 +43,20 @@ class WaterTrackerService {
             );
         }
 
-        return prisma.waterTracker.upsert({
-            where: {
-                memberId_date: {
-                    memberId,
-                    date,
-                },
-            },
-            update: {
-                dailyWater: amount,
-            },
-            create: {
+        const existing = await prisma.waterTracker.findFirst({
+            where: { memberId, date },
+            orderBy: { id: "desc" },
+        });
+
+        if (existing) {
+            return prisma.waterTracker.update({
+                where: { id: existing.id },
+                data: { dailyWater: amount },
+            });
+        }
+
+        return prisma.waterTracker.create({
+            data: {
                 memberId,
                 date,
                 dailyWater: amount,
