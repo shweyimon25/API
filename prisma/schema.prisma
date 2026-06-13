@@ -843,6 +843,7 @@ model WaterTracker {
 
 model BankInformation {
   id                Int     @id @default(autoincrement())
+  name              String
   coverPhoto        String?
   bankAccountHolder String
   bankAccountNumber String

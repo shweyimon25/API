@@ -145,6 +145,7 @@ class BankInformationService {
     files: Express.Multer.File[]
   ) {
     const {
+      name,
       bankAccountHolder,
       bankAccountNumber,
       phone,
@@ -208,6 +209,7 @@ class BankInformationService {
     // Create new bank information
     const bankInformation = await prisma.bankInformation.create({
       data: {
+        name,
         coverPhoto,
         bankAccountHolder,
         bankAccountNumber,
@@ -228,6 +230,7 @@ class BankInformationService {
     files: Express.Multer.File[]
   ) {
     const {
+      name,
       bankAccountHolder,
       bankAccountNumber,
       phone,
@@ -308,6 +311,7 @@ class BankInformationService {
         id,
       },
       data: {
+        name: name ?? existingBankInformation.name,
         coverPhoto: coverPhoto ?? existingBankInformation.coverPhoto,
         bankAccountHolder:
           bankAccountHolder ?? existingBankInformation.bankAccountHolder,

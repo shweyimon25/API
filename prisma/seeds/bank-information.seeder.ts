@@ -6,6 +6,7 @@ const BankInformationSeeder = async () => {
 
   const bankInformations = [
     {
+      name: "KBZ Bank",
       bankAccountHolder: "John Doe",
       bankAccountNumber: "1234567890",
       phone: "1234567890",
@@ -23,6 +24,7 @@ const BankInformationSeeder = async () => {
       await prisma.bankInformation.update({
         where: { id: existing.id },
         data: {
+          name: bankInformation.name,
           bankAccountHolder: bankInformation.bankAccountHolder,
           phone: bankInformation.phone,
           paymentTypes: bankInformation.paymentTypes,

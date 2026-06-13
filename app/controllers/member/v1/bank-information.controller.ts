@@ -4,12 +4,37 @@ import { successResponse } from "../../../helpers/response";
 import { BankInformationCollection } from "../../../resources/member/v1/bank-information/bank-information.collection";
 import { BankInformationResource } from "../../../resources/member/v1/bank-information/bank-information.resource";
 import { bankInformationScope } from "../../../scopes/member/v1/bank-information.scope";
+import prisma from "../../../../prisma/client";
+import { formatBankInformationItem } from "../../../helpers/bank-information.helper";
 
 class BankInformationController {
   private bankInformationService: BankInformationService;
 
   constructor() {
     this.bankInformationService = new BankInformationService();
+  }
+
+  async list(req: Request, res: Response) {
+    const where = bankInformationScope(req.query);
+
+    const bankInformations = await prisma.bankInformation.findMany({
+      where,
+      orderBy: { id: "asc" },
+    });
+
+    const results = bankInformations.map(formatBankInformationItem);
+
+    return res.json({
+      jsonrpc: "2.0",
+      id: null,
+      result: {
+        isFullFilled: true,
+        data: {
+          count: results.length,
+          results,
+        },
+      },
+    });
   }
 
   async findAll(req: Request, res: Response) {

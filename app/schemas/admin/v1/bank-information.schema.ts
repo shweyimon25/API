@@ -2,6 +2,7 @@ import { z } from "zod";
 import { PaymentTypes, Status } from "@prisma/client";
 
 export const createBankInformationSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
   bankAccountHolder: z.string().min(1, { message: "Bank account holder is required" }),
   bankAccountNumber: z.string().min(1, { message: "Bank account number is required" }),
   phone: z
@@ -17,6 +18,7 @@ export const createBankInformationSchema = z.object({
 });
 
 export const updateBankInformationSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }).optional(),
   bankAccountHolder: z
     .string()
     .optional(),

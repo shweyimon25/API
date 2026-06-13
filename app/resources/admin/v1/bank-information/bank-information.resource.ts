@@ -2,6 +2,7 @@ export class BankInformationResource {
   static toResource(bankInformation: any) {
     return {
       id: bankInformation.id,
+      name: bankInformation.name,
       coverPhoto: bankInformation.coverPhoto,
       bankAccountHolder: bankInformation.bankAccountHolder,
       bankAccountNumber: bankInformation.bankAccountNumber,
