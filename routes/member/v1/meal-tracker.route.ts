@@ -11,13 +11,22 @@ router
     .get([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(async (req: Request, res: Response) =>
-            mealTrackerController.findAll(req, res),
+            mealTrackerController.getMealTrackersList(req, res),
         ),
     ])
     .post([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(async (req: Request, res: Response) =>
-            mealTrackerController.create(req, res),
+            mealTrackerController.createMealTracker(req, res),
+        ),
+    ]);
+
+router
+    .route("/multi_create")
+    .post([
+        passport.authenticate("jwt", { session: false }),
+        asyncHandler(async (req: Request, res: Response) =>
+            mealTrackerController.createMultiMealTrackers(req, res),
         ),
     ]);
 

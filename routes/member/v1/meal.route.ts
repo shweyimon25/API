@@ -11,7 +11,7 @@ router
     .get([
         passport.authenticate("jwt", { session: false }),
         asyncHandler(async (req: Request, res: Response) =>
-            mealController.findAll(req, res),
+            mealController.getMealsList(req, res),
         ),
     ]);
 
