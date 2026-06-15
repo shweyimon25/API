@@ -6,6 +6,14 @@ import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 const router = Router();
 const paymentController = new PaymentController();
 
+router.post("/create", [
+  passport.authenticate("jwt", { session: false }),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await paymentController.createRpc(req, res)
+  ),
+]);
+
 router
     .route("/")
     .post([
