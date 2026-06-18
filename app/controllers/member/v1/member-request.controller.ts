@@ -1,17 +1,137 @@
 import { Request, Response } from "express";
 import { validater } from "../../../helpers/validator";
 import { gymMemberRequestSchema, trainerMemberRequestSchema } from "../../../schemas/member/v1/member-request.schema";
-import { ValidationException } from "../../../helpers/exceptions";
 import MemberShipService from "../../../services/member/v1/member-request.service";
 import MembershipService from "../../../services/member/v1/member-request.service";
 import { Member, User } from "@prisma/client";
 import { successResponse } from "../../../helpers/response";
+import prisma from "../../../../prisma/client";
+import {
+  BadRequestException,
+  Exception,
+  NotFoundException,
+  ValidationException,
+} from "../../../helpers/exceptions";
+import {
+  buildTrainerRequestWhere,
+  formatTrainerRequest,
+  formatTrainerRequestFormData,
+  parseTrainerFormBody,
+  RpcTrainerRequestParams,
+  trainerRequestInclude,
+} from "../../../helpers/trainer-request.helper";
 
 class MemberRequestController {
     private membershipService: MemberShipService;
 
     constructor() {
         this.membershipService = new MembershipService();
+    }
+
+    private rpcError(res: Response, message: string) {
+        return res.json({
+            jsonrpc: "2.0",
+            id: null,
+            result: {
+                isFullFilled: false,
+                message,
+                data: null,
+            },
+        });
+    }
+
+    private handleTrainerCreateError(res: Response, error: unknown) {
+        if (error instanceof ValidationException) {
+            const message =
+                error.details?.[0]?.issue ??
+                error.message ??
+                "Validation failed";
+            return this.rpcError(res, message);
+        }
+
+        if (
+            error instanceof BadRequestException ||
+            error instanceof NotFoundException ||
+            error instanceof Exception
+        ) {
+            return this.rpcError(res, error.message);
+        }
+
+        console.error("Create trainer request error:", error);
+        return this.rpcError(res, "Internal server error");
+    }
+
+    async trainerRequestFormDataCreate(req: Request, res: Response) {
+        const params = parseTrainerFormBody(req.body as Record<string, unknown>);
+        const memberId = (req.user as Member).id;
+        const files = (req.files as Express.Multer.File[]) ?? [];
+
+        try {
+            const request = await this.membershipService.createTrainerFromFormData(
+                params,
+                files,
+                memberId
+            );
+
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    data: formatTrainerRequestFormData(request),
+                },
+            });
+        } catch (error) {
+            return this.handleTrainerCreateError(res, error);
+        }
+    }
+
+    async trainerRequestCreate(req: Request, res: Response) {
+        const params = (req.body?.params ?? {}) as RpcTrainerRequestParams;
+        const memberId = (req.user as Member).id;
+
+        try {
+            const request = await this.membershipService.createTrainerFromRpc(
+                params,
+                memberId
+            );
+
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    data: formatTrainerRequest(request),
+                },
+            });
+        } catch (error) {
+            return this.handleTrainerCreateError(res, error);
+        }
+    }
+
+    async trainerRequestList(req: Request, res: Response) {
+        const params = req.body?.params ?? {};
+        const where = buildTrainerRequestWhere(params.filters);
+
+        const requests = await prisma.memberRequest.findMany({
+            where,
+            orderBy: { id: "desc" },
+            include: trainerRequestInclude,
+        });
+
+        const results = requests.map((request) => formatTrainerRequest(request));
+
+        return res.json({
+            jsonrpc: "2.0",
+            id: null,
+            result: {
+                isFullFilled: true,
+                data: {
+                    count: results.length,
+                    results,
+                },
+            },
+        });
     }
 
     async trainerMemberRequest(req: Request, res: Response) {

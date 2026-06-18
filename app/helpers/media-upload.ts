@@ -91,3 +91,42 @@ export const upload = async (file: any, folderName: string = "temp") => {
     fileUrl,
   };
 };
+
+export const uploadBase64Image = async (
+  base64: string,
+  folderName: string
+): Promise<string | null> => {
+  const trimmed = base64?.trim();
+  if (!trimmed) return null;
+
+  let mimeType = "image/jpeg";
+  let data = trimmed;
+
+  if (trimmed.startsWith("data:")) {
+    const match = trimmed.match(/^data:(.+);base64,(.+)$/);
+    if (!match) return null;
+    mimeType = match[1];
+    data = match[2];
+  }
+
+  const buffer = Buffer.from(data, "base64");
+  if (!buffer.length) return null;
+
+  const extension = mimeType.includes("png")
+    ? ".png"
+    : mimeType.includes("webp")
+      ? ".webp"
+      : ".jpg";
+
+  return (
+    await upload(
+      {
+        buffer,
+        size: buffer.length,
+        mimetype: mimeType,
+        originalname: `upload${extension}`,
+      },
+      folderName
+    )
+  ).fileUrl;
+};
