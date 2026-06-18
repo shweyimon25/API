@@ -126,7 +126,8 @@ function memberImageUrl(
   storedUrl?: string | null
 ) {
   if (storedUrl) return storedUrl;
-  return `${ODOO_IMAGE_BASE}/web/image/?model=res.users&id=${memberId}&field=${field}`;
+  // return `${ODOO_IMAGE_BASE}/web/image/?model=res.users&id=${memberId}&field=${field}`;
+  return '';
 }
 
 function formatShopPlanMemberType(name: string) {
@@ -224,7 +225,7 @@ export function buildMemberDetailData(
     image_1920: memberImageUrl(
       member.id,
       "image_1920",
-      member.profile?.profilePhoto
+      ""
     ),
     cover_photo: memberImageUrl(
       member.id,

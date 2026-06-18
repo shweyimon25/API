@@ -140,6 +140,116 @@ class MemberController {
       });
     }
   }
+
+
+  async updateMemberData(req: Request, res: Response) {
+    try {
+      const memberId = parseInt(req.params.id);
+      const { params } = req.body; 
+      const currentMemberId = (req.user as Member).id;
+
+      if (!memberId || isNaN(memberId)) {
+        return res.status(400).json({
+          jsonrpc: "2.0",
+          id: null,
+          error: { message: "Invalid or missing Member ID." }
+        });
+      }
+
+      const isResettingToZero = params.weight === 0;
+
+      await prisma.$transaction(async (tx) => {
+        
+        if (params.gender !== undefined || params.age !== undefined) {
+          
+          const incomingGender = params.gender?.trim().toUpperCase();
+          const finalGender = (incomingGender === "MALE" || incomingGender === "FEMALE") 
+            ? incomingGender 
+            : "MALE";
+
+          const profileData = {
+            gender: finalGender,
+            age: params.age ? parseInt(params.age.toString()) : undefined
+          };
+
+          await tx.member.update({
+            where: { id: memberId },
+            data: {
+              profile: {
+                upsert: {
+                  update: profileData,
+                  create: profileData
+                }
+              }
+            }
+          });
+        }
+
+        const measurementData = {
+          heightFeet:   params.height_ft?.toString() ?? "0",
+          heightInches: params.height_in?.toString() ?? "0",
+          weight:       params.weight?.toString() ?? "0",
+          neck:         params.neck?.toString() ?? "0",
+          waist:        params.waist?.toString() ?? "0",
+          shoulders:    params.shoulders?.toString() ?? "0",
+          thigh:        params.thigh?.toString() ?? "0",
+          calf:         params.calf?.toString() ?? "0",
+          arms:         params.arms?.toString() ?? "0",
+          wrist:        params.wrist?.toString() ?? "0",
+          chest:        params.chest?.toString() ?? "0",
+          hip:          params.hip?.toString() ?? "0",
+        };
+        await tx.bodyMeasurement.upsert({
+          where: { memberId: memberId },
+          update: measurementData,
+          create: {
+            memberId: memberId,
+            ...measurementData
+          }
+        });
+
+        if (!isResettingToZero) {
+          await tx.weightHistory.create({
+            data: {
+              memberId:   memberId,
+              date:       new Date(),
+              heightFeet: params.height_ft ?? 0,
+              heightInch: params.height_in ?? 0,
+              weight:     params.weight ?? 0.0,
+              neck:       params.neck ?? 0.0,
+              calf:       params.calf ?? 0.0,
+              wristLeft:  params.wrist ?? 0.0,
+              waist:      params.waist ?? 0.0,
+              hip:        params.hip ?? 0.0,
+              shoulders:  params.shoulders ?? 0.0,
+              armLeft:    params.arms ?? 0.0,
+              thighLeft:  params.thigh ?? 0.0,
+              bmi:        params.bmi ?? 0.0
+            }
+          });
+        }
+      });
+
+      return res.status(200).json({
+        jsonrpc: "2.0",
+        id: null,
+        result: {
+          isFullFilled: true,
+          message: "Profile gender updated and body measurements recorded successfully.",
+          data: await fetchMemberDetailData(memberId, currentMemberId)
+        }
+      });
+
+    } catch (error: any) {
+      console.error("Update Member Data Error:", error);
+      return res.status(500).json({
+        jsonrpc: "2.0",
+        id: null,
+        error: { message: "Internal Server Error", data: error.message }
+      });
+    }
+  }
+    
 }
 
 export default MemberController;

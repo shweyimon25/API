@@ -36,4 +36,15 @@ router
     ),
   ]);
 
+
+router
+  .route("/:id/update")
+  .post([
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await memberController.updateMemberData(req, res),
+    ),
+  ]);
+
 export default router;

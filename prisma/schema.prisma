@@ -294,6 +294,8 @@ model Member {
   mealTrackers             MealTracker[]
   PostReport               PostReport[]
   PostViews                PostViews[]
+  weightHistories          WeightHistory[]
+
 }
 
 model MemberFcmToken {
@@ -1111,6 +1113,26 @@ model PlanDuration {
   updatedAt DateTime @updatedAt
 }
 
+model WeightHistory {
+  id         Int      @id @default(autoincrement())
+  date       DateTime @default(now())
+  heightFeet Int      
+  heightInch Int      
+  weight     Float
+  neck       Float
+  calf       Float
+  wristLeft  Float    
+  waist      Float
+  hip        Float
+  shoulders  Float
+  armLeft    Float    
+  thighLeft  Float    
+  bmi        Float
+
+  memberId      Int
+  member        Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
 enum NotificationType {
   INFO
   WARNING
@@ -1159,3 +1181,4 @@ enum ClientType {
   queen
   admin
 }
+
