@@ -2,7 +2,18 @@ import { Prisma, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { BadRequestException, ForbiddenException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { CreateShopInput, UpdateShopInput } from "../../../schemas/member/v1/shop.schema";
-import { upload } from "../../../helpers/media-upload";
+import { upload, uploadBase64Image } from "../../../helpers/media-upload";
+import { memberShopInclude, resolveMemberIdFromPartnerId } from "../../../helpers/member-shop.helper";
+
+export type RpcShopCreateParams = {
+    name?: string;
+    partner_id?: number;
+};
+
+export type RpcShopUpdateParams = {
+    name?: string;
+    image?: string;
+};
 
 /** Member API: always only ACTIVE shops */
 const memberShopWhere = (where?: Prisma.ShopWhereInput): Prisma.ShopWhereInput => ({
@@ -10,7 +21,7 @@ const memberShopWhere = (where?: Prisma.ShopWhereInput): Prisma.ShopWhereInput =
     status: Status.ACTIVE,
 });
 
-class ShopService {
+export default class ShopService {
     async findAll(where?: Prisma.ShopWhereInput) {
         const shops = await prisma.shop.findMany({
             where: memberShopWhere(where),
@@ -103,6 +114,110 @@ class ShopService {
         return shop;
     }
 
+    async createFromRpcParams(params: RpcShopCreateParams, loggedInMemberId: number) {
+        const name = params.name?.trim();
+        const partnerId = Number(params.partner_id);
+
+        if (!name) {
+            throw new ValidationException("Failed to create shop", [
+                { field: "name", issue: "Shop name is required" },
+            ]);
+        }
+
+        if (!Number.isInteger(partnerId) || partnerId <= 0) {
+            throw new ValidationException("Failed to create shop", [
+                { field: "partner_id", issue: "Partner is required" },
+            ]);
+        }
+
+        const memberId = resolveMemberIdFromPartnerId(partnerId);
+        if (memberId !== loggedInMemberId) {
+            throw new ValidationException("Failed to create shop", [
+                { field: "partner_id", issue: "Partner does not match logged-in member" },
+            ]);
+        }
+
+        const member = await prisma.member.findFirst({
+            where: { id: memberId, status: Status.ACTIVE },
+        });
+
+        if (!member) {
+            throw new ValidationException("Failed to create shop", [
+                { field: "partner_id", issue: "Member not found" },
+            ]);
+        }
+
+        const existingShop = await prisma.shop.findUnique({
+            where: { memberId },
+        });
+
+        if (existingShop) {
+            throw new BadRequestException("You already have a shop. Please update your shop profile instead");
+        }
+
+        const freeShopLevel = await prisma.shopLevel.findFirst({
+            where: { name: "Free", status: Status.ACTIVE },
+        });
+
+        const shop = await prisma.shop.create({
+            data: {
+                name,
+                memberId,
+                shopLevelId: freeShopLevel?.id,
+                status: Status.ACTIVE,
+            },
+            include: memberShopInclude,
+        });
+
+        return shop;
+    }
+
+    async updateFromRpcParams(
+        id: number,
+        params: RpcShopUpdateParams,
+        loggedInMemberId: number
+    ) {
+        if (!Number.isInteger(id) || id <= 0) {
+            throw new ValidationException("Failed to update shop", [
+                { field: "id", issue: "Shop id is required" },
+            ]);
+        }
+
+        const existingShop = await this.findOne(id);
+
+        if (existingShop.memberId !== loggedInMemberId) {
+            throw new ForbiddenException("You are not allowed to update this shop");
+        }
+
+        const name = params.name?.trim();
+        const imageBase64 = params.image?.trim();
+        let logoUrl: string | undefined;
+
+        if (imageBase64) {
+            const uploaded = await uploadBase64Image(imageBase64, "shop");
+            if (uploaded) {
+                logoUrl = uploaded;
+            }
+        }
+
+        if (!name && !logoUrl) {
+            throw new ValidationException("Failed to update shop", [
+                { field: "name", issue: "At least one field is required to update" },
+            ]);
+        }
+
+        const shop = await prisma.shop.update({
+            where: { id, memberId: loggedInMemberId },
+            data: {
+                ...(name ? { name } : {}),
+                ...(logoUrl ? { logo: logoUrl } : {}),
+            },
+            include: memberShopInclude,
+        });
+
+        return shop;
+    }
+
     async update(id: number, updateShopInput: UpdateShopInput, files: Express.Multer.File[], memberId: number,) {
         const { name } = updateShopInput;
 
@@ -143,5 +258,3 @@ class ShopService {
         });
     }
 }
-
-export default ShopService;

@@ -144,15 +144,32 @@ class MemberController {
 
   async updateMemberData(req: Request, res: Response) {
     try {
-      const memberId = parseInt(req.params.id);
+      const paramId = parseInt(req.params.id);
       const { params } = req.body; 
       const currentMemberId = (req.user as Member).id;
 
-      if (!memberId || isNaN(memberId)) {
+      if (!paramId || isNaN(paramId)) {
         return res.status(400).json({
           jsonrpc: "2.0",
           id: null,
           error: { message: "Invalid or missing Member ID." }
+        });
+      }
+
+      const memberId = await this.resolveMemberIdForUpdate(paramId, currentMemberId);
+      if (!memberId) {
+        return res.status(404).json({
+          jsonrpc: "2.0",
+          id: null,
+          error: { message: "Member not found." }
+        });
+      }
+
+      if (memberId !== currentMemberId) {
+        return res.status(403).json({
+          jsonrpc: "2.0",
+          id: null,
+          error: { message: "You are not allowed to update this member." }
         });
       }
 
@@ -168,20 +185,19 @@ class MemberController {
             : "MALE";
 
           const profileData = {
-            gender: finalGender,
-            age: params.age ? parseInt(params.age.toString()) : undefined
+            ...(params.gender !== undefined ? { gender: finalGender } : {}),
+            ...(params.age !== undefined
+              ? { age: parseInt(params.age.toString(), 10) }
+              : {}),
           };
 
-          await tx.member.update({
-            where: { id: memberId },
-            data: {
-              profile: {
-                upsert: {
-                  update: profileData,
-                  create: profileData
-                }
-              }
-            }
+          await tx.memberProfile.upsert({
+            where: { memberId },
+            update: profileData,
+            create: {
+              memberId,
+              ...profileData,
+            },
           });
         }
 
@@ -248,6 +264,37 @@ class MemberController {
         error: { message: "Internal Server Error", data: error.message }
       });
     }
+  }
+
+  private async resolveMemberIdForUpdate(
+    paramId: number,
+    currentMemberId: number
+  ) {
+    if (paramId === currentMemberId) {
+      return currentMemberId;
+    }
+
+    if (paramId === currentMemberId + 1) {
+      return currentMemberId;
+    }
+
+    const member = await prisma.member.findUnique({
+      where: { id: paramId },
+      select: { id: true },
+    });
+    if (member) {
+      return member.id;
+    }
+
+    const partnerMember = await prisma.member.findUnique({
+      where: { id: paramId - 1 },
+      select: { id: true },
+    });
+    if (partnerMember) {
+      return partnerMember.id;
+    }
+
+    return null;
   }
     
 }
