@@ -240,7 +240,10 @@ class MemberController {
               shoulders:  params.shoulders ?? 0.0,
               armLeft:    params.arms ?? 0.0,
               thighLeft:  params.thigh ?? 0.0,
-              bmi:        params.bmi ?? 0.0
+              bmi:        params.bmi ?? 0.0,
+              armRight:   params.arms_right ?? params.arms ?? 0.0,   
+              thighRight: params.thigh_right ?? params.thigh ?? 0.0, 
+              bfp:        params.bfp ?? 0.0                         
             }
           });
         }

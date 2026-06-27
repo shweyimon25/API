@@ -76,6 +76,7 @@ import memberShopListRoute from "./member/v1/member-shop.route";
 import memberPhysicalLimitationRoute from "./member/v1/physical-limitation.route";
 import memberDietTypeRoute from "./member/v1/diet-type.route";
 import memberBadHabitRoute from "./member/v1/bad-habit.route";
+import memberWeightHistory from "./member/v1/weight-history.route";
 
 const router = Router();
 
@@ -156,5 +157,6 @@ router.use("/member/v1", memberShopListRoute);
 router.use("/member/v1/physical-limitations", memberPhysicalLimitationRoute);
 router.use("/member/v1/diet-types", memberDietTypeRoute);
 router.use("/member/v1/bad-habits", memberBadHabitRoute);
+router.use("/member/v1/weight-history", memberWeightHistory)
 
 export default router;

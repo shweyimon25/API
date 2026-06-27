@@ -1,0 +1,26 @@
+-- AlterTable
+ALTER TABLE "BankInformation" ALTER COLUMN "name" DROP DEFAULT;
+
+-- CreateTable
+CREATE TABLE "WeightHistory" (
+    "id" SERIAL NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "heightFeet" INTEGER NOT NULL,
+    "heightInch" INTEGER NOT NULL,
+    "weight" DOUBLE PRECISION NOT NULL,
+    "neck" DOUBLE PRECISION NOT NULL,
+    "calf" DOUBLE PRECISION NOT NULL,
+    "wristLeft" DOUBLE PRECISION NOT NULL,
+    "waist" DOUBLE PRECISION NOT NULL,
+    "hip" DOUBLE PRECISION NOT NULL,
+    "shoulders" DOUBLE PRECISION NOT NULL,
+    "armLeft" DOUBLE PRECISION NOT NULL,
+    "thighLeft" DOUBLE PRECISION NOT NULL,
+    "bmi" DOUBLE PRECISION NOT NULL,
+    "memberId" INTEGER NOT NULL,
+
+    CONSTRAINT "WeightHistory_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "WeightHistory" ADD CONSTRAINT "WeightHistory_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "Member"("id") ON DELETE CASCADE ON UPDATE CASCADE;

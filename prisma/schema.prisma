@@ -1116,18 +1116,21 @@ model PlanDuration {
 model WeightHistory {
   id         Int      @id @default(autoincrement())
   date       DateTime @default(now())
-  heightFeet Int      
-  heightInch Int      
-  weight     Float
-  neck       Float
-  calf       Float
-  wristLeft  Float    
-  waist      Float
-  hip        Float
-  shoulders  Float
-  armLeft    Float    
-  thighLeft  Float    
-  bmi        Float
+  heightFeet Int      @default(0)
+  heightInch Int      @default(0)
+  weight     Float    @default(0)
+  neck       Float    @default(0)
+  calf       Float    @default(0)
+  wristLeft  Float    @default(0)
+  waist      Float    @default(0)
+  hip        Float    @default(0)
+  shoulders  Float    @default(0)
+  armLeft    Float    @default(0)
+  armRight   Float    @default(0)
+  thighRight Float    @default(0)
+  thighLeft  Float    @default(0) 
+  bmi        Float    @default(0)
+  bfp        Float    @default(0)
 
   memberId      Int
   member        Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
