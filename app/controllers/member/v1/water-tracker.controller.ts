@@ -140,6 +140,8 @@ class WaterTrackerController {
         }
 
         const today = new Date();
+        today.setHours(today.getHours() + 6);
+        today.setMinutes(today.getMinutes() + 30);
         const formattedDate = today.toISOString().split('T')[0]; // Output: "2026-06-09" 
 
         try {

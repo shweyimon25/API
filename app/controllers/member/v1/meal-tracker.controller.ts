@@ -268,7 +268,10 @@ class MealTrackerController {
                 });
             }
 
-            const todayStr = new Date().toISOString().split('T')[0]; // Output: "2026-06-09" 
+            const today = new Date();
+            today.setHours(today.getHours() + 6);
+            today.setMinutes(today.getMinutes() + 30);
+            const todayStr = today.toISOString().split('T')[0]; // Output: "2026-06-09" 
 
             const totalCal = (meal.cal ?? 0) * count;
             const totalCarb = (meal.carb ?? 0) * count;

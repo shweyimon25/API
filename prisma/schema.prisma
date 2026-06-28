@@ -295,7 +295,7 @@ model Member {
   PostReport               PostReport[]
   PostViews                PostViews[]
   weightHistories          WeightHistory[]
-
+  fitnessSurveys           MemberFitnessSurvey[]
 }
 
 model MemberFcmToken {
@@ -386,6 +386,20 @@ model MemberProfile {
   reason       String? @db.Text() // Only For Trainer Member
   certificates Json? // Only For Trainer Member
   photos       Json? // Only For Trainer Member
+  
+  idealWeight  Int?
+  bodyGoalType String?
+  bodyType     String?
+  energyLevel  String?
+  dailyLife    String?
+  averageNight String?
+  physicalActivity    String?
+  preferredActivity   String?
+  lastIdeaWeight      String?
+  dailyWaterIntake    String?
+  proficientLevelType String?
+
+
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1136,6 +1150,26 @@ model WeightHistory {
   member        Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
+model MemberFitnessSurvey {
+  id                Int                @id @default(autoincrement())
+  
+  memberId          Int
+  member            Member             @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  date              DateTime?          @default(now())
+  bodyGoal          BodyGoalType?
+  bodyType          BodyType?
+  energyLevel       EngergyLevel?
+  dailyLife         DailyLife?
+  averageNight      AverageNight?
+  physicalActivity  PhysicalActivity?
+  preferredActivity PreferredActivity?
+  lastIdealWeight   LastIdeaWeight?
+  dailyWaterIntake  DailyWaterIntake?
+  proficientLevel   ProficientLevelType?
+
+}
+
 enum NotificationType {
   INFO
   WARNING
@@ -1185,3 +1219,69 @@ enum ClientType {
   admin
 }
 
+enum BodyGoalType {
+  weight_gain
+  weight_loss
+  beauty
+}
+
+enum BodyType {
+  ectomorph
+  mesomorph
+  endomorph
+}
+
+enum EngergyLevel {
+  even_throughout_the_day
+  a_dip_in_energy_around_lunch_time
+  a_nap_after_meals
+  mostly_at_home
+}
+
+enum DailyLife {
+  at_the_office
+  walking_daily
+  working_physically
+  most_at_home
+}
+
+enum AverageNight {
+  less_than_five_hours
+  five_six_hours
+  seven_eight_hours
+  more_than_eight_hours
+}
+
+enum PhysicalActivity {
+  not_much
+  one_two_time_a_week
+  three_five_time_a_week
+  five_seven_time_a_week
+}
+
+enum PreferredActivity {
+  working_out_at_home
+  working_out_at_a_gym
+  running
+  walking
+}
+
+enum LastIdeaWeight {
+  less_than_a_year
+  one_to_two_years_ago
+  more_than_three_years
+  never
+}
+
+enum DailyWaterIntake {
+  one
+  two
+  two_to_six
+  more_than_six
+}
+
+enum ProficientLevelType {
+  beginner
+  advanced
+  professional
+}

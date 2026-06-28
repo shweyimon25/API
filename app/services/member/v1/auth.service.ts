@@ -29,6 +29,8 @@ class AuthService {
                         reason: true,
                         certificates: true,
                         photos: true,
+                        proficientLevelType: true,
+                        bodyGoalType: true,
                     },
                 },
                 memberType: {

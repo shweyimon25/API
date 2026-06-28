@@ -254,12 +254,14 @@ class AuthController {
               "res_video_group": member.memberRequests[0]?.memberPlan?.isVideoGroup ?? false
             },
             "age": member.profile?.age,
-            "gender": member.profile?.gender,
+            "gender": member.profile?.gender?.toLowerCase() ?? null,
             "client_type": member.clientType,
             "client_code": member.code,
-            "proficient_level": member.proficientLevel?.name ?? null,
-            "main_goal_body_type": member.bodyGoal?.name ?? null,
-            "need_info": false
+            "proficient_level": member.profile?.proficientLevelType ?? null,
+            "main_goal_body_type": member.profile?.bodyGoalType ?? null,
+            "need_info": !member.profile?.gender ||
+                        !member.profile?.age ||
+                        !member.profile?.proficientLevelType,
           },
           "partner_id": {
             "id": member.id
@@ -641,6 +643,7 @@ class AuthController {
             reason: true,
             certificates: true,
             photos: true,
+            
           },
         },
         memberType: {
@@ -819,6 +822,8 @@ class AuthController {
           coverPhoto: true,
           age: true,
           yearOfExp: true,
+          proficientLevelType : true,
+          bodyGoalType: true,
           reason: true,
           certificates: true,
           photos: true,
@@ -953,12 +958,14 @@ class AuthController {
               "res_video_group": member.memberRequests[0]?.memberPlan?.isVideoGroup ?? false
             },
             "age": member.profile?.age,
-            "gender": member.profile?.gender,
+            "gender": member.profile?.gender?.toLowerCase() ?? null,
             "client_type": member.clientType,
             "client_code": member.code,
-            "proficient_level": member.proficientLevel?.name ?? null,
-            "main_goal_body_type": member.bodyGoal?.name ?? null,
-            "need_info": false
+            "proficient_level": member.profile?.proficientLevelType ?? null,
+            "main_goal_body_type": member.profile?.bodyGoalType ?? null,
+            "need_info": !member.profile?.gender ||
+                        !member.profile?.age ||
+                        !member.profile?.proficientLevelType,
           },
           "partner_id": {
             "id": member.id

@@ -18,6 +18,8 @@ export type MemberDetailRecord = {
     address: string | null;
     gender: string | null;
     age: number | null;
+    proficientLevelType: string | null;
+    bodyGoalType : string | null;
   } | null;
   shop: {
     id: number;
@@ -304,14 +306,14 @@ export function buildMemberDetailData(
           duration: null,
           price: 0.0,
         },
-    proficient_level: lower(member.proficientLevel?.name ?? null),
-    main_goal_body_type: lower(member.bodyGoal?.name ?? null),
+    proficient_level: member.profile?.proficientLevelType ?? null,
+    main_goal_body_type: member.profile?.bodyGoalType ?? null,
     total_trainer_unread_count: 0,
     total_unread_count: 0,
     need_info:
       !member.profile?.gender ||
       !member.profile?.age ||
-      !member.bodyMeasurement,
+      !member.profile?.proficientLevelType,
     social_unread_noti_count: counts.socialUnreadNotiCount,
     friend_request_noti_count: counts.friendRequestNotiCount,
   };
