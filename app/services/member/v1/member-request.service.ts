@@ -102,7 +102,10 @@ class MemberRequestService {
             ]);
         }
 
-        const status = parseRpcState(params.state);
+        const status =
+            params.state != null && String(params.state).trim() !== ""
+                ? parseRpcState(params.state)
+                : MemberRequestStatus.PENDING;
         const gender = parseRpcGender(params.gender);
 
         await prisma.member.update({

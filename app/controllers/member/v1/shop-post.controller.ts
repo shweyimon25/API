@@ -8,12 +8,58 @@ import { createShopPostSchema, updateShopPostSchema } from "../../../schemas/mem
 import { ShopPostCollection } from "../../../resources/member/v1/shop-post/shop-post.collection";
 import { ShopPostResource } from "../../../resources/member/v1/shop-post/shop-post.resource";
 import { memberShopPostScope } from "../../../scopes/member/v1/shop-post.scope";
+import prisma from "../../../../prisma/client";
+import {
+    buildMemberShopPostWhere,
+    formatMemberShopPostWithShare,
+    memberShopPostInclude,
+    parseMemberShopPostOrder,
+} from "../../../helpers/member-shop-post.helper";
 
 class ShopPostController {
     private shopPostService: ShopPostService;
 
     constructor() {
         this.shopPostService = new ShopPostService();
+    }
+
+    async memberShopPosts(req: Request, res: Response) {
+        const memberId = (req.user as Member).id;
+        const params = req.body?.params ?? {};
+        const offset = Number(params.offset ?? 0);
+        const limit = Number(params.limit ?? 0);
+        const where = buildMemberShopPostWhere(params.filters);
+        const orderBy = parseMemberShopPostOrder(params.order);
+        const include = memberShopPostInclude(memberId);
+
+        const [count, posts] = await Promise.all([
+            prisma.post.count({ where }),
+            prisma.post.findMany({
+                where,
+                orderBy,
+                ...(Number.isFinite(offset) && offset > 0 ? { skip: offset } : {}),
+                ...(Number.isFinite(limit) && limit > 0 ? { take: limit } : {}),
+                include,
+            }),
+        ]);
+
+        const results = await Promise.all(
+            posts.map((post) =>
+                formatMemberShopPostWithShare(post, memberId)
+            )
+        );
+
+        return res.json({
+            jsonrpc: "2.0",
+            id: null,
+            result: {
+                isFullFilled: true,
+                data: {
+                    count,
+                    results,
+                },
+            },
+        });
     }
 
     async findAll(req: Request, res: Response) {

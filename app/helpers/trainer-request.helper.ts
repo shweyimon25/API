@@ -361,7 +361,6 @@ export function parseTrainerFormBody(
     arms: body.arms as string | number | undefined,
     waist: body.waist as string | number | undefined,
     thigh: body.thigh as string | number | undefined,
-    state: body.state != null ? String(body.state) : "approve",
     member_plan_id:
       body.member_plan_id != null ? Number(body.member_plan_id) : undefined,
   };
