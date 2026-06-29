@@ -246,7 +246,7 @@ export function buildMemberDetailData(
     following_count: 0,
     follower_id: null,
     login: member.email ?? member.phone ?? null,
-    partner_id: member.id + 1,
+    partner_id: member.id,
     company_id: 1,
     phone: member.phone,
     address: member.profile?.address ?? null,
