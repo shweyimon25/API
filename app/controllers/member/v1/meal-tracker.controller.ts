@@ -362,7 +362,11 @@ class MealTrackerController {
         }
 
         try {
-            const todayStr = new Date().toISOString().split('T')[0]; // "2026-06-13"
+            const today = new Date();
+            today.setHours(today.getHours() + 6);
+            today.setMinutes(today.getMinutes() + 30);
+            const todayStr = today.toISOString().split('T')[0]; // Output: "2026-06-09" 
+            
             const createdResults = [];
 
             for (const item of paramsList) {
