@@ -337,14 +337,23 @@ export function buildBodyMeasurementData(params: RpcTrainerRequestParams) {
   };
 }
 
+export function normalizeContactField(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : undefined;
+}
+
 export function parseTrainerFormBody(
   body: Record<string, unknown>
 ): RpcTrainerRequestParams {
   return {
     trainer_name: String(body.trainer_name ?? ""),
     user_id: Number(body.user_id),
-    phone: body.phone != null ? String(body.phone) : undefined,
-    gmail: body.gmail != null ? String(body.gmail) : undefined,
+    phone: normalizeContactField(
+      body.phone != null ? String(body.phone) : undefined
+    ),
+    gmail: normalizeContactField(
+      body.gmail != null ? String(body.gmail) : undefined
+    ),
     year_of_experience: Number(body.year_of_experience),
     join_purpose: String(body.join_purpose ?? ""),
     age: Number(body.age),

@@ -11,9 +11,64 @@ import {
   buildBodyMeasurementData,
   isTrainerPhotoField,
   isTrainerCertificateField,
+  normalizeContactField,
 } from "../../../helpers/trainer-request.helper";
 
 class MemberRequestService {
+    private async buildTrainerMemberUpdateData(
+        member: { id: number; email: string | null; phone: string | null },
+        params: RpcTrainerRequestParams
+    ) {
+        const data: {
+            name: string;
+            email?: string;
+            phone?: string;
+        } = {
+            name: params.trainer_name.trim(),
+        };
+
+        const nextEmail = normalizeContactField(params.gmail);
+        const nextPhone = normalizeContactField(params.phone);
+
+        if (nextEmail && nextEmail !== member.email) {
+            const emailTaken = await prisma.member.findFirst({
+                where: {
+                    email: nextEmail,
+                    id: { not: member.id },
+                },
+                select: { id: true },
+            });
+
+            if (emailTaken) {
+                throw new ValidationException("Failed to create trainer request", [
+                    { field: "gmail", issue: "Email is already in use" },
+                ]);
+            }
+
+            data.email = nextEmail;
+        }
+
+        if (nextPhone && nextPhone !== member.phone) {
+            const phoneTaken = await prisma.member.findFirst({
+                where: {
+                    phone: nextPhone,
+                    id: { not: member.id },
+                },
+                select: { id: true },
+            });
+
+            if (phoneTaken) {
+                throw new ValidationException("Failed to create trainer request", [
+                    { field: "phone", issue: "Phone is already in use" },
+                ]);
+            }
+
+            data.phone = nextPhone;
+        }
+
+        return data;
+    }
+
     private async createTrainerCore(
         params: RpcTrainerRequestParams,
         authMemberId: number,
@@ -108,13 +163,14 @@ class MemberRequestService {
                 : MemberRequestStatus.PENDING;
         const gender = parseRpcGender(params.gender);
 
+        const memberUpdateData = await this.buildTrainerMemberUpdateData(
+            member,
+            params
+        );
+
         await prisma.member.update({
             where: { id: memberId },
-            data: {
-                name: params.trainer_name,
-                email: params.gmail ?? member.email,
-                phone: params.phone ?? member.phone,
-            },
+            data: memberUpdateData,
         });
 
         const measurementData = buildBodyMeasurementData(params);
