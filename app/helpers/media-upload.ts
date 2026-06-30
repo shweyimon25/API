@@ -11,15 +11,27 @@ export interface FileInfo {
   fileUrl: string;
 }
 
+const getOssConfig = () => {
+  const endpoint = process.env.OSS_ENDPOINT || process.env.OSS_END_POINT;
+  const accessKeyId = process.env.OSS_ACCESS_KEY_ID || process.env.OSS_ACCESS_KEY;
+  const secretAccessKey =
+    process.env.OSS_ACCESS_KEY_SECRET || process.env.OSS_SECRET_KEY;
+  const region = process.env.OSS_REGION;
+
+  return { endpoint, accessKeyId, secretAccessKey, region };
+};
+
+const canUseOss = () => {
+  const { endpoint, accessKeyId, secretAccessKey } = getOssConfig();
+  return !!(endpoint && accessKeyId && secretAccessKey);
+};
+
 // Lazy initialization of S3 client to ensure env vars are loaded
 let s3: AWS.S3 | null = null;
 
 const getS3Client = (): AWS.S3 => {
   if (!s3) {
-    const endpoint = process.env.OSS_ENDPOINT || process.env.OSS_END_POINT;
-    const accessKeyId = process.env.OSS_ACCESS_KEY_ID || process.env.OSS_ACCESS_KEY;
-    const secretAccessKey = process.env.OSS_ACCESS_KEY_SECRET || process.env.OSS_SECRET_KEY;
-    const region = process.env.OSS_REGION;
+    const { endpoint, accessKeyId, secretAccessKey, region } = getOssConfig();
 
     if (!endpoint || !accessKeyId || !secretAccessKey) {
       throw new Error(
@@ -51,7 +63,7 @@ export const upload = async (file: any, folderName: string = "temp") => {
   const key = `${folderName}/${uniqueName}`;
   const bucketName = "yc-fitness-uat";
 
-  if (process.env.NODE_ENV === "development") {
+  if (!canUseOss()) {
     const relativePath = path.join("public", "uploads", folderName);
     const absolutePath = path.join(process.cwd(), relativePath);
     await fs.mkdir(absolutePath, { recursive: true });

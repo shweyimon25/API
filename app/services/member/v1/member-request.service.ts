@@ -16,19 +16,26 @@ import {
 
 class MemberRequestService {
     private async buildTrainerMemberUpdateData(
-        member: { id: number; email: string | null; phone: string | null },
+        member: {
+            id: number;
+            email: string | null;
+            phone: string | null;
+            countryCode: string | null;
+        },
         params: RpcTrainerRequestParams
     ) {
         const data: {
             name: string;
             email?: string;
             phone?: string;
+            countryCode?: string;
         } = {
             name: params.trainer_name.trim(),
         };
 
         const nextEmail = normalizeContactField(params.gmail);
         const nextPhone = normalizeContactField(params.phone);
+        const nextCountryCode = normalizeContactField(params.country_code);
 
         if (nextEmail && nextEmail !== member.email) {
             const emailTaken = await prisma.member.findFirst({
@@ -64,6 +71,10 @@ class MemberRequestService {
             }
 
             data.phone = nextPhone;
+        }
+
+        if (nextCountryCode && nextCountryCode !== member.countryCode) {
+            data.countryCode = nextCountryCode;
         }
 
         return data;

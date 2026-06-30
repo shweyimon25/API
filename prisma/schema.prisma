@@ -242,6 +242,7 @@ model Member {
   code         String      @unique // YC0244
   email        String?     @unique
   phone        String?     @unique
+  countryCode  String?
   appleId      String?     @unique
   password     String
   memberType   MemberType? @relation(fields: [memberTypeId], references: [id], onDelete: Cascade)

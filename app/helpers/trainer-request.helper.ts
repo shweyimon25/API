@@ -25,6 +25,7 @@ type TrainerRequestRecord = {
     name: string;
     email: string | null;
     phone: string | null;
+    countryCode: string | null;
     bodyMeasurement: {
       heightFeet: string | null;
       heightInches: string | null;
@@ -232,6 +233,7 @@ export function formatTrainerRequestFormData(request: TrainerRequestRecord) {
 
   return {
     id: request.id,
+    country_code: request.member.countryCode ?? "+95",
     trainer_name: request.member.name,
     user_id: request.memberId,
     gmail: request.member.email,
@@ -272,6 +274,7 @@ export function formatTrainerRequest(request: TrainerRequestRecord) {
 
   return {
     id: request.id,
+    country_code: request.member.countryCode ?? "+95",
     trainer_name: request.member.name,
     user_id: request.memberId,
     gmail: request.member.email,
@@ -311,6 +314,7 @@ export type RpcTrainerRequestParams = {
   trainer_name: string;
   user_id: number;
   phone?: string;
+  country_code?: string;
   gmail?: string;
   year_of_experience: number;
   certificate?: string;
@@ -383,6 +387,9 @@ export function parseTrainerFormBody(
     user_id: Number(body.user_id),
     phone: normalizeContactField(
       body.phone != null ? String(body.phone) : undefined
+    ),
+    country_code: normalizeContactField(
+      body.country_code != null ? String(body.country_code) : undefined
     ),
     gmail: normalizeContactField(
       body.gmail != null ? String(body.gmail) : undefined
