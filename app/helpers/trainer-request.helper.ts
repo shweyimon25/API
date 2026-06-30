@@ -98,6 +98,10 @@ function normalizeMediaLines(
   });
 }
 
+function storedMediaUrl(url: string, fallback: string) {
+  return url?.trim() ? url : fallback;
+}
+
 function formatTrainerPhotoLineFormData(
   photos: Prisma.JsonValue,
   requestId: number,
@@ -107,7 +111,10 @@ function formatTrainerPhotoLineFormData(
     (line) => ({
       id: line.id,
       name: null,
-      photo: `${ODOO_IMAGE_BASE}/web/content/?model=res.trainer.photo&id=${line.id}&field=photo`,
+      photo: storedMediaUrl(
+        line.url,
+        `${ODOO_IMAGE_BASE}/web/content/?model=res.trainer.photo&id=${line.id}&field=photo`
+      ),
       trainer_id: emptyTrainerPartner(ODOO_IMAGE_BASE),
     })
   );
@@ -125,7 +132,10 @@ function formatTrainerCertificateLineFormData(
     "certificate"
   ).map((line) => ({
     id: line.id,
-    photo: `${ODOO_IMAGE_BASE}/web/content/?model=res.certificate&id=${line.id}&field=photo`,
+    photo: storedMediaUrl(
+      line.url,
+      `${ODOO_IMAGE_BASE}/web/content/?model=res.certificate&id=${line.id}&field=photo`
+    ),
   }));
 }
 
@@ -138,6 +148,11 @@ function emptyTrainerPartner(base = ODOO_PUBLIC_BASE) {
 }
 
 function trainerPhotoUrl(photo: unknown, lineId: number) {
+  if (photo && typeof photo === "object" && "url" in photo) {
+    const url = String((photo as StoredMediaLine).url ?? "").trim();
+    if (url) return url;
+  }
+
   if (typeof photo === "string" && photo.trim()) {
     return photo;
   }
@@ -145,11 +160,28 @@ function trainerPhotoUrl(photo: unknown, lineId: number) {
   return `${ODOO_PUBLIC_BASE}/web/content/?model=res.trainer.photo&id=${lineId}&field=photo`;
 }
 
+function trainerCertificateUrl(certificate: unknown, lineId: number) {
+  if (certificate && typeof certificate === "object" && "url" in certificate) {
+    const url = String((certificate as StoredMediaLine).url ?? "").trim();
+    if (url) return url;
+  }
+
+  if (typeof certificate === "string" && certificate.trim()) {
+    return certificate;
+  }
+
+  return `${ODOO_PUBLIC_BASE}/web/content/?model=res.certificate&id=${lineId}&field=photo`;
+}
+
 function formatTrainerPhotoLine(photos: Prisma.JsonValue) {
   const list = Array.isArray(photos) ? photos : [];
 
   return list.map((photo, index) => {
-    const lineId = index + 1;
+    const lineId =
+      photo && typeof photo === "object" && "id" in photo
+        ? Number((photo as StoredMediaLine).id) || index + 1
+        : index + 1;
+
     return {
       id: lineId,
       name: "",
@@ -163,14 +195,15 @@ function formatTrainerCertificateLine(certificates: Prisma.JsonValue) {
   const list = Array.isArray(certificates) ? certificates : [];
 
   return list.map((certificate, index) => {
-    const lineId = index + 1;
+    const lineId =
+      certificate && typeof certificate === "object" && "id" in certificate
+        ? Number((certificate as StoredMediaLine).id) || index + 1
+        : index + 1;
+
     return {
       id: lineId,
       name: "",
-      certificate:
-        typeof certificate === "string" && certificate.trim()
-          ? certificate
-          : `${ODOO_PUBLIC_BASE}/web/content/?model=res.trainer.certificate&id=${lineId}&field=certificate`,
+      certificate: trainerCertificateUrl(certificate, lineId),
       trainer_id: emptyTrainerPartner(),
     };
   });
