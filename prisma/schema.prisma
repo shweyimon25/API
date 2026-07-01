@@ -234,6 +234,8 @@ model MemberRequest {
   rejectedAt   DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  payments Payment[]
 }
 
 model Member {
@@ -894,6 +896,9 @@ model Payment {
 
   shopLevelId Int? // Only for shop level upgrade 
   shopLevel   ShopLevel? @relation(fields: [shopLevelId], references: [id]) // // Only for shop level upgrade 
+
+  memberRequestId Int?
+  memberRequest   MemberRequest? @relation(fields: [memberRequestId], references: [id])
 
   bankInformationId Int
   bankInformation   BankInformation @relation(fields: [bankInformationId], references: [id])

@@ -1,8 +1,6 @@
 import { Member } from "@prisma/client";
 import { Request, Response } from "express";
-import PaymentService, {
-  RpcPaymentParams,
-} from "../../../services/member/v1/payment.service";
+import PaymentService from "../../../services/member/v1/payment.service";
 import { createPaymentSchema } from "../../../schemas/member/v1/payment.schema";
 import { validater } from "../../../helpers/validator";
 import {
@@ -11,7 +9,10 @@ import {
 } from "../../../helpers/exceptions";
 import { successResponse } from "../../../helpers/response";
 import { PaymentResource } from "../../../resources/member/v1/payment/payment.resource";
-import { formatPaymentReference } from "../../../helpers/payment.helper";
+import {
+  formatPaymentReference,
+  parsePaymentRpcBody,
+} from "../../../helpers/payment.helper";
 
 class PaymentController {
   private paymentService: PaymentService;
@@ -33,13 +34,15 @@ class PaymentController {
   }
 
   async createRpc(req: Request, res: Response) {
-    const params = (req.body?.params ?? {}) as RpcPaymentParams;
+    const params = parsePaymentRpcBody(req.body as Record<string, unknown>);
+    const files = (req.files as Express.Multer.File[]) ?? [];
     const memberId = (req.user as Member).id;
 
     try {
       const payment = await this.paymentService.createFromRpcParams(
         params,
-        memberId
+        memberId,
+        files
       );
 
       return res.json({
@@ -50,6 +53,7 @@ class PaymentController {
           data: {
             id: payment.id,
             name: formatPaymentReference(payment.id),
+            photo: payment.attachment,
           },
         },
       });

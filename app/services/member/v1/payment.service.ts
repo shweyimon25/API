@@ -2,27 +2,102 @@ import { PaymentRequestType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { CreatePaymentInput } from "../../../schemas/member/v1/payment.schema";
 import { ValidationException } from "../../../helpers/exceptions";
-import { upload } from "../../../helpers/media-upload";
+import { upload, uploadBase64Image } from "../../../helpers/media-upload";
+import {
+    isPaymentPhotoField,
+    RpcPaymentParams,
+} from "../../../helpers/payment.helper";
 
-export type RpcPaymentParams = {
-    bank_id: number;
-    partner_id?: number;
-    bank_name?: string;
-    client_account_number?: string;
-    client_account_holder?: string;
-    client_phone?: string;
-    request_type: "plan" | "shop";
-    member_plan_id?: number;
-    shop_level_id?: number;
-    amount: number;
-    photo?: string;
-};
+export type { RpcPaymentParams };
 
 class PaymentService {
-    async createFromRpcParams(params: RpcPaymentParams, memberId: number) {
+    private assertPartnerId(partnerId: number | undefined, memberId: number) {
+        if (partnerId == null) return;
+
+        const parsed = Number(partnerId);
+        if (!Number.isInteger(parsed) || parsed <= 0) {
+            throw new ValidationException("Failed to create payment", [
+                { field: "partner_id", issue: "Partner is invalid" },
+            ]);
+        }
+
+        if (parsed !== memberId && parsed !== memberId + 1) {
+            throw new ValidationException("Failed to create payment", [
+                { field: "partner_id", issue: "Partner does not match logged-in member" },
+            ]);
+        }
+    }
+
+    private async resolvePaymentPhoto(photo?: string) {
+        const trimmed = photo?.trim();
+        if (!trimmed) {
+            throw new ValidationException("Failed to create payment", [
+                { field: "photo", issue: "Payment photo is required" },
+            ]);
+        }
+
+        const uploaded = await uploadBase64Image(trimmed, "payment-attachments");
+        if (!uploaded) {
+            throw new ValidationException("Failed to create payment", [
+                { field: "photo", issue: "Invalid payment photo" },
+            ]);
+        }
+
+        return uploaded;
+    }
+
+    private async resolvePaymentAttachment(
+        photo: string | undefined,
+        files: Express.Multer.File[] = []
+    ) {
+        const photoFile = files.find((file) => isPaymentPhotoField(file.fieldname));
+        if (photoFile) {
+            const { fileUrl } = await upload(photoFile, "payment-attachments");
+            return fileUrl;
+        }
+
+        return this.resolvePaymentPhoto(photo);
+    }
+
+    private async resolveTrainerRequestId(
+        trainerRequestId: number | undefined,
+        memberId: number
+    ) {
+        if (trainerRequestId == null) {
+            return null;
+        }
+
+        const parsed = Number(trainerRequestId);
+        if (!Number.isInteger(parsed) || parsed <= 0) {
+            throw new ValidationException("Failed to create payment", [
+                { field: "trainer_request_id", issue: "Trainer request is invalid" },
+            ]);
+        }
+
+        const trainerRequest = await prisma.memberRequest.findFirst({
+            where: {
+                id: parsed,
+                memberId,
+                memberType: { name: "Trainer Member" },
+            },
+        });
+
+        if (!trainerRequest) {
+            throw new ValidationException("Failed to create payment", [
+                { field: "trainer_request_id", issue: "Trainer request is not found" },
+            ]);
+        }
+
+        return trainerRequest.id;
+    }
+
+    async createFromRpcParams(
+        params: RpcPaymentParams,
+        memberId: number,
+        files: Express.Multer.File[] = []
+    ) {
         const bankInformationId = Number(params.bank_id);
         const amount = Number(params.amount);
-        const attachment = params.photo?.trim() ? String(params.photo).trim() : "";
 
         if (!Number.isInteger(bankInformationId) || bankInformationId <= 0) {
             throw new ValidationException("Failed to create payment", [
@@ -36,14 +111,12 @@ class PaymentService {
             ]);
         }
 
-        if (
-            params.partner_id != null &&
-            Number(params.partner_id) !== memberId
-        ) {
-            throw new ValidationException("Failed to create payment", [
-                { field: "partner_id", issue: "Partner does not match logged-in member" },
-            ]);
-        }
+        this.assertPartnerId(params.partner_id, memberId);
+
+        const [attachment, memberRequestId] = await Promise.all([
+            this.resolvePaymentAttachment(params.photo, files),
+            this.resolveTrainerRequestId(params.trainer_request_id, memberId),
+        ]);
 
         const bankInformation = await prisma.bankInformation.findFirst({
             where: { id: bankInformationId, status: Status.ACTIVE },
@@ -90,7 +163,8 @@ class PaymentService {
                 null,
                 amount,
                 bankInformationId,
-                attachment
+                attachment,
+                memberRequestId
             );
         }
 
@@ -136,7 +210,8 @@ class PaymentService {
                 shopLevelId,
                 amount,
                 bankInformationId,
-                attachment
+                attachment,
+                null
             );
         }
 
@@ -336,7 +411,8 @@ class PaymentService {
             shopLevelId,
             amount,
             bankInformationId,
-            attachments[0]
+            attachments[0],
+            null
         );
     }
 
@@ -348,7 +424,8 @@ class PaymentService {
         shopLevelId: number | null | undefined,
         amount: number,
         bankInformationId: number,
-        attachment: string
+        attachment: string,
+        memberRequestId: number | null = null
     ) {
         const bankInformation = await prisma.bankInformation.findFirst({
             where: {
@@ -382,6 +459,7 @@ class PaymentService {
                     requestType === PaymentRequestType.SHOP_LEVEL_UPGRADE
                         ? shopLevelId
                         : null,
+                memberRequestId,
                 bankInformationId,
                 amount,
                 attachment,
