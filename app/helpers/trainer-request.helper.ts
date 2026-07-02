@@ -374,9 +374,129 @@ export function buildBodyMeasurementData(params: RpcTrainerRequestParams) {
   };
 }
 
+export type RpcTrainerBodyUpdateParams = {
+  gender?: string;
+  weight?: number | string;
+  height_ft?: number | string;
+  height_inch?: number | string;
+  neck?: number | string;
+  calf?: number | string;
+  chest?: number | string;
+  wrist?: number | string;
+  waist?: number | string;
+  hip?: number | string;
+  shoulders?: number | string;
+  arms?: number | string;
+  thigh?: number | string;
+};
+
+const measurementFieldMap: {
+  key: keyof RpcTrainerBodyUpdateParams;
+  field:
+    | "heightFeet"
+    | "heightInches"
+    | "weight"
+    | "neck"
+    | "calf"
+    | "chest"
+    | "wrist"
+    | "waist"
+    | "hip"
+    | "shoulders"
+    | "arms"
+    | "thigh";
+}[] = [
+  { key: "height_ft", field: "heightFeet" },
+  { key: "height_inch", field: "heightInches" },
+  { key: "weight", field: "weight" },
+  { key: "neck", field: "neck" },
+  { key: "calf", field: "calf" },
+  { key: "chest", field: "chest" },
+  { key: "wrist", field: "wrist" },
+  { key: "waist", field: "waist" },
+  { key: "hip", field: "hip" },
+  { key: "shoulders", field: "shoulders" },
+  { key: "arms", field: "arms" },
+  { key: "thigh", field: "thigh" },
+];
+
+export function buildPartialBodyMeasurementData(
+  params: RpcTrainerBodyUpdateParams
+) {
+  const data: Record<string, string | null> = {};
+
+  for (const { key, field } of measurementFieldMap) {
+    if (params[key] != null && params[key] !== "") {
+      data[field] = measurementValue(params[key]);
+    }
+  }
+
+  return data;
+}
+
+export function hasTrainerBodyUpdates(params: RpcTrainerBodyUpdateParams) {
+  if (params.gender != null && String(params.gender).trim() !== "") {
+    return true;
+  }
+
+  return measurementFieldMap.some(
+    ({ key }) => params[key] != null && params[key] !== ""
+  );
+}
+
 export function normalizeContactField(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+export type RpcTrainerUpdateParams = {
+  trainer_name?: string;
+  phone?: string;
+  gmail?: string;
+  country_code?: string;
+  age?: number;
+  year_of_experience?: number;
+};
+
+export function parseTrainerFormUpdateBody(
+  body: Record<string, unknown>
+): RpcTrainerUpdateParams {
+  const params: RpcTrainerUpdateParams = {};
+
+  if (body.trainer_name != null && String(body.trainer_name).trim()) {
+    params.trainer_name = String(body.trainer_name).trim();
+  }
+
+  const phone = normalizeContactField(
+    body.phone != null ? String(body.phone) : undefined
+  );
+  if (phone) {
+    params.phone = phone;
+  }
+
+  const gmail = normalizeContactField(
+    body.gmail != null ? String(body.gmail) : undefined
+  );
+  if (gmail) {
+    params.gmail = gmail;
+  }
+
+  const countryCode = normalizeContactField(
+    body.country_code != null ? String(body.country_code) : undefined
+  );
+  if (countryCode) {
+    params.country_code = countryCode;
+  }
+
+  if (body.age != null && body.age !== "") {
+    params.age = Number(body.age);
+  }
+
+  if (body.year_of_experience != null && body.year_of_experience !== "") {
+    params.year_of_experience = Number(body.year_of_experience);
+  }
+
+  return params;
 }
 
 export function parseTrainerFormBody(

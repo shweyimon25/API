@@ -9,6 +9,7 @@ import prisma from "../../../../prisma/client";
 import {
   BadRequestException,
   Exception,
+  ForbiddenException,
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
@@ -17,6 +18,8 @@ import {
   formatTrainerRequest,
   formatTrainerRequestFormData,
   parseTrainerFormBody,
+  parseTrainerFormUpdateBody,
+  RpcTrainerBodyUpdateParams,
   RpcTrainerRequestParams,
   trainerRequestInclude,
 } from "../../../helpers/trainer-request.helper";
@@ -52,13 +55,43 @@ class MemberRequestController {
         if (
             error instanceof BadRequestException ||
             error instanceof NotFoundException ||
+            error instanceof ForbiddenException ||
             error instanceof Exception
         ) {
             return this.rpcError(res, error.message);
         }
 
-        console.error("Create trainer request error:", error);
+        console.error("Trainer request error:", error);
         return this.rpcError(res, "Internal server error");
+    }
+
+    async trainerRequestFormDataUpdate(req: Request, res: Response) {
+        const params = parseTrainerFormUpdateBody(
+            req.body as Record<string, unknown>
+        );
+        const memberId = (req.user as Member).id;
+        const files = (req.files as Express.Multer.File[]) ?? [];
+
+        try {
+            const request = await this.membershipService.updateTrainerFromFormData(
+                +req.params.trainer_id,
+                params,
+                files,
+                memberId
+            );
+
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    message: "Update Successfully.",
+                    data: formatTrainerRequestFormData(request),
+                },
+            });
+        } catch (error) {
+            return this.handleTrainerCreateError(res, error);
+        }
     }
 
     async trainerRequestFormDataCreate(req: Request, res: Response) {
@@ -78,6 +111,31 @@ class MemberRequestController {
                 id: null,
                 result: {
                     isFullFilled: true,
+                    data: formatTrainerRequestFormData(request),
+                },
+            });
+        } catch (error) {
+            return this.handleTrainerCreateError(res, error);
+        }
+    }
+
+    async trainerRequestUpdate(req: Request, res: Response) {
+        const params = (req.body?.params ?? {}) as RpcTrainerBodyUpdateParams;
+        const memberId = (req.user as Member).id;
+
+        try {
+            const request = await this.membershipService.updateTrainerFromRpc(
+                +req.params.trainer_id,
+                params,
+                memberId
+            );
+
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    isFullFilled: true,
+                    message: "Update Successfully.",
                     data: formatTrainerRequestFormData(request),
                 },
             });

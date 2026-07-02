@@ -1,7 +1,7 @@
 import { MemberRequestStatus, ProviderType, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { GymMemberRequestInput, TrainerMemberRequestInput } from "../../../schemas/member/v1/member-request.schema";
-import { BadRequestException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import { BadRequestException, ForbiddenException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
 import { upload, uploadBase64Image } from "../../../helpers/media-upload";
 import {
   parseRpcGender,
@@ -9,9 +9,13 @@ import {
   RpcTrainerRequestParams,
   trainerRequestInclude,
   buildBodyMeasurementData,
+  buildPartialBodyMeasurementData,
+  hasTrainerBodyUpdates,
   isTrainerPhotoField,
   isTrainerCertificateField,
   normalizeContactField,
+  RpcTrainerBodyUpdateParams,
+  RpcTrainerUpdateParams,
 } from "../../../helpers/trainer-request.helper";
 
 class MemberRequestService {
@@ -66,6 +70,73 @@ class MemberRequestService {
 
             if (phoneTaken) {
                 throw new ValidationException("Failed to create trainer request", [
+                    { field: "phone", issue: "Phone is already in use" },
+                ]);
+            }
+
+            data.phone = nextPhone;
+        }
+
+        if (nextCountryCode && nextCountryCode !== member.countryCode) {
+            data.countryCode = nextCountryCode;
+        }
+
+        return data;
+    }
+
+    private async buildTrainerMemberPartialUpdateData(
+        member: {
+            id: number;
+            email: string | null;
+            phone: string | null;
+            countryCode: string | null;
+        },
+        params: RpcTrainerUpdateParams
+    ) {
+        const data: {
+            name?: string;
+            email?: string;
+            phone?: string;
+            countryCode?: string;
+        } = {};
+
+        if (params.trainer_name?.trim()) {
+            data.name = params.trainer_name.trim();
+        }
+
+        const nextEmail = normalizeContactField(params.gmail);
+        const nextPhone = normalizeContactField(params.phone);
+        const nextCountryCode = normalizeContactField(params.country_code);
+
+        if (nextEmail && nextEmail !== member.email) {
+            const emailTaken = await prisma.member.findFirst({
+                where: {
+                    email: nextEmail,
+                    id: { not: member.id },
+                },
+                select: { id: true },
+            });
+
+            if (emailTaken) {
+                throw new ValidationException("Failed to update trainer request", [
+                    { field: "gmail", issue: "Email is already in use" },
+                ]);
+            }
+
+            data.email = nextEmail;
+        }
+
+        if (nextPhone && nextPhone !== member.phone) {
+            const phoneTaken = await prisma.member.findFirst({
+                where: {
+                    phone: nextPhone,
+                    id: { not: member.id },
+                },
+                select: { id: true },
+            });
+
+            if (phoneTaken) {
+                throw new ValidationException("Failed to update trainer request", [
                     { field: "phone", issue: "Phone is already in use" },
                 ]);
             }
@@ -275,6 +346,227 @@ class MemberRequestService {
             photoUrls,
             certificateUrls
         );
+    }
+
+    async updateTrainerFromFormData(
+        trainerRequestId: number,
+        params: RpcTrainerUpdateParams,
+        files: Express.Multer.File[],
+        authMemberId: number
+    ) {
+        if (!Number.isInteger(trainerRequestId) || trainerRequestId <= 0) {
+            throw new ValidationException("Failed to update trainer request", [
+                { field: "trainer_id", issue: "Trainer request id is required" },
+            ]);
+        }
+
+        const trainerMemberType = await prisma.memberType.findFirst({
+            where: { name: "Trainer Member", status: Status.ACTIVE },
+        });
+
+        if (!trainerMemberType) {
+            throw new BadRequestException("Trainer member type is not configured");
+        }
+
+        const existingRequest = await prisma.memberRequest.findFirst({
+            where: {
+                id: trainerRequestId,
+                memberTypeId: trainerMemberType.id,
+            },
+            include: trainerRequestInclude,
+        });
+
+        if (!existingRequest) {
+            throw new NotFoundException("Trainer request not found");
+        }
+
+        if (existingRequest.memberId !== authMemberId) {
+            throw new ForbiddenException(
+                "You are not allowed to update this trainer request"
+            );
+        }
+
+        const photoFiles = files.filter((file) => isTrainerPhotoField(file.fieldname));
+        const certificateFiles = files.filter((file) =>
+            isTrainerCertificateField(file.fieldname)
+        );
+
+        const photoUrls = await Promise.all(
+            photoFiles.map(async (file) => {
+                const { fileUrl } = await upload(file, "trainer-member-photos");
+                return fileUrl;
+            })
+        );
+
+        const certificateUrls = await Promise.all(
+            certificateFiles.map(async (file) => {
+                const { fileUrl } = await upload(file, "trainer-member-certificates");
+                return fileUrl;
+            })
+        );
+
+        const hasRequestUpdates =
+            params.trainer_name ||
+            params.phone ||
+            params.gmail ||
+            params.country_code ||
+            (params.age != null && Number.isFinite(params.age)) ||
+            (params.year_of_experience != null &&
+                Number.isFinite(params.year_of_experience)) ||
+            photoUrls.length > 0 ||
+            certificateUrls.length > 0;
+
+        if (!hasRequestUpdates) {
+            throw new ValidationException("Failed to update trainer request", [
+                {
+                    field: "trainer_name",
+                    issue: "At least one field is required to update",
+                },
+            ]);
+        }
+
+        const memberUpdateData = await this.buildTrainerMemberPartialUpdateData(
+            existingRequest.member,
+            params
+        );
+
+        if (Object.keys(memberUpdateData).length > 0) {
+            await prisma.member.update({
+                where: { id: authMemberId },
+                data: memberUpdateData,
+            });
+        }
+
+        const requestUpdate: {
+            age?: number;
+            yearOfExp?: number;
+            photos?: { id: number; url: string }[];
+            certificates?: { id: number; url: string }[];
+        } = {};
+
+        if (params.age != null && Number.isFinite(params.age)) {
+            requestUpdate.age = Number(params.age);
+        }
+
+        if (
+            params.year_of_experience != null &&
+            Number.isFinite(params.year_of_experience)
+        ) {
+            requestUpdate.yearOfExp = Number(params.year_of_experience);
+        }
+
+        if (photoUrls.length > 0) {
+            requestUpdate.photos = photoUrls.map((url, index) => ({
+                id: trainerRequestId + 77 + index,
+                url,
+            }));
+        }
+
+        if (certificateUrls.length > 0) {
+            requestUpdate.certificates = certificateUrls.map((url, index) => ({
+                id: authMemberId + 1 + index,
+                url,
+            }));
+        }
+
+        return prisma.memberRequest.update({
+            where: { id: trainerRequestId },
+            data: requestUpdate,
+            include: trainerRequestInclude,
+        });
+    }
+
+    private async findTrainerRequestForMember(
+        trainerRequestId: number,
+        authMemberId: number
+    ) {
+        if (!Number.isInteger(trainerRequestId) || trainerRequestId <= 0) {
+            throw new ValidationException("Failed to update trainer request", [
+                { field: "trainer_id", issue: "Trainer request id is required" },
+            ]);
+        }
+
+        const trainerMemberType = await prisma.memberType.findFirst({
+            where: { name: "Trainer Member", status: Status.ACTIVE },
+        });
+
+        if (!trainerMemberType) {
+            throw new BadRequestException("Trainer member type is not configured");
+        }
+
+        const existingRequest = await prisma.memberRequest.findFirst({
+            where: {
+                id: trainerRequestId,
+                memberTypeId: trainerMemberType.id,
+            },
+            include: trainerRequestInclude,
+        });
+
+        if (!existingRequest) {
+            throw new NotFoundException("Trainer request not found");
+        }
+
+        if (existingRequest.memberId !== authMemberId) {
+            throw new ForbiddenException(
+                "You are not allowed to update this trainer request"
+            );
+        }
+
+        return existingRequest;
+    }
+
+    async updateTrainerFromRpc(
+        trainerRequestId: number,
+        params: RpcTrainerBodyUpdateParams,
+        authMemberId: number
+    ) {
+        if (!hasTrainerBodyUpdates(params)) {
+            throw new ValidationException("Failed to update trainer request", [
+                {
+                    field: "gender",
+                    issue: "At least one field is required to update",
+                },
+            ]);
+        }
+
+        const existingRequest = await this.findTrainerRequestForMember(
+            trainerRequestId,
+            authMemberId
+        );
+
+        const requestUpdate: { gender?: ReturnType<typeof parseRpcGender> } = {};
+        if (params.gender != null && String(params.gender).trim() !== "") {
+            requestUpdate.gender = parseRpcGender(params.gender);
+        }
+
+        if (Object.keys(requestUpdate).length > 0) {
+            await prisma.memberRequest.update({
+                where: { id: trainerRequestId },
+                data: requestUpdate,
+            });
+        }
+
+        const measurementData = buildPartialBodyMeasurementData(params);
+        if (Object.keys(measurementData).length > 0) {
+            if (existingRequest.member.bodyMeasurement) {
+                await prisma.bodyMeasurement.update({
+                    where: { memberId: authMemberId },
+                    data: measurementData,
+                });
+            } else {
+                await prisma.bodyMeasurement.create({
+                    data: {
+                        memberId: authMemberId,
+                        ...measurementData,
+                    },
+                });
+            }
+        }
+
+        return prisma.memberRequest.findFirstOrThrow({
+            where: { id: trainerRequestId },
+            include: trainerRequestInclude,
+        });
     }
 
     async createTrainerFromRpc(
