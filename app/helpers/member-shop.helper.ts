@@ -39,7 +39,7 @@ function shopImageUrl(shopId: number, storedUrl?: string | null) {
 }
 
 export function resolveMemberIdFromPartnerId(partnerId: number) {
-  return partnerId - 1;
+  return partnerId;
 }
 
 function parseOrder(order: unknown): Prisma.ShopOrderByWithRelationInput {
@@ -60,7 +60,7 @@ export function buildMemberShopWhere(filters: unknown): Prisma.ShopWhereInput {
   if (partnerId) {
     const parsed = Number(partnerId);
     if (Number.isFinite(parsed)) {
-      where.memberId = parsed - 1;
+      where.memberId = parsed;
     }
   }
 
@@ -141,7 +141,7 @@ export function formatMemberShop(
     ? shop.shopRatings.find((rating) => rating.memberId === currentMemberId)
     : undefined;
 
-  const partnerId = shop.member ? shop.member.id + 1 : null;
+  const partnerId = shop.member ? shop.member.id : null;
 
   return {
     id: shop.id,

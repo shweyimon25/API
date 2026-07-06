@@ -123,7 +123,7 @@ export function buildMemberShopPostWhere(
   if (partnerId) {
     const parsed = Number(partnerId);
     if (Number.isFinite(parsed)) {
-      and.push({ shop: { memberId: parsed - 1 } });
+      and.push({ shop: { memberId: parsed} });
     }
   }
 
@@ -192,7 +192,7 @@ export function formatMemberShopPost(
   sharePost?: ReturnType<typeof formatShopSharedPost> | null,
   shareCount = 0
 ) {
-  const partnerId = post.member ? post.member.id + 1 : null;
+  const partnerId = post.member ? post.member.id : null;
 
   return {
     id: post.id,
