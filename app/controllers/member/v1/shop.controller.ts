@@ -71,6 +71,7 @@ class ShopController {
 
     // Current member
     const { id } = req.user as User;
+    
 
     // Check Shop Already Exist
     const shopExisted = await prisma.shop.findFirst({
@@ -196,7 +197,7 @@ class ShopController {
         jsonrpc: "2.0",
         id: null,
         result: {
-          isFullFilled: true,
+          isFullFilled: false,
           message: "You don't have a shop.",
         },
       });
