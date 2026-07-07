@@ -71,6 +71,7 @@ class ShopController {
 
     // Current member
     const { id } = req.user as User;
+    
 
     const currentMember = await prisma.member.findFirst({
       where: {
@@ -93,6 +94,7 @@ class ShopController {
       data: {
         name: req.body.name,
         logo: fileUrl,
+        memberId: id,
       },
     });
 
@@ -168,7 +170,7 @@ class ShopController {
         jsonrpc: "2.0",
         id: null,
         result: {
-          isFullFilled: true,
+          isFullFilled: false,
           message: "You don't have a shop.",
         },
       });
