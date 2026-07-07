@@ -79,7 +79,14 @@ class ShopController {
     });
 
     // Upload To OSS
-    const file = req.files;
+    const files = req.files as Express.Multer.File[];
+
+    const file = files.find((f) => f.fieldname === "image");
+
+    if (!file) {
+      throw new Error("Image is required");
+    }
+
     const { fileUrl } = await upload(file, "shop");
 
     const shop = await prisma.shop.create({
