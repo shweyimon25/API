@@ -80,6 +80,34 @@ export function buildMemberShopWhere(filters: unknown): Prisma.ShopWhereInput {
     };
   }
 
+  const partnerClientCode = parseOdooFilter(
+    filters,
+    "partner_id.client_code",
+    "=",
+  );
+
+  if (partnerClientCode) {
+    where.member = {
+      is: {
+        code: {
+          equals: partnerClientCode,
+        },
+      },
+    };
+  }
+
+  const partnerName = parseOdooFilter(filters, "partner_id.name", "=");
+
+  if (partnerName) {
+    where.member = {
+      is: {
+        name: {
+          equals: partnerName,
+        },
+      },
+    };
+  }
+
   return where;
 }
 
@@ -117,7 +145,7 @@ export const memberShopInclude = {
 
 export function formatMemberShop(
   shop: ShopListRecord,
-  currentMemberId?: number
+  currentMemberId?: number,
 ) {
   const totalPost = shop._count.posts;
   const postLimit = shop.shopLevel?.postLimit ?? 0;
@@ -150,7 +178,7 @@ export function formatMemberShop(
       ? {
           image_1920: partnerImageUrl(
             partnerId!,
-            shop.member.profile?.profilePhoto
+            shop.member.profile?.profilePhoto,
           ),
           name: shop.member.name,
           id: partnerId,

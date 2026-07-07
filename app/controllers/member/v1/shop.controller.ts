@@ -72,6 +72,25 @@ class ShopController {
     // Current member
     const { id } = req.user as User;
 
+    // Check Shop Already Exist
+    const shopExisted = await prisma.shop.findFirst({
+      where: {
+        memberId: id,
+      },
+    });
+
+    if (shopExisted) {
+      return res.json({
+        jsonrpc: "2.0",
+        id: null,
+        result: {
+          isFullFilled: false,
+          message: "Shop is already exist",
+          data: null,
+        },
+      });
+    }
+
     const currentMember = await prisma.member.findFirst({
       where: {
         id,
@@ -93,6 +112,15 @@ class ShopController {
       data: {
         name: req.body.name,
         logo: fileUrl,
+        member: {
+          connect: { id: id },
+        },
+        shopLevel: {
+          connect: { id: 11 },
+        },
+      },
+      include: {
+        shopLevel: true,
       },
     });
 
@@ -112,9 +140,9 @@ class ShopController {
               "http://localhost:8069/web/content/?model=res.partner&id=12&field=image_1920",
           },
           member_type_level_id: {
-            id: 1,
-            name: "Free Shop Plan",
-            count: 10,
+            id: shop.shopLevel?.id,
+            name: shop.shopLevel?.name,
+            count: shop.shopLevel?.postLimit,
           },
           create_date: shop.createdAt,
           image: shop.logo,
