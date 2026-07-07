@@ -30,4 +30,12 @@ router.post("/member.shop", [
   ),
 ]);
 
+router.post("/member.shop/result/check", [
+  passport.authenticate("jwt", { session: false }),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await shopController.memberShopResultCheck(req, res)
+  ),
+]);
+
 export default router;
