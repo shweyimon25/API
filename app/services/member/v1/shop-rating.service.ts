@@ -1,7 +1,15 @@
 import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { CreateShopRatingInput, UpdateShopRatingInput } from "../../../schemas/member/v1/shop-rating.schema";
-import { ForbiddenException, NotFoundException } from "../../../helpers/exceptions";
+import { ForbiddenException, NotFoundException, ValidationException } from "../../../helpers/exceptions";
+import { memberShopRatingInclude } from "../../../helpers/member-shop-rating.helper";
+
+export type RpcShopRatingCreateParams = {
+    shop_id?: number;
+    partner_id?: number;
+    count?: number;
+    shop_review?: string;
+};
 
 const shopRatingInclude = {
     shop: {
@@ -83,6 +91,70 @@ class ShopRatingService {
         });
 
         return this.findOne(shopRating.id);
+    }
+
+    async createFromRpcParams(
+        params: RpcShopRatingCreateParams,
+        loggedInMemberId: number,
+    ) {
+        const shopId = Number(params.shop_id);
+        const partnerId = Number(params.partner_id);
+        const rate = Number(params.count);
+        const review = params.shop_review?.trim() ?? "";
+
+        if (!Number.isInteger(shopId) || shopId <= 0) {
+            throw new ValidationException("Failed to create shop rating", [
+                { field: "shop_id", issue: "Shop is required" },
+            ]);
+        }
+
+        if (!Number.isInteger(partnerId) || partnerId <= 0) {
+            throw new ValidationException("Failed to create shop rating", [
+                { field: "partner_id", issue: "Partner is required" },
+            ]);
+        }
+
+        if (!Number.isInteger(rate) || rate < 1 || rate > 5) {
+            throw new ValidationException("Failed to create shop rating", [
+                { field: "count", issue: "Rating must be between 1 and 5" },
+            ]);
+        }
+
+        if (partnerId !== loggedInMemberId) {
+            throw new ValidationException("Failed to create shop rating", [
+                { field: "partner_id", issue: "Partner does not match logged-in member" },
+            ]);
+        }
+
+        const shop = await prisma.shop.findFirst({
+            where: { id: shopId, status: Status.ACTIVE },
+        });
+
+        if (!shop) {
+            throw new NotFoundException("Shop not found");
+        }
+
+        const shopRating = await prisma.shopRating.upsert({
+            where: {
+                memberId_shopId: {
+                    memberId: partnerId,
+                    shopId,
+                },
+            },
+            create: {
+                shopId,
+                memberId: partnerId,
+                rate,
+                review: review || null,
+            },
+            update: {
+                rate,
+                review: review || null,
+            },
+            include: memberShopRatingInclude,
+        });
+
+        return shopRating;
     }
 
     async update(id: number, updateShopRatingInput: UpdateShopRatingInput, memberId: number) {

@@ -71,7 +71,6 @@ class ShopController {
 
     // Current member
     const { id } = req.user as User;
-    
 
     // Check Shop Already Exist
     const shopExisted = await prisma.shop.findFirst({
@@ -163,14 +162,48 @@ class ShopController {
   }
 
   async memberShopUpdate(req: Request, res: Response) {
-    const params = (req.body?.params ?? {}) as RpcShopUpdateParams;
-    const memberId = (req.user as Member).id;
-    const shop = await this.shopService.updateFromRpcParams(
-      +req.params.id,
-      params,
-      memberId,
-    );
-    const data = formatMemberShop(shop, memberId);
+    const { id } = req.user as Member;
+
+    const existingShop = await prisma.shop.findUnique({
+      where: {
+        memberId: id,
+        id: +req.params.id,
+      }
+    });
+
+    if (!existingShop) {
+      return res.json({
+        jsonrpc: "2.0",
+        id: null,
+        result: {
+          isFullFilled: false,
+          message: "Shop not found",
+        },
+      });
+    }
+
+    let fileUrlPath;
+
+    if (req.files) {
+      const files = req.files as Express.Multer.File[];
+      const file = files.find((f) => f.fieldname === "image");
+      const { fileUrl } = await upload(file, "shop");
+      fileUrlPath = fileUrl;
+    }
+
+    const updateShop = await prisma.shop.update({
+      where: {
+        id: existingShop.id,
+      },
+      data: {
+        name: req.body.name,
+        logo: fileUrlPath,
+      },
+      include: {
+        member: true,
+        shopLevel: true,
+      },
+    });
 
     return res.json({
       jsonrpc: "2.0",
@@ -178,9 +211,35 @@ class ShopController {
       result: {
         isFullFilled: true,
         message: "Update Successfully.",
-        data,
-      },
+        data: {
+          "id": updateShop.id,
+          "name": updateShop.name,
+          "partner_id": {
+            "id": updateShop.member?.id,
+            "image_1920": updateShop.logo,
+            "name": updateShop.member?.name,
+          },
+          "member_type_level_id": {
+            "id": updateShop.shopLevelId,
+            "name": updateShop.shopLevel?.name,
+            "count": updateShop.shopLevel?.postLimit,
+          },
+          "create_date": updateShop.createdAt,
+          "image": updateShop.logo,
+          "total_post": 0,
+          "rate_count": 0.0,
+          "total_rate_user_count": 0.0,
+          "five_star": 0,
+          "four_star": 0,
+          "three_star": 0,
+          "two_star": 0,
+          "one_star": 0,
+          "remaining_post": 10,
+          "is_rate": null
+        }
+      }
     });
+
   }
 
   async memberShopResultCheck(req: Request, res: Response) {

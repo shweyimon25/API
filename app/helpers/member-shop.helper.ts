@@ -1,5 +1,4 @@
 import { Prisma, Status } from "@prisma/client";
-import { parseOdooFilter } from "./personal-workout.helper";
 
 const ODOO_IMAGE_BASE =
   process.env.ODOO_IMAGE_BASE_URL ?? "http://localhost:8069";
@@ -55,57 +54,72 @@ function parseOrder(order: unknown): Prisma.ShopOrderByWithRelationInput {
 
 export function buildMemberShopWhere(filters: unknown): Prisma.ShopWhereInput {
   const where: Prisma.ShopWhereInput = { status: Status.ACTIVE };
+  const filtersStr =
+    typeof filters === "string" ? filters : JSON.stringify(filters ?? "[]");
+  const tupleRe =
+    /\(\s*'([^']+)'\s*,\s*'([^']+)'\s*,\s*(?:'([^']*)'|([^)]+))\s*\)/g;
+  const orSearch: Prisma.ShopWhereInput[] = [];
 
-  const partnerId = parseOdooFilter(filters, "partner_id");
-  if (partnerId) {
-    const parsed = Number(partnerId);
-    if (Number.isFinite(parsed)) {
-      where.memberId = parsed;
+  let match: RegExpExecArray | null;
+  while ((match = tupleRe.exec(filtersStr)) !== null) {
+    const field = match[1];
+    const op = match[2];
+    const value = (match[3] ?? match[4] ?? "").trim().replace(/^'|'$/g, "");
+    if (!value) continue;
+
+    if (field === "partner_id" && op === "=") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        where.memberId = parsed;
+      }
+      continue;
+    }
+
+    if (field === "id" && op === "=") {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) {
+        where.id = parsed;
+      }
+      continue;
+    }
+
+    if (field === "name" && op === "ilike") {
+      orSearch.push({
+        name: { contains: value, mode: "insensitive" },
+      });
+      continue;
+    }
+
+    if (field === "partner_id.client_code" && (op === "=" || op === "ilike")) {
+      orSearch.push({
+        member: {
+          is: {
+            code:
+              op === "="
+                ? { equals: value, mode: "insensitive" }
+                : { contains: value, mode: "insensitive" },
+          },
+        },
+      });
+      continue;
+    }
+
+    if (field === "partner_id.name" && (op === "=" || op === "ilike")) {
+      orSearch.push({
+        member: {
+          is: {
+            name:
+              op === "="
+                ? { equals: value, mode: "insensitive" }
+                : { contains: value, mode: "insensitive" },
+          },
+        },
+      });
     }
   }
 
-  const shopId = parseOdooFilter(filters, "id");
-  if (shopId) {
-    const parsed = Number(shopId);
-    if (Number.isFinite(parsed)) {
-      where.id = parsed;
-    }
-  }
-
-  const name = parseOdooFilter(filters, "name", "ilike");
-  if (name) {
-    where.name = {
-      contains: name,
-      mode: "insensitive",
-    };
-  }
-
-  const partnerClientCode = parseOdooFilter(
-    filters,
-    "partner_id.client_code",
-    "=",
-  );
-
-  if (partnerClientCode) {
-    where.member = {
-      is: {
-        code: {
-          equals: partnerClientCode,
-        },
-      },
-    };
-  }
-
-  const partnerName = parseOdooFilter(filters, "partner_id.name", "=");
-
-  if (partnerName) {
-    where.member = {
-      is: {
-        name: {
-          equals: partnerName,
-        },
-      },
-    };
+  if (orSearch.length) {
+    where.OR = orSearch;
   }
 
   return where;

@@ -7,6 +7,13 @@ import { createShopRatingSchema, updateShopRatingSchema } from "../../../schemas
 import { Member } from "@prisma/client";
 import { ShopRatingCollection } from "../../../resources/member/v1/shop-rating/shop-rating.collection";
 import { ShopRatingResource } from "../../../resources/member/v1/shop-rating/shop-rating.resource";
+import prisma from "../../../../prisma/client";
+import {
+    buildMemberShopRatingWhere,
+    formatMemberShopRating,
+    memberShopRatingInclude,
+    parseMemberShopRatingOrder,
+} from "../../../helpers/member-shop-rating.helper";
 
 class ShopRatingController {
     private shopRatingService: ShopRatingService;
@@ -15,70 +22,56 @@ class ShopRatingController {
         this.shopRatingService = new ShopRatingService();
     }
 
-    async findAll(req: Request, res: Response) {
-        const { page, perPage, shopId } = req.query;
+    async memberShopRateList(req: Request, res: Response) {
+        const params = req.body?.params ?? {};
+        const offset = Number(params.offset ?? 0);
+        const limit = Number(params.limit ?? 0);
+        const where = buildMemberShopRatingWhere(params.filters);
+        const orderBy = parseMemberShopRatingOrder(params.order);
 
-        if (!shopId) {
-            throw new BadRequestException("Shop ID is required");
-        }
+        const [count, ratings] = await Promise.all([
+            prisma.shopRating.count({ where }),
+            prisma.shopRating.findMany({
+                where,
+                orderBy,
+                ...(Number.isFinite(offset) && offset > 0 ? { skip: offset } : {}),
+                ...(Number.isFinite(limit) && limit > 0 ? { take: limit } : {}),
+                include: memberShopRatingInclude,
+            }),
+        ]);
 
-        if (page && perPage) {
-            const shopRatings = await this.shopRatingService.findByPaginate(+page, +perPage, +shopId);
-            return successResponse(
-                res,
-                "Shop ratings fetched successfully",
-                ShopRatingCollection.withPagination(shopRatings)
-            );
-        }
+        const results = ratings.map((rating) => formatMemberShopRating(rating));
 
-        const shopRatings = await this.shopRatingService.findAll(+shopId);
-        return successResponse(
-            res,
-            "Shop ratings fetched successfully",
-            ShopRatingCollection.toCollection(shopRatings)
-        );
+        return res.json({
+            jsonrpc: "2.0",
+            id: null,
+            result: {
+                isFullFilled: true,
+                data: {
+                    count,
+                    results,
+                },
+            },
+        });
     }
 
-    async create(req: Request, res: Response) {
-        const { data, success, error } = await validater(createShopRatingSchema, req.body);
-
-        if (!success) {
-            throw new ValidationException("Failed to create shop rating", error);
-        }
-
+    async memberShopRateCreate(req: Request, res: Response) {
+        const params = req.body?.params ?? {};
         const memberId = (req.user as Member).id;
-        const shopRating = await this.shopRatingService.create(data, memberId);
-        return successResponse(
-            res,
-            "Shop rating created successfully",
-            ShopRatingResource.toResource(shopRating)
+        const shopRating = await this.shopRatingService.createFromRpcParams(
+            params,
+            memberId,
         );
-    }
+        const data = formatMemberShopRating(shopRating);
 
-    async update(req: Request, res: Response) {
-        const { id } = req.params;
-
-        const { data, success, error } = await validater(updateShopRatingSchema, req.body);
-
-        if (!success) {
-            throw new ValidationException("Failed to update shop rating", error);
-        }
-
-        const memberId = (req.user as Member).id;
-        const shopRating = await this.shopRatingService.update(+id, data, memberId);
-        return successResponse(
-            res,
-            "Shop rating updated successfully",
-            ShopRatingResource.toResource(shopRating)
-        );
-    }
-
-    async destroy(req: Request, res: Response) {
-        const { id } = req.params;
-        const memberId = (req.user as Member).id;
-
-        const shopRating = await this.shopRatingService.destroy(+id, memberId);
-        return successResponse(res, "Shop rating deleted successfully", shopRating);
+        return res.json({
+            jsonrpc: "2.0",
+            id: null,
+            result: {
+                isFullFilled: true,
+                data,
+            },
+        });
     }
 }
 
