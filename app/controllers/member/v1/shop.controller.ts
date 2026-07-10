@@ -1,6 +1,4 @@
-import ShopService, {
-  RpcShopUpdateParams,
-} from "../../../services/member/v1/shop.service";
+import ShopService from "../../../services/member/v1/shop.service";
 import { Request, Response } from "express";
 import { Member, User } from "@prisma/client";
 import prisma from "../../../../prisma/client";
@@ -95,6 +93,9 @@ class ShopController {
       where: {
         id,
       },
+      include: {
+        profile: true
+      }
     });
 
     // Upload To OSS
@@ -116,7 +117,7 @@ class ShopController {
           connect: { id: id },
         },
         shopLevel: {
-          connect: { id: 11 },
+          connect: { id: 8 },
         },
       },
       include: {
@@ -136,8 +137,7 @@ class ShopController {
           partner_id: {
             id: currentMember?.id,
             name: currentMember?.name,
-            image_1920:
-              "http://localhost:8069/web/content/?model=res.partner&id=12&field=image_1920",
+            image_1920: currentMember?.profile?.coverPhoto ?? ""
           },
           member_type_level_id: {
             id: shop.shopLevel?.id,
