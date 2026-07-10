@@ -9,6 +9,7 @@ import {
   parseMemberShopOrder,
 } from "../../../helpers/member-shop.helper";
 import { upload } from "../../../helpers/media-upload";
+import { formatDate } from "../../../helpers/helper";
 
 class ShopController {
   private shopService: ShopService;
@@ -109,6 +110,9 @@ class ShopController {
 
     const { fileUrl } = await upload(file, "shop");
 
+    // Get Free Shop Level
+    const freeShopLevel = await this.getFreeShopLevel();
+
     const shop = await prisma.shop.create({
       data: {
         name: req.body.name,
@@ -117,7 +121,7 @@ class ShopController {
           connect: { id: id },
         },
         shopLevel: {
-          connect: { id: 8 },
+          connect: { id: freeShopLevel?.id },
         },
       },
       include: {
@@ -144,7 +148,7 @@ class ShopController {
             name: shop.shopLevel?.name,
             count: shop.shopLevel?.postLimit,
           },
-          create_date: shop.createdAt,
+          create_date: formatDate(shop.createdAt),
           image: shop.logo,
           total_post: 0.0,
           rate_count: 0.0,
@@ -200,7 +204,11 @@ class ShopController {
         logo: fileUrlPath,
       },
       include: {
-        member: true,
+        member: {
+          include: {
+            profile: true
+          }
+        },
         shopLevel: true,
       },
     });
@@ -216,7 +224,7 @@ class ShopController {
           "name": updateShop.name,
           "partner_id": {
             "id": updateShop.member?.id,
-            "image_1920": updateShop.logo,
+            "image_1920": updateShop.member?.profile?.coverPhoto ?? "",
             "name": updateShop.member?.name,
           },
           "member_type_level_id": {
@@ -224,7 +232,7 @@ class ShopController {
             "name": updateShop.shopLevel?.name,
             "count": updateShop.shopLevel?.postLimit,
           },
-          "create_date": updateShop.createdAt,
+          "create_date": formatDate(updateShop.createdAt),
           "image": updateShop.logo,
           "total_post": 0,
           "rate_count": 0.0,
@@ -270,6 +278,16 @@ class ShopController {
         message: "You have a shop.",
       },
     });
+  }
+
+  async getFreeShopLevel() {
+    const freeShopLevel = await prisma.shopLevel.findFirst({
+      where: {
+        name: "Free",
+      },
+    });
+
+    return freeShopLevel;
   }
 }
 

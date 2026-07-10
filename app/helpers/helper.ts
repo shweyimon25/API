@@ -118,5 +118,11 @@ export const generateTimeAgo = (date: Date) => {
 };
 
 export const generateFcmToken = async () => {
-  
+
+};
+
+export const formatDate = (date: string | Date) => {
+  const d = date instanceof Date ? date : new Date(date);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
