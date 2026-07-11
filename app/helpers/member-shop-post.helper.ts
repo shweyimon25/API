@@ -74,9 +74,19 @@ function shopMediaLine(media: unknown) {
   return items.map((item) => {
     if (item && typeof item === "object") {
       const m = item as Record<string, unknown>;
+
+      if (m.type === "image" && m.url) {
+        return { image: String(m.url), video: null };
+      }
+      if (m.type === "video" && m.url) {
+        return { image: null, video: String(m.url) };
+      }
+
+      const image = (m.image as string) || null;
+      const video = (m.video as string) || null;
       return {
-        image: (m.image as string) ?? null,
-        video: (m.video as string) ?? null,
+        image: image || null,
+        video: video || null,
       };
     }
 

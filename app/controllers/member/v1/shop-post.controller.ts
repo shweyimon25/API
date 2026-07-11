@@ -9,7 +9,6 @@ import {
     parseMemberShopPostOrder,
 } from "../../../helpers/member-shop-post.helper";
 import { upload } from "../../../helpers/media-upload";
-import { formatDate } from "../../../helpers/helper";
 
 class ShopPostController {
     private shopPostService: ShopPostService;
@@ -83,17 +82,29 @@ class ShopPostController {
             });
         }
 
-        let images = [];
-        let videos = [];
-        let media = [];
+        let images: string[] = [];
+        let videos: string[] = [];
+        const media: { image: string | null; video: string | null }[] = [];
+        const files = (req.files as Express.Multer.File[]) ?? [];
 
-        for (const file of req.files as Express.Multer.File[]) {
-            if (file.fieldname === 'images') {
-                const { fileUrl } = await upload(file);
+        for (const file of files) {
+            const isImageField =
+                file.fieldname === "images" ||
+                file.fieldname === "media_line/image" ||
+                file.fieldname === "media_line[image]" ||
+                /^media_line\[\d+\]\[image\]$/.test(file.fieldname);
+
+            const isVideoField =
+                file.fieldname === "videos" ||
+                file.fieldname === "media_line/video" ||
+                file.fieldname === "media_line[video]" ||
+                /^media_line\[\d+\]\[video\]$/.test(file.fieldname);
+
+            if (isImageField && file.mimetype.startsWith("image/")) {
+                const { fileUrl } = await upload(file, "shop-post");
                 images.push(fileUrl);
-            }
-            if (file.fieldname === 'videos') {
-                const { fileUrl } = await upload(file);
+            } else if (isVideoField && file.mimetype.startsWith("video/")) {
+                const { fileUrl } = await upload(file, "shop-post");
                 videos.push(fileUrl);
             }
         }
@@ -101,60 +112,49 @@ class ShopPostController {
         const maxLength = Math.max(images.length, videos.length);
 
         for (let i = 0; i < maxLength; i++) {
-            media.push({
-                image: images[i] ?? '',
-                video: videos[i] ?? '',
-            });
+            const image = images[i] ?? null;
+            const video = videos[i] ?? null;
+            if (image || video) {
+                media.push({ image, video });
+            }
         }
+
+        const caption = String(req.body.caption ?? "").trim();
+        const viewTypeRaw = String(req.body.view_type ?? "public").toLowerCase();
+        const price = Number(req.body.price);
+        const currency = String(req.body.currency ?? "ks").trim().toLowerCase() || "ks";
+
+        const viewTypeMap: Record<string, PrivencyType> = {
+            public: PrivencyType.PUBLIC,
+            only_me: PrivencyType.PRIVATE,
+            friend: PrivencyType.FRIEND,
+        };
+        const privencyType = viewTypeMap[viewTypeRaw] ?? PrivencyType.PUBLIC;
 
         const shopPost = await prisma.post.create({
             data: {
-                content: req.body.caption,
-                privencyType: req.body.view_type == 'public' ? PrivencyType.PUBLIC : PrivencyType.PRIVATE,
-                timeAgo: new Date(),
-                viewCount: 0,
-                media: media,
-                shopId: req.body.shopId,
-                memberId: memberId,
-            }
+                content: {
+                    caption: caption || null,
+                    price: Number.isFinite(price) ? price : 0,
+                    currency,
+                },
+                privencyType,
+                media,
+                shopId: currentMember.shop.id,
+                memberId,
+            },
+            include: memberShopPostInclude(memberId),
         });
 
+        const data = await formatMemberShopPostWithShare(shopPost, memberId);
+
         return res.json({
-            "jsonrpc": "2.0",
-            "id": null,
-            "result": {
-                "isFullFilled": true,
-                "data": {
-                    "id": shopPost.id,
-                    "caption": shopPost.content,
-                    "partner_id": {
-                        "image_1920": currentMember?.profile?.profilePhoto ?? '',
-                        "name": currentMember?.name,
-                        "id": currentMember?.profile?.id
-                    },
-                    "view_type": shopPost.privencyType == PrivencyType.PUBLIC ? 'public' : 'only_me',
-                    "create_date": formatDate(shopPost.createdAt),
-                    "media_line": shopPost.media,
-                    "view_count": 0,
-                    "react_count": 0,
-                    "comment_count": 0,
-                    "share_count": 0,
-                    "is_react": null, // True or False
-                    "price": 80000.0,
-                    "currency": "ks",
-                    "share_post_id": {
-                        "view_count": 0,
-                        "share_count": 0,
-                        "create_date": null,
-                        "caption": null,
-                        "view_type": null,
-                        "react_count": 0,
-                        "comment_count": 0,
-                        "is_react": false,
-                        "id": null
-                    }
-                }
-            }
+            jsonrpc: "2.0",
+            id: null,
+            result: {
+                isFullFilled: true,
+                data,
+            },
         });
     }
 
