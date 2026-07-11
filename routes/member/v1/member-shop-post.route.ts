@@ -22,4 +22,12 @@ router.post("/member.shop.post/create", [
   ),
 ]);
 
+router.post("/member.shop.post/update", [
+  passport.authenticate("jwt", { session: false }),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await shopPostController.memberShopPostUpdate(req, res)
+  ),
+]);
+
 export default router;

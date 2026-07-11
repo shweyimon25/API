@@ -128,7 +128,7 @@ class ShopPostController {
                     "id": shopPost.id,
                     "caption": shopPost.content,
                     "partner_id": {
-                        "image_1920": currentMember?.profile?.profilePhoto,
+                        "image_1920": currentMember?.profile?.profilePhoto ?? '',
                         "name": currentMember?.name,
                         "id": currentMember?.profile?.id
                     },
@@ -150,7 +150,7 @@ class ShopPostController {
                         "view_type": null,
                         "react_count": 0,
                         "comment_count": 0,
-                        "is_react": null,
+                        "is_react": false,
                         "id": null
                     }
                 }
