@@ -30,4 +30,12 @@ router.post("/member.shop.post/update", [
   ),
 ]);
 
+router.post("/member.shop.post/delete", [
+  passport.authenticate("jwt", { session: false }),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await shopPostController.memberShopPostDelete(req, res)
+  ),
+]);
+
 export default router;

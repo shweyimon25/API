@@ -2,9 +2,6 @@ import { Prisma, PrivencyType, Status } from "@prisma/client";
 import { parseOdooFilter } from "./personal-workout.helper";
 import prisma from "../../prisma/client";
 
-const ODOO_IMAGE_BASE =
-  process.env.ODOO_IMAGE_BASE_URL ?? "http://localhost:8069";
-
 type ShopPostRecord = {
   id: number;
   content: unknown;
@@ -26,9 +23,8 @@ function formatDate(d: Date) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-function partnerImageUrl(partnerId: number, storedUrl?: string | null) {
-  if (storedUrl) return storedUrl;
-  return `${ODOO_IMAGE_BASE}/web/content/?model=res.partner&id=${partnerId}&field=image_1920`;
+function partnerImageUrl(storedUrl?: string | null) {
+  return storedUrl?.trim() ? storedUrl : "";
 }
 
 function caption(content: unknown) {
@@ -104,7 +100,7 @@ export function emptyShopSharePost() {
     view_type: null,
     comment_count: 0,
     react_count: 0,
-    is_react: null,
+    is_react: false,
     create_date: null,
     view_count: 0,
     id: null,
@@ -188,7 +184,7 @@ function formatShopSharedPost(
     view_type: viewType(post.privencyType),
     comment_count: post._count.postComments,
     react_count: post._count.postReactions,
-    is_react: post.postReactions.length > 0 ? true : null,
+    is_react: post.postReactions.length > 0,
     create_date: formatDate(post.createdAt),
     view_count: post.viewCount ?? 0,
     id: post.id,
@@ -210,10 +206,7 @@ export function formatMemberShopPost(
     partner_id: post.member
       ? {
           id: partnerId,
-          image_1920: partnerImageUrl(
-            partnerId!,
-            post.member.profile?.profilePhoto
-          ),
+          image_1920: partnerImageUrl(post.member.profile?.profilePhoto),
           name: post.member.name,
         }
       : {
@@ -228,7 +221,7 @@ export function formatMemberShopPost(
     react_count: post._count.postReactions,
     comment_count: post._count.postComments,
     share_count: shareCount,
-    is_react: post.postReactions.length > 0 ? true : null,
+    is_react: post.postReactions.length > 0,
     price: postPrice(post.content),
     currency: postCurrency(post.content),
     share_post_id: sharePost ?? emptyShopSharePost(),

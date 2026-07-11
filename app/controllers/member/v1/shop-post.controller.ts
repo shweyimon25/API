@@ -163,6 +163,21 @@ class ShopPostController {
 
         console.log(req.body);
     }
+
+    async memberShopPostDelete(req: Request, res: Response) {
+        const memberId = (req.user as Member).id;
+
+        
+
+        return res.json({
+            jsonrpc: "2.0",
+            id: null,
+            result: {
+                isFullFilled: true,
+                message: "Delete Successfully."
+            },
+        });
+    }
 }
 
 export default ShopPostController;

@@ -10,4 +10,6 @@ router.route("/:id").get([
     passport.authenticate("jwt", { session: false }),
 ])
 
+
+
 export default router;
