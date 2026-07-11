@@ -14,4 +14,12 @@ router.post("/member.shop.post", [
   ),
 ]);
 
+router.post("/member.shop.post/create", [
+  passport.authenticate("jwt", { session: false }),
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await shopPostController.memberShopPostCreate(req, res)
+  ),
+]);
+
 export default router;

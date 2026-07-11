@@ -1,13 +1,6 @@
 import { Request, Response } from "express";
-import { Member } from "@prisma/client";
+import { Member, PrivencyType } from "@prisma/client";
 import ShopPostService from "../../../services/member/v1/shop-post.service";
-import { successResponse } from "../../../helpers/response";
-import { validater } from "../../../helpers/validator";
-import { ValidationException } from "../../../helpers/exceptions";
-import { createShopPostSchema, updateShopPostSchema } from "../../../schemas/member/v1/shop-post.schema";
-import { ShopPostCollection } from "../../../resources/member/v1/shop-post/shop-post.collection";
-import { ShopPostResource } from "../../../resources/member/v1/shop-post/shop-post.resource";
-import { memberShopPostScope } from "../../../scopes/member/v1/shop-post.scope";
 import prisma from "../../../../prisma/client";
 import {
     buildMemberShopPostWhere,
@@ -15,6 +8,8 @@ import {
     memberShopPostInclude,
     parseMemberShopPostOrder,
 } from "../../../helpers/member-shop-post.helper";
+import { upload } from "../../../helpers/media-upload";
+import { formatDate } from "../../../helpers/helper";
 
 class ShopPostController {
     private shopPostService: ShopPostService;
@@ -62,71 +57,111 @@ class ShopPostController {
         });
     }
 
-    async findAll(req: Request, res: Response) {
-        const { page, perPage } = req.query;
-        const where = memberShopPostScope(req.query);
+    async memberShopPostCreate(req: Request, res: Response) {
+        const memberId = (req.user as Member).id;
 
-        if (page && perPage) {
-            const shopPosts = await this.shopPostService.findByPaginate(+page, +perPage, where);
-            return successResponse(
-                res,
-                "Shop posts fetched successfully",
-                ShopPostCollection.withPagination(shopPosts)
-            );
+        // Current Member
+        const currentMember = await prisma.member.findUnique({
+            where: {
+                id: memberId,
+            },
+            include: {
+                shop: true,
+                profile: true,
+            }
+        });
+
+        if (!currentMember?.shop) {
+            return res.json({
+                jsonrpc: "2.0",
+                id: null,
+                result: {
+                    message: "Please create a shop first",
+                    isFullFilled: false,
+                    data: null,
+                },
+            });
         }
 
-        const shopPosts = await this.shopPostService.findAll(where);
-        return successResponse(
-            res,
-            "Shop posts fetched successfully",
-            ShopPostCollection.toCollection(shopPosts)
-        );
-    }
+        let images = [];
+        let videos = [];
+        let media = [];
 
-    async findOne(req: Request, res: Response) {
-        const shopPost = await this.shopPostService.findOne(+req.params.id);
-        return successResponse(
-            res,
-            "Shop post fetched successfully",
-            ShopPostResource.toResource(shopPost)
-        );
-    }
-
-    async create(req: Request, res: Response) {
-        const { data, success, error } = await validater(createShopPostSchema, req.body);
-        if (!success) {
-            throw new ValidationException("Failed to create shop post", error);
+        for (const file of req.files as Express.Multer.File[]) {
+            if (file.fieldname === 'images') {
+                const { fileUrl } = await upload(file);
+                images.push(fileUrl);
+            }
+            if (file.fieldname === 'videos') {
+                const { fileUrl } = await upload(file);
+                videos.push(fileUrl);
+            }
         }
 
-        const memberId = (req.user as Member).id;
-        const shopPost = await this.shopPostService.create(data, req.files as Express.Multer.File[], memberId);
+        const maxLength = Math.max(images.length, videos.length);
 
-        return successResponse(
-            res,
-            "Shop post created successfully",
-            ShopPostResource.toResource(shopPost)
-        );
-    }
-
-    async update(req: Request, res: Response) {
-        const { data, success, error } = await validater(updateShopPostSchema, req.body);
-        if (!success) {
-            throw new ValidationException("Failed to update shop post", error);
+        for (let i = 0; i < maxLength; i++) {
+            media.push({
+                image: images[i] ?? '',
+                video: videos[i] ?? '',
+            });
         }
 
-        const memberId = (req.user as Member).id;
-        const shopPost = await this.shopPostService.update(+req.params.id, data, req.files as Express.Multer.File[], memberId);
-        return successResponse(
-            res,
-            "Shop post updated successfully",
-            ShopPostResource.toResource(shopPost)
-        );
+        const shopPost = await prisma.post.create({
+            data: {
+                content: req.body.caption,
+                privencyType: req.body.view_type == 'public' ? PrivencyType.PUBLIC : PrivencyType.PRIVATE,
+                timeAgo: new Date(),
+                viewCount: 0,
+                media: media,
+                shopId: req.body.shopId,
+                memberId: memberId,
+            }
+        });
+
+        return res.json({
+            "jsonrpc": "2.0",
+            "id": null,
+            "result": {
+                "isFullFilled": true,
+                "data": {
+                    "id": shopPost.id,
+                    "caption": shopPost.content,
+                    "partner_id": {
+                        "image_1920": currentMember?.profile?.profilePhoto,
+                        "name": currentMember?.name,
+                        "id": currentMember?.profile?.id
+                    },
+                    "view_type": shopPost.privencyType == PrivencyType.PUBLIC ? 'public' : 'only_me',
+                    "create_date": formatDate(shopPost.createdAt),
+                    "media_line": shopPost.media,
+                    "view_count": 0,
+                    "react_count": 0,
+                    "comment_count": 0,
+                    "share_count": 0,
+                    "is_react": null, // True or False
+                    "price": 80000.0,
+                    "currency": "ks",
+                    "share_post_id": {
+                        "view_count": 0,
+                        "share_count": 0,
+                        "create_date": null,
+                        "caption": null,
+                        "view_type": null,
+                        "react_count": 0,
+                        "comment_count": 0,
+                        "is_react": null,
+                        "id": null
+                    }
+                }
+            }
+        });
     }
 
-    async destroy(req: Request, res: Response) {
+    async memberShopPostUpdate(req: Request, res: Response) {
         const memberId = (req.user as Member).id;
-        await this.shopPostService.destroy(+req.params.id, memberId);
-        return successResponse(res, "Shop post deleted successfully");
+
+        console.log(req.body);
     }
 }
 
