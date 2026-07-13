@@ -1,25 +1,25 @@
 import { Prisma } from "@prisma/client";
 
 export interface MemberPostScopeQuery {
-    content?: string;
-    tagId?: string;
+    caption?: string;
+    postCategoryId?: string;
     fromDate?: string;
     toDate?: string;
 }
 
 export const memberPostScope = (query: MemberPostScopeQuery): Prisma.PostWhereInput => {
-    const { content, tagId, fromDate, toDate } = query;
+    const { caption, postCategoryId, fromDate, toDate } = query;
 
     const where: Prisma.PostWhereInput = {};
 
-    if (content) {
-        where.content = {
-            equals: JSON.stringify(content)
+    if (caption) {
+        where.caption = {
+            equals: JSON.stringify(caption)
         };
     }
 
-    if (tagId) {
-        where.tagId = +tagId;
+    if (postCategoryId) {
+        where.postCategoryId = +postCategoryId;
     }
 
     if (fromDate || toDate) {
