@@ -12,7 +12,7 @@ import adminProsRoute from "./admin/v1/pros.route";
 import adminConsRoute from "./admin/v1/cons.route";
 import adminShopLevelRoute from "./admin/v1/shop-level.route";
 import adminShopRoute from "./admin/v1/shop.route";
-import adminTagRoute from "./admin/v1/tag.route";
+import adminTagRoute from "./admin/v1/post-category.route";
 import adminPostRoute from "./admin/v1/post.route";
 import adminWorkoutRoute from "./admin/v1/workout.route";
 import adminBankInformationRoute from "./admin/v1/bank-information.route";
@@ -35,7 +35,6 @@ import adminReportCategoryRoute from "./admin/v1/report-category.route";
 // Member Routes
 import memberAuthRoute from "./member/v1/auth.route";
 import memberProfileRoute from "./member/v1/profile.route";
-import memberPostRoute from "./member/v1/post.route";
 import memberSocialPostRoute from "./member/v1/member-social-post.route";
 import memberPostCommentRoute from "./member/v1/post-comment.route";
 import memberTagRoute from "./member/v1/tag.route";
@@ -44,7 +43,6 @@ import memberPlanRoute from "./member/v1/member-plan.route";
 import memberRequestRoute from "./member/v1/member-request.route";
 import memberPaymentRoute from "./member/v1/payment.route";
 import memberBankInformationRoute from "./member/v1/bank-information.route";
-import memberShopPostRoute from "./member/v1/shop-post.route";
 import memberShopPostCommentRoute from "./member/v1/shop-post-comment.route";
 import memberShopPostReactionRoute from "./member/v1/shop-post-reaction.route";
 import memberShopRatingRoute from "./member/v1/shop-rating.route";
@@ -113,12 +111,10 @@ router.use("/admin/v1/payments", adminPaymentRoute);
 router.use("/admin/v1/attendances", adminAttendanceRoute);
 router.use("/admin/v1/report-category", adminReportCategoryRoute);
 
-
 // Member Routes
 router.use("/member/v1/auth", memberAuthRoute);
 router.use("/member/v1/profile", memberProfileRoute);
 router.use("/member/v1", memberSocialPostRoute);
-router.use("/member/v1/posts", memberPostRoute);
 router.use("/member/v1/post-comments", memberPostCommentRoute);
 router.use("/member/v1/tags", memberTagRoute);
 router.use("/member/v1/member-types", memberMemberTypeRoute);
@@ -127,7 +123,6 @@ router.use("/member/v1/member-request", memberRequestRoute);
 router.use("/member/v1/payment", memberPaymentRoute);
 router.use("/member/v1/bank-informations", memberBankInformationRoute);
 router.use("/member/v1/shop-levels", memberShopLevelRoute);
-router.use("/member/v1/shop-posts", memberShopPostRoute);
 router.use("/member/v1/shop-post-comments", memberShopPostCommentRoute);
 router.use("/member/v1/shop-ratings", memberShopRatingRoute);
 router.use("/member/v1/shop-post-reactions", memberShopPostReactionRoute);
@@ -138,7 +133,7 @@ router.use("/member/v1/friends", memberFriendRoute);
 router.use("/member/v1/post-reactions", memberPostReactionRoute);
 router.use("/member/v1/conversations", memberConversationRoute);
 router.use("/member/v1/messages", memberMessageRoute);
-router.use("/member/v1/members", memberMember);    
+router.use("/member/v1/members", memberMember);
 router.use("/member/v1/blocks", memberBlockRoute);
 router.use("/member/v1/meals", memberMealRoute);
 router.use("/member/v1/meal-trackers", memberMealTrackerRoute);
@@ -159,6 +154,6 @@ router.use("/member/v1", memberShopRatingListRoute);
 router.use("/member/v1/physical-limitations", memberPhysicalLimitationRoute);
 router.use("/member/v1/diet-types", memberDietTypeRoute);
 router.use("/member/v1/bad-habits", memberBadHabitRoute);
-router.use("/member/v1/weight-history", memberWeightHistory)
+router.use("/member/v1/weight-history", memberWeightHistory);
 
 export default router;

@@ -22,8 +22,8 @@ class PostReportService {
             name: true,
           },
         },
-        socialPost:{select: { id: true, content: true }},
-        shopPost:{select: { id: true, content: true }},
+        socialPost:{select: { id: true, caption: true }},
+        shopPost:{select: { id: true, caption: true }},
         reportCategories: {
           select: {
             id: true,

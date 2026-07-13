@@ -2,21 +2,14 @@ import { Prisma, Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import { BadRequestException } from "../../../helpers/exceptions";
 
-/** Member API: always only ACTIVE tags (no status in scope) */
-const memberTagWhere = (where?: Prisma.TagWhereInput) => ({
-  status: Status.ACTIVE,
-  ...where,
-});
-
-class TagService {
-  async findAll(where?: Prisma.TagWhereInput) {
-    const tags = await prisma.tag.findMany({
-      where: memberTagWhere(where),
+class PostCategoryService {
+  async findAll(where?: Prisma.PostCategoryWhereInput) {
+    const postCategories = await prisma.postCategory.findMany({
+      where: where,
       orderBy: { id: "desc" },
       select: {
         id: true,
         name: true,
-        status: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -25,19 +18,22 @@ class TagService {
       },
     });
 
-    return tags;
+    return postCategories;
   }
 
-  async findByPaginate(page: number, perPage: number, where?: Prisma.TagWhereInput) {
-    const tags = await prisma.tag.findMany({
-      where: memberTagWhere(where),
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    where?: Prisma.PostCategoryWhereInput,
+  ) {
+    const postCategories = await prisma.postCategory.findMany({
+      where: where,
       orderBy: { id: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
       select: {
         id: true,
         name: true,
-        status: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -46,35 +42,34 @@ class TagService {
       },
     });
 
-    const totalTags = await prisma.tag.count({
-      where: memberTagWhere(where),
+    const totalPostCategories = await prisma.postCategory.count({
+      where: where,
     });
 
     return {
-      data: tags,
+      data: postCategories,
       meta: {
-        totalCount: totalTags,
-        totalPages: Math.ceil(totalTags / perPage),
+        totalCount: totalPostCategories,
+        totalPages: Math.ceil(totalPostCategories / perPage),
         currentPage: page,
         perPage,
         prevPage: page > 1 ? page - 1 : null,
-        nextPage: page < Math.ceil(totalTags / perPage) ? page + 1 : null,
+        nextPage:
+          page < Math.ceil(totalPostCategories / perPage) ? page + 1 : null,
         hasPrevPage: page > 1,
-        hasNextPage: page < Math.ceil(totalTags / perPage),
+        hasNextPage: page < Math.ceil(totalPostCategories / perPage),
       },
     };
   }
 
   async findOne(id: number) {
-    const tag = await prisma.tag.findUnique({
+    const postCategory = await prisma.postCategory.findUnique({
       where: {
         id,
-        status: Status.ACTIVE,
       },
       select: {
         id: true,
         name: true,
-        status: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -85,13 +80,12 @@ class TagService {
       },
     });
 
-    if (!tag) {
-      throw new BadRequestException("Tag not found");
+    if (!postCategory) {
+      throw new BadRequestException("Post category not found");
     }
 
-    return tag;
+    return postCategory;
   }
 }
 
-export default TagService;
-
+export default PostCategoryService;

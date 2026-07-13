@@ -15,14 +15,14 @@ class PostReactionController {
         this.postReactionService = new PostReactionService();
     }
 
-    private caption(content: unknown) {
-        if (content == null || content === "") return null;
-        if (typeof content === "string") return content;
-        if (typeof content === "object" && content !== null && "caption" in content) {
-            const c = (content as Record<string, unknown>).caption;
+    private caption(caption: unknown) {
+        if (caption == null || caption === "") return null;
+        if (typeof caption === "string") return caption;
+        if (typeof caption === "object" && caption !== null && "caption" in caption) {
+            const c = (caption as Record<string, unknown>).caption;
             return c != null ? String(c) : null;
         }
-        return String(content);
+        return String(caption);
     }
 
     private filterValue(filters: unknown, fieldName: string) {
@@ -61,7 +61,7 @@ class PostReactionController {
         };
         post: {
             id: number;
-            content: Prisma.JsonValue;
+            caption: Prisma.JsonValue;
             shopId: number | null;
         };
     }) {
@@ -70,7 +70,7 @@ class PostReactionController {
             name: reaction.member.name,
             id: reaction.member.id,
         };
-        const postCaption = this.caption(reaction.post.content);
+        const postCaption = this.caption(reaction.post.caption);
 
         return {
             id: reaction.id,
@@ -268,7 +268,7 @@ class PostReactionController {
                 post: {
                     select: {
                         id: true,
-                        content: true,
+                        caption: true,
                         shopId: true,
                     },
                 },
@@ -330,7 +330,7 @@ class PostReactionController {
                     post: {
                         select: {
                             id: true,
-                            content: true,
+                            caption: true,
                             shopId: true,
                         },
                     },

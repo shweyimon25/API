@@ -1,65 +1,66 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
-import TagController from "../../../app/controllers/admin/v1/tag.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 import { hasPermission } from "../../../app/middlewares/guards/permission.guard";
+import PostCategoryController from "../../../app/controllers/admin/v1/post-category.controller";
 
 const router = Router();
-const tagController = new TagController();
+const postCategoryController = new PostCategoryController();
 
 router
   .route("/")
   .get([
     passport.authenticate("jwt", { session: false }),
-    hasPermission(['tag:list']),
+    hasPermission(["post-category:list"]),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await tagController.findAll(req, res)
+        await postCategoryController.findAll(req, res),
     ),
   ])
   .post([
     passport.authenticate("jwt", { session: false }),
-    hasPermission(['tag:create']),
+    hasPermission(["post-category:create"]),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await tagController.create(req, res)
+        await postCategoryController.create(req, res),
     ),
   ]);
 
-router.route("/common").get([
-  passport.authenticate("jwt", { session: false }),
-  asyncHandler(
-    async (req: Request, res: Response) =>
-      await tagController.findCommonAll(req, res)
-  ),
-]);
+router
+  .route("/common")
+  .get([
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await postCategoryController.findCommonAll(req, res),
+    ),
+  ]);
 
 router
   .route("/:id")
   .get([
     passport.authenticate("jwt", { session: false }),
-    hasPermission(['tag:read']),
+    hasPermission(["post-category:read"]),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await tagController.findOne(req, res)
+        await postCategoryController.findOne(req, res),
     ),
   ])
   .put([
     passport.authenticate("jwt", { session: false }),
-    hasPermission(['tag:update']),
+    hasPermission(["post-category:update"]),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await tagController.update(req, res)
+        await postCategoryController.update(req, res),
     ),
   ])
   .delete([
     passport.authenticate("jwt", { session: false }),
-    hasPermission(['tag:delete']),
+    hasPermission(["post-category:delete"]),
     asyncHandler(
       async (req: Request, res: Response) =>
-        await tagController.destroy(req, res)
+        await postCategoryController.destroy(req, res),
     ),
   ]);
 
 export default router;
-

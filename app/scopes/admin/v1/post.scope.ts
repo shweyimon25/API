@@ -1,29 +1,29 @@
 import { PrivencyType, Prisma } from "@prisma/client";
 
 interface PostScopeQuery {
-    content?: string;
-    tagId?: string;
-    privencyType?: string;
+  caption?: string;
+  postCategoryId?: string;
+  privencyType?: string;
 }
 
 export const postScope = (query: PostScopeQuery): Prisma.PostWhereInput => {
-    const { content, tagId, privencyType } = query;
+  const { caption, postCategoryId, privencyType } = query;
 
-    const where: Prisma.PostWhereInput = {};
+  const where: Prisma.PostWhereInput = {};
 
-    if (content) {
-        where.content = {
-            equals: JSON.stringify(content)
-        };
-    }
+  if (caption) {
+    where.caption = {
+      equals: JSON.stringify(caption),
+    };
+  }
 
-    if (tagId) {
-        where.tagId = +tagId;
-    }
+  if (postCategoryId) {
+    where.postCategoryId = +postCategoryId;
+  }
 
-    if (privencyType) {
-        where.privencyType = privencyType as PrivencyType;
-    }
+  if (privencyType) {
+    where.privencyType = privencyType as PrivencyType;
+  }
 
-    return where;
+  return where;
 };

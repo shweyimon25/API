@@ -6,7 +6,6 @@ import adminUserSeeder from "./admin-user.seeder";
 import memberTypeSeeder from "./member-type.seeder";
 import proSeeder from "./pros.seeder";
 import conSeeder from "./cons.seeder";
-import tagSeeder from "./tag.seeder";
 import physicalLimitaionSeeder from "./physical-limitation.seeder";
 import dietTypeSeeder from "./diet-type.seeder";
 import bodyAttentionAreaSeeder from "./body-attention-area.seeder";
@@ -21,6 +20,7 @@ import placeSeeder from "./place.seeder";
 import mealSeeder from "./meal.seeder";
 import planDurationSeeder from "./plan-duration.seeder";
 import workoutSeeder from "./workout.seeder";
+import postCategorySeeder from "./post-category.seeder";
 
 dotenv.config();
 
@@ -65,7 +65,7 @@ const main = async () => {
     await shopLevelSeeder();
     await proSeeder();
     await conSeeder();
-    await tagSeeder();
+    await postCategorySeeder();
     await physicalLimitaionSeeder();
     await dietTypeSeeder();
     await bodyAttentionAreaSeeder();

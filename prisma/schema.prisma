@@ -30,8 +30,6 @@ model User {
   updatedAt   DateTime @updatedAt
 
   roles                       UserRole[]
-  tagsCreated                 Tag[]                @relation("TagCreatedBy")
-  tagsUpdated                 Tag[]                @relation("TagUpdatedBy")
   usersCreated                User[]               @relation("UserCreatedBy")
   usersUpdated                User[]               @relation("UserUpdatedBy")
   rolesCreated                Role[]               @relation("RoleCreatedBy")
@@ -389,20 +387,18 @@ model MemberProfile {
   reason       String? @db.Text() // Only For Trainer Member
   certificates Json? // Only For Trainer Member
   photos       Json? // Only For Trainer Member
-  
-  idealWeight  Int?
-  bodyGoalType String?
-  bodyType     String?
-  energyLevel  String?
-  dailyLife    String?
-  averageNight String?
+
+  idealWeight         Int?
+  bodyGoalType        String?
+  bodyType            String?
+  energyLevel         String?
+  dailyLife           String?
+  averageNight        String?
   physicalActivity    String?
   preferredActivity   String?
   lastIdeaWeight      String?
   dailyWaterIntake    String?
   proficientLevelType String?
-
-
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -524,33 +520,22 @@ model ShopRating {
   @@unique([memberId, shopId])
 }
 
-model Tag {
-  id     Int    @id @default(autoincrement())
-  name   String @unique
-  status Status @default(ACTIVE)
-
-  createdById Int?
-  updatedById Int?
-  createdBy   User?    @relation("TagCreatedBy", fields: [createdById], references: [id])
-  updatedBy   User?    @relation("TagUpdatedBy", fields: [updatedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  posts Post[]
-}
-
 model Post {
-  id           Int           @id @default(autoincrement())
-  content      Json
-  tag          Tag?          @relation(fields: [tagId], references: [id])
-  tagId        Int?
-  privencyType PrivencyType? @default(PUBLIC)
-  timeAgo      DateTime      @default(now())
-  media        Json
-  viewCount    Int           @default(0)
+  id             Int           @id @default(autoincrement())
+  caption        String?
+  postCategory   PostCategory? @relation(fields: [postCategoryId], references: [id])
+  postCategoryId Int?
+  privencyType   PrivencyType? @default(PUBLIC)
+  timeAgo        DateTime      @default(now())
+  media          Json
+  viewCount      Int           @default(0)
 
+  // Only For Shop Post
   shop   Shop? @relation(fields: [shopId], references: [id])
   shopId Int?
+
+  currency String?
+  price    Float   @default(0)
 
   memberId Int
   member   Member @relation(fields: [memberId], references: [id])
@@ -564,8 +549,16 @@ model Post {
   shopReports   PostReport[]   @relation("ShopPostReports")
   socialSaves   PostSave[]     @relation("SocialPostSaves")
   shopSaves     PostSave[]     @relation("ShopPostSaves")
-  socialViews   PostViews[]   @relation("SocialPostViews")
-  shopViews   PostViews[]   @relation("ShopPostViews")
+  socialViews   PostViews[]    @relation("SocialPostViews")
+  shopViews     PostViews[]    @relation("ShopPostViews")
+}
+
+model PostCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
 }
 
 model PostSave {
@@ -602,8 +595,8 @@ model PostReaction {
 
 enum PrivencyType {
   PUBLIC
-  PRIVATE
   FRIEND
+  ONLY_ME
 }
 
 model PostComment {
@@ -1109,26 +1102,26 @@ model PostReport {
 }
 
 model PostViews {
-  id            Int @id @default(autoincrement())
-  socialPostId  Int?
-  socialPost    Post?  @relation("SocialPostViews", fields: [socialPostId], references: [id], onDelete: Cascade)
+  id           Int   @id @default(autoincrement())
+  socialPostId Int?
+  socialPost   Post? @relation("SocialPostViews", fields: [socialPostId], references: [id], onDelete: Cascade)
 
-  shopPostId    Int?
-  shopPost      Post? @relation("ShopPostViews", fields: [shopPostId], references: [id], onDelete: Cascade)
+  shopPostId Int?
+  shopPost   Post? @relation("ShopPostViews", fields: [shopPostId], references: [id], onDelete: Cascade)
 
-  memberId      Int
-  member        Member @relation(fields: [memberId], references: [id])
-  
-  createdAt     DateTime @default(now())
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+
+  createdAt DateTime @default(now())
+
   @@unique([memberId, socialPostId])
   @@unique([memberId, shopPostId])
-
 }
 
 model PlanDuration {
-  id Int @id @default(autoincrement())
-  name String
-  value Int
+  id        Int      @id @default(autoincrement())
+  name      String
+  value     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -1148,21 +1141,21 @@ model WeightHistory {
   armLeft    Float    @default(0)
   armRight   Float    @default(0)
   thighRight Float    @default(0)
-  thighLeft  Float    @default(0) 
+  thighLeft  Float    @default(0)
   bmi        Float    @default(0)
   bfp        Float    @default(0)
 
-  memberId      Int
-  member        Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 model MemberFitnessSurvey {
-  id                Int                @id @default(autoincrement())
-  
-  memberId          Int
-  member            Member             @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id Int @id @default(autoincrement())
 
-  date              DateTime?          @default(now())
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  date              DateTime?            @default(now())
   bodyGoal          BodyGoalType?
   bodyType          BodyType?
   energyLevel       EngergyLevel?
@@ -1173,7 +1166,6 @@ model MemberFitnessSurvey {
   lastIdealWeight   LastIdeaWeight?
   dailyWaterIntake  DailyWaterIntake?
   proficientLevel   ProficientLevelType?
-
 }
 
 enum NotificationType {

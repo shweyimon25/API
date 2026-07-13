@@ -1,7 +1,5 @@
 import prisma from "../../../../prisma/client";
-import {
-  NotFoundException,
-} from "../../../helpers/exceptions";
+import { NotFoundException } from "../../../helpers/exceptions";
 import { Prisma } from "@prisma/client";
 
 class PostService {
@@ -12,12 +10,6 @@ class PostService {
         id: "desc",
       },
       include: {
-        tag: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         _count: {
           select: {
             postComments: true,
@@ -29,7 +21,11 @@ class PostService {
     return posts;
   }
 
-  async findByPaginate(page: number, perPage: number, where?: Prisma.PostWhereInput) {
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    where?: Prisma.PostWhereInput,
+  ) {
     const posts = await prisma.post.findMany({
       where,
       orderBy: {
@@ -38,12 +34,6 @@ class PostService {
       skip: (page - 1) * perPage,
       take: perPage,
       include: {
-        tag: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
         _count: {
           select: {
             postComments: true,
@@ -73,14 +63,6 @@ class PostService {
     const post = await prisma.post.findUnique({
       where: {
         id,
-      },
-      include: {
-        tag: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
     });
 

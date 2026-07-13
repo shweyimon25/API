@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
-import TagController from "../../../app/controllers/member/v1/tag.controller";
+import TagController from "../../../app/controllers/member/v1/post-category.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
 const router = Router();

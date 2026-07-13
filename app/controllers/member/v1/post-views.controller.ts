@@ -4,14 +4,14 @@ import prisma from "../../../../prisma/client";
 
 class PostViewsController {
 
-    private caption(content: unknown) {
-        if (content == null || content === "") return null;
-        if (typeof content === "string") return content;
-        if (typeof content === "object" && content !== null && "caption" in content) {
-            const c = (content as Record<string, unknown>).caption;
+    private caption(caption: unknown) {
+        if (caption == null || caption === "") return null;
+        if (typeof caption === "string") return caption;
+        if (typeof caption === "object" && caption !== null && "caption" in caption) {
+            const c = (caption as Record<string, unknown>).caption;
             return c != null ? String(c) : null;
         }
-        return String(content);
+        return String(caption);
     }
 
     private filterValue(filters: unknown, fieldName: string) {
@@ -41,8 +41,8 @@ class PostViewsController {
         name: string;
         profile: { profilePhoto: string | null } | null;
         };
-        socialPost: { id: number; content: unknown; media: unknown, viewCount: number } | null;
-        shopPost: { id: number; content: unknown; media: unknown, viewCount: number } | null;
+        socialPost: { id: number; caption: unknown; media: unknown, viewCount: number } | null;
+        shopPost: { id: number; caption: unknown; media: unknown, viewCount: number } | null;
     }) {
         
         return {
@@ -61,7 +61,7 @@ class PostViewsController {
         },
         social_post_id: {
             id: view.socialPost?.id ?? null,
-            caption: view.socialPost ? this.caption(view.socialPost.content) : null,
+            caption: view.socialPost ? this.caption(view.socialPost.caption) : null,
             react_count: 0,
             view_count: view.socialPost ? view.socialPost.viewCount : 0,
             comment_count: 0,
@@ -69,7 +69,7 @@ class PostViewsController {
         },
         shop_post_id: {
             id: view.shopPost?.id ?? null,
-            caption: view.shopPost ? this.caption(view.shopPost.content) : null,
+            caption: view.shopPost ? this.caption(view.shopPost.caption) : null,
             react_count: 0,
             view_count: view.shopPost ? view.shopPost.viewCount : 0,
             comment_count: 0,
@@ -141,8 +141,8 @@ class PostViewsController {
                         profile: { select: { profilePhoto: true } },
                         },
                     },
-                    socialPost: { select: { id: true, content: true, media: true, viewCount: true } },
-                    shopPost: { select: { id: true, content: true, media: true, viewCount: true } },
+                    socialPost: { select: { id: true, caption: true, media: true, viewCount: true } },
+                    shopPost: { select: { id: true, caption: true, media: true, viewCount: true } },
                 },
             }),
         ]);
@@ -207,8 +207,8 @@ class PostViewsController {
             profile: { select: { profilePhoto: true } },
             },
         },
-        socialPost: { select: { id: true, content: true, media: true } },
-        shopPost: { select: { id: true, content: true, media: true } },
+        socialPost: { select: { id: true, caption: true, media: true } },
+        shopPost: { select: { id: true, caption: true, media: true } },
         };
 
         try {
