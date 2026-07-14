@@ -6,42 +6,76 @@ import {
   memberShopPostUpdateSchema,
 } from "../../../schemas/member/v1/member-shop-post.schema";
 import prisma from "../../../../prisma/client";
-import { formatDate, generateTimeAgo } from "../../../helpers/helper";
+import { formatDate } from "../../../helpers/helper";
 import { upload } from "../../../helpers/media-upload";
 
 class ShopPostController {
   async memberShopPosts(req: Request, res: Response) {
-    // const memberId = (req.user as Member).id;
-    // const params = req.body?.params ?? {};
-    // const offset = Number(params.offset ?? 0);
-    // const limit = Number(params.limit ?? 0);
-    // const where = buildMemberShopPostWhere(params.filters);
-    // const orderBy = parseMemberShopPostOrder(params.order);
-    // const include = memberShopPostInclude(memberId);
-    // const [count, posts] = await Promise.all([
-    //   prisma.post.count({ where }),
-    //   prisma.post.findMany({
-    //     where,
-    //     orderBy,
-    //     ...(Number.isFinite(offset) && offset > 0 ? { skip: offset } : {}),
-    //     ...(Number.isFinite(limit) && limit > 0 ? { take: limit } : {}),
-    //     include,
-    //   }),
-    // ]);
-    // const results = await Promise.all(
-    //   posts.map((post) => formatMemberShopPostWithShare(post, memberId)),
-    // );
-    // return res.json({
-    //   jsonrpc: "2.0",
-    //   id: null,
-    //   result: {
-    //     isFullFilled: true,
-    //     data: {
-    //       count,
-    //       results,
-    //     },
-    //   },
-    // });
+    // Filter
+    const filters = req.body.params.filters;
+
+    const partnerIdMatch = filters.match(/\('partner_id','=',(\d+)\)/);
+
+    const where: Prisma.PostWhereInput = {};
+
+    if (partnerIdMatch) {
+      where.memberId = Number(partnerIdMatch[1]);
+    }
+
+    // Shop Post List
+    const shopPosts = await prisma.post.findMany({
+      where: {
+        memberId: (req.user as Member).id,
+        shopId: {
+          not: null,
+        },
+      },
+      include: {
+        shop: true,
+        member: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
+
+    return res.json({
+      jsonrpc: "2.0",
+      id: null,
+      result: {
+        isFullFilled: true,
+        data: {
+          count: shopPosts.length,
+          results: shopPosts.map((shopPost) => {
+            return {
+              id: shopPost.id,
+              caption: shopPost.caption,
+              partner_id: {
+                id: shopPost.member.id,
+                image_1920: shopPost.member.profile?.coverPhoto ?? "",
+                name: shopPost.member.name,
+              },
+              view_type:
+                shopPost.privencyType === PrivencyType.PUBLIC
+                  ? "public"
+                  : shopPost.privencyType === PrivencyType.FRIEND
+                    ? "friend"
+                    : "only_me",
+              create_date: formatDate(shopPost.createdAt),
+              media_line: shopPost.media,
+              view_count: 9,
+              react_count: 0,
+              comment_count: 6,
+              share_count: 0,
+              is_react: false,
+              price: shopPost.price,
+              currency: shopPost.currency,
+            };
+          }),
+        },
+      },
+    });
   }
 
   async memberShopPostCreate(req: Request, res: Response) {
