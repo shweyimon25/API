@@ -84,7 +84,9 @@ class MemberSocialPostController {
 
         // post_category =
         ...(postCategory && {
-          postCategory,
+          postCategory: {
+            name: postCategory,
+          },
         }),
       },
       include: {
