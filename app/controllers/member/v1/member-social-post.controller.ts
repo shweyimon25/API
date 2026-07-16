@@ -131,7 +131,17 @@ class MemberSocialPostController {
               share_count: 1,
               is_react: false,
               is_reels: false,
-              share_post_id: null,
+              share_post_id: {
+                id: null,
+                caption: null,
+                create_uid: null,
+                partner_id: {
+                  id: null,
+                  name: null,
+                  image_1920:
+                    "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
+                },
+              },
             };
           }),
         },
@@ -291,7 +301,17 @@ class MemberSocialPostController {
           share_count: 0,
           is_react: false,
           is_reels: false,
-          share_post_id: null,
+          share_post_id: {
+            id: null,
+            caption: null,
+            create_uid: null,
+            partner_id: {
+              id: null,
+              name: null,
+              image_1920:
+                "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
+            },
+          },
         },
       },
     });
@@ -625,7 +645,17 @@ class MemberSocialPostController {
           share_count: 0,
           is_react: false,
           is_reels: false,
-          share_post_id: null,
+          share_post_id: {
+            id: null,
+            caption: null,
+            create_uid: null,
+            partner_id: {
+              id: null,
+              name: null,
+              image_1920:
+                "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
+            },
+          },
         },
       },
     });
