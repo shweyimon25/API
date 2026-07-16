@@ -11,18 +11,23 @@ export const updatePostCommentSchema = z.object({
 });
 
 export const createPostCommentReactionSchema = z.object({
-  postCommentId: z.coerce.number().min(1, { message: "Post comment is required" }),
+  postCommentId: z.coerce
+    .number()
+    .min(1, { message: "Post comment is required" }),
   reaction: z.string().min(1, { message: "Reaction is required" }),
 });
 
 export const deletePostCommentReactionSchema = z.object({
-  postCommentId: z.coerce.number().min(1, { message: "Post comment is required" }),
+  postCommentId: z.coerce
+    .number()
+    .min(1, { message: "Post comment is required" }),
 });
 
 export type CreatePostCommentInput = z.infer<typeof createPostCommentSchema>;
 export type UpdatePostCommentInput = z.infer<typeof updatePostCommentSchema>;
-export type CreatePostCommentReactionInput = z.infer<typeof createPostCommentReactionSchema>;
-export type DeletePostCommentReactionInput = z.infer<typeof deletePostCommentReactionSchema>;
-
-
-
+export type CreatePostCommentReactionInput = z.infer<
+  typeof createPostCommentReactionSchema
+>;
+export type DeletePostCommentReactionInput = z.infer<
+  typeof deletePostCommentReactionSchema
+>;
