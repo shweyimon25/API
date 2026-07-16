@@ -95,8 +95,8 @@ class ShopController {
         id,
       },
       include: {
-        profile: true
-      }
+        profile: true,
+      },
     });
 
     // Upload To OSS
@@ -141,7 +141,7 @@ class ShopController {
           partner_id: {
             id: currentMember?.id,
             name: currentMember?.name,
-            image_1920: currentMember?.profile?.coverPhoto ?? ""
+            image_1920: currentMember?.profile?.coverPhoto ?? "",
           },
           member_type_level_id: {
             id: shop.shopLevel?.id,
@@ -172,7 +172,7 @@ class ShopController {
       where: {
         memberId: id,
         id: +req.params.id,
-      }
+      },
     });
 
     if (!existingShop) {
@@ -206,8 +206,8 @@ class ShopController {
       include: {
         member: {
           include: {
-            profile: true
-          }
+            profile: true,
+          },
         },
         shopLevel: true,
       },
@@ -220,34 +220,33 @@ class ShopController {
         isFullFilled: true,
         message: "Update Successfully.",
         data: {
-          "id": updateShop.id,
-          "name": updateShop.name,
-          "partner_id": {
-            "id": updateShop.member?.id,
-            "image_1920": updateShop.member?.profile?.coverPhoto ?? "",
-            "name": updateShop.member?.name,
+          id: updateShop.id,
+          name: updateShop.name,
+          partner_id: {
+            id: updateShop.member?.id,
+            image_1920: updateShop.member?.profile?.coverPhoto ?? "",
+            name: updateShop.member?.name,
           },
-          "member_type_level_id": {
-            "id": updateShop.shopLevelId,
-            "name": updateShop.shopLevel?.name,
-            "count": updateShop.shopLevel?.postLimit,
+          member_type_level_id: {
+            id: updateShop.shopLevelId,
+            name: updateShop.shopLevel?.name,
+            count: updateShop.shopLevel?.postLimit,
           },
-          "create_date": formatDate(updateShop.createdAt),
-          "image": updateShop.logo,
-          "total_post": 0,
-          "rate_count": 0.0,
-          "total_rate_user_count": 0.0,
-          "five_star": 0,
-          "four_star": 0,
-          "three_star": 0,
-          "two_star": 0,
-          "one_star": 0,
-          "remaining_post": 10,
-          "is_rate": null
-        }
-      }
+          create_date: formatDate(updateShop.createdAt),
+          image: updateShop.logo,
+          total_post: 0,
+          rate_count: 0.0,
+          total_rate_user_count: 0.0,
+          five_star: 0,
+          four_star: 0,
+          three_star: 0,
+          two_star: 0,
+          one_star: 0,
+          remaining_post: 10,
+          is_rate: null,
+        },
+      },
     });
-
   }
 
   async memberShopResultCheck(req: Request, res: Response) {

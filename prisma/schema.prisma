@@ -540,6 +540,10 @@ model Post {
   memberId Int
   member   Member @relation(fields: [memberId], references: [id])
 
+  sharePostId Int?
+  sharePost   Post?  @relation("PostShares", fields: [sharePostId], references: [id])
+  sharedPosts Post[] @relation("PostShares")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

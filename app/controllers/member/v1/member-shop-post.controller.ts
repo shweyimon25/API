@@ -13,19 +13,16 @@ class ShopPostController {
   async memberShopPosts(req: Request, res: Response) {
     // Filter
     const filters = req.body.params.filters;
+    const partnerIdMatch = filters.match(
+      /\('partner_id'\s*,\s*'='\s*,\s*(\d+)\)/,
+    );
 
-    const partnerIdMatch = filters.match(/\('partner_id','=',(\d+)\)/);
-
-    const where: Prisma.PostWhereInput = {};
-
-    if (partnerIdMatch) {
-      where.memberId = Number(partnerIdMatch[1]);
-    }
+    const memberId = partnerIdMatch ? Number(partnerIdMatch[1]) : undefined;
 
     // Shop Post List
     const shopPosts = await prisma.post.findMany({
       where: {
-        memberId: (req.user as Member).id,
+        memberId: memberId,
         shopId: {
           not: null,
         },
@@ -69,8 +66,6 @@ class ShopPostController {
               comment_count: 6,
               share_count: 0,
               is_react: false,
-              price: shopPost.price,
-              currency: shopPost.currency,
             };
           }),
         },
@@ -252,8 +247,6 @@ class ShopPostController {
           comment_count: 0,
           share_count: 0,
           is_react: false,
-          price: shopPost.price,
-          currency: shopPost.currency,
         },
       },
     });
@@ -404,8 +397,6 @@ class ShopPostController {
           comment_count: 0,
           share_count: 0,
           is_react: false,
-          price: updateShopPost.price,
-          currency: updateShopPost.currency,
         },
       },
     });

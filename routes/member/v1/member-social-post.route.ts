@@ -24,7 +24,7 @@ router.post("/member.social.post/create", [
   auth,
   asyncHandler(
     async (req: Request, res: Response) =>
-      await postController.memberSocialPostCreate(req, res),
+      await postController.memberSocialSharePostCreate(req, res),
   ),
 ]);
 
@@ -36,21 +36,21 @@ router.post("/member.social.post/form-data/create", [
   ),
 ]);
 
-// router.post("/member.post.save/create", [
-//   auth,
-//   asyncHandler(
-//     async (req: Request, res: Response) =>
-//       await postController.memberPostSaveCreate(req, res),
-//   ),
-// ]);
+router.post("/member.post.save/create", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postController.memberPostSaveCreate(req, res),
+  ),
+]);
 
-// router.post("/member.post.save/:id/delete", [
-//   auth,
-//   asyncHandler(
-//     async (req: Request, res: Response) =>
-//       await postController.memberPostSaveDelete(req, res),
-//   ),
-// ]);
+router.post("/member.post.save/:id/delete", [
+  auth,
+  asyncHandler(
+    async (req: Request, res: Response) =>
+      await postController.memberPostSaveDelete(req, res),
+  ),
+]);
 
 router.get("/member.post.react", [
   auth,
