@@ -514,18 +514,19 @@ class MemberSocialPostController {
     // Check Current Social Post
     const socialPost = await prisma.post.findFirst({
       where: {
+        id: +req.params.id,
         memberId: member.id,
         shopId: null,
       },
     });
 
-    if (!member) {
+    if (!socialPost) {
       return res.json({
         jsonrpc: "2.0",
         id: null,
         result: {
           isFullFilled: false,
-          message: "social post not found.",
+          message: "Social post not found.",
         },
       });
     }
@@ -595,7 +596,10 @@ class MemberSocialPostController {
           : PrivencyType.ONLY_ME;
 
     // Create Social Post
-    const updateSocialPost = await prisma.post.create({
+    const updateSocialPost = await prisma.post.update({
+      where: {
+        id: +req.params.id,
+      },
       data: {
         caption: data.caption ?? socialPost?.caption,
         privencyType: privencyType ?? socialPost?.privencyType,
