@@ -339,7 +339,7 @@ class MemberSocialPostController {
     // Check Share Post Id
     const existingSharePost = await prisma.post.findFirst({
       where: {
-        id: data.share_post_id,
+        id: +data.share_post_id,
         shop: null,
         memberId: (req.user as Member).id,
       },
@@ -359,7 +359,7 @@ class MemberSocialPostController {
     // Check Post Category
     const existingPostCategory = await prisma.postCategory.findFirst({
       where: {
-        id: data.share_post_id,
+        name: data.post_category,
       },
     });
 
@@ -388,7 +388,7 @@ class MemberSocialPostController {
         caption: data.caption,
         postCategoryId: existingPostCategory.id,
         privencyType,
-        sharePostId: data.share_post_id,
+        sharePostId: +data.share_post_id,
         memberId: (req.user as Member).id,
         media: existingSharePost.media as Prisma.InputJsonValue,
       },

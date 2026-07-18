@@ -36,7 +36,7 @@ import adminReportCategoryRoute from "./admin/v1/report-category.route";
 import memberAuthRoute from "./member/v1/auth.route";
 import memberProfileRoute from "./member/v1/profile.route";
 import memberSocialPostRoute from "./member/v1/member-social-post.route";
-import memberPostCommentRoute from "./member/v1/post-comment.route";
+import memberPostCommentRoute from "./member/v1/member-post-comment.route";
 import memberTagRoute from "./member/v1/tag.route";
 import memberMemberTypeRoute from "./member/v1/member-type.route";
 import memberPlanRoute from "./member/v1/member-plan.route";

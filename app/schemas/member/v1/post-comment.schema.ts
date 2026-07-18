@@ -1,9 +1,11 @@
 import { z } from "zod";
 
 export const createPostCommentSchema = z.object({
-  postId: z.coerce.number().min(1, { message: "Post is required" }),
-  comment: z.string().min(1, { message: "Comment is required" }),
-  parentId: z.coerce.number().min(1).optional(),
+      "name": z.string("Name").min(1, ""),
+    "mentioned_users": "",
+    // "social_post_id": 10,
+    "shop_post_id": 6,
+    "parent_command_id": null
 });
 
 export const updatePostCommentSchema = z.object({

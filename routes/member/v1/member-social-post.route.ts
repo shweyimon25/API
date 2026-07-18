@@ -2,7 +2,7 @@ import passport from "passport";
 import { Request, Response, Router } from "express";
 import PostController from "../../../app/controllers/member/v1/member-social-post.controller";
 import PostReactionController from "../../../app/controllers/member/v1/post-reaction.controller";
-import PostCommentController from "../../../app/controllers/member/v1/post-comment.controller";
+import PostCommentController from "../../../app/controllers/member/v1/member-post-comment.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
 const router = Router();
