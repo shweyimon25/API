@@ -49,65 +49,65 @@ function mapComment(c: any): any {
 
 class PostCommentService {
   async create(input: CreatePostCommentInput, memberId: number) {
-    const { postId, comment, parentId } = input;
+    // const { postId, comment, parentId } = input;
 
-    const post = await prisma.post.findFirst({
-      where: { id: postId, privencyType: PrivencyType.PUBLIC },
-    });
-    if (!post) {
-      throw new NotFoundException("Post not found");
-    }
+    // const post = await prisma.post.findFirst({
+    //   where: { id: postId, privencyType: PrivencyType.PUBLIC },
+    // });
+    // if (!post) {
+    //   throw new NotFoundException("Post not found");
+    // }
 
-    if (parentId != null) {
-      const parent = await prisma.postComment.findFirst({
-        where: { id: parentId, postId },
-      });
-      if (!parent) {
-        throw new BadRequestException(
-          "Parent comment not found or does not belong to this post"
-        );
-      }
-    }
+    // if (parentId != null) {
+    //   const parent = await prisma.postComment.findFirst({
+    //     where: { id: parentId, postId },
+    //   });
+    //   if (!parent) {
+    //     throw new BadRequestException(
+    //       "Parent comment not found or does not belong to this post"
+    //     );
+    //   }
+    // }
 
-    const created = await prisma.postComment.create({
-      data: {
-        postId,
-        memberId,
-        comment,
-        parentId: parentId ?? null,
-      },
-      include: {
-        member: { select: memberSelect },
-      },
-    });
+    // const created = await prisma.postComment.create({
+    //   data: {
+    //     postId,
+    //     memberId,
+    //     comment,
+    //     parentId: parentId ?? null,
+    //   },
+    //   include: {
+    //     member: { select: memberSelect },
+    //   },
+    // });
 
-    const withReplies = await prisma.postComment.findUnique({
-      where: { id: created.id },
-      include: {
-        member: { select: memberSelect },
-        postCommentReactions: {
-          select: {
-            postCommentId: true,
-            memberId: true,
-            reaction: true,
-          },
-        },
-        replies: {
-          include: {
-            member: { select: memberSelect },
-            postCommentReactions: {
-              select: {
-                postCommentId: true,
-                memberId: true,
-                reaction: true,
-              },
-            },
-          },
-          orderBy: { createdAt: "asc" },
-        },
-      },
-    });
-    return withReplies!;
+    // const withReplies = await prisma.postComment.findUnique({
+    //   where: { id: created.id },
+    //   include: {
+    //     member: { select: memberSelect },
+    //     postCommentReactions: {
+    //       select: {
+    //         postCommentId: true,
+    //         memberId: true,
+    //         reaction: true,
+    //       },
+    //     },
+    //     replies: {
+    //       include: {
+    //         member: { select: memberSelect },
+    //         postCommentReactions: {
+    //           select: {
+    //             postCommentId: true,
+    //             memberId: true,
+    //             reaction: true,
+    //           },
+    //         },
+    //       },
+    //       orderBy: { createdAt: "asc" },
+    //     },
+    //   },
+    // });
+    // return withReplies!;
   }
 
   async findOne(id: number) {
