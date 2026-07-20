@@ -278,10 +278,10 @@ model Member {
   bodyMeasurement          BodyMeasurement?
   shopUpgradeRequests      ShopUpgradeRequest[]
   posts                    Post[]
-  friends                  Friend[]                  @relation("MemberFriends")
-  friendsOf                Friend[]                  @relation("MemberFriend")
-  friendRequests           FriendRequest[]           @relation("MemberFriendRequestSender")
-  friendRequestsOf         FriendRequest[]           @relation("MemberFriendRequestReceiver")
+  friends                  Friend[]                   @relation("MemberFriends")
+  friendsOf                Friend[]                   @relation("MemberFriend")
+  friendRequests           FriendRequest[]            @relation("MemberFriendRequestSender")
+  friendRequestsOf         FriendRequest[]            @relation("MemberFriendRequestReceiver")
   fcmToken                 MemberFcmToken?
   postReactions            PostReaction[]
   postSaves                PostSave[]
@@ -290,13 +290,14 @@ model Member {
   attendances              Attendance[]
   messageReactions         MessageReaction[]
   postCommentReactions     PostCommentReaction[]
-  blocks                   Block[]                   @relation("MemberBlocked")
-  blockedBy                Block[]                   @relation("MemberBlockedBy")
+  blocks                   Block[]                    @relation("MemberBlocked")
+  blockedBy                Block[]                    @relation("MemberBlockedBy")
   mealTrackers             MealTracker[]
   PostReport               PostReport[]
   PostViews                PostViews[]
   weightHistories          WeightHistory[]
   fitnessSurveys           MemberFitnessSurvey[]
+  postCommentMentionMember PostCommentMentionMember[]
 }
 
 model MemberFcmToken {
@@ -604,19 +605,32 @@ enum PrivencyType {
 }
 
 model PostComment {
-  id        Int           @id @default(autoincrement())
-  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    Int
-  memberId  Int
-  member    Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  comment   String        @db.Text()
-  parentId  Int?
-  parent    PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   PostComment[] @relation("CommentReplies")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id            Int                        @id @default(autoincrement())
+  post          Post                       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId        Int
+  memberId      Int
+  member        Member                     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  comment       String                     @db.Text()
+  mentionsUsers PostCommentMentionMember[]
+  type          String
+  parentId      Int?
+  parent        PostComment?               @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       PostComment[]              @relation("CommentReplies")
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
 
   postCommentReactions PostCommentReaction[]
+}
+
+model PostCommentMentionMember {
+  id            Int          @id @default(autoincrement())
+  memberId      Int
+  member        Member       @relation(fields: [memberId], references: [id])
+  postComment   PostComment? @relation(fields: [postCommentId], references: [id])
+  postCommentId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PostCommentReaction {
