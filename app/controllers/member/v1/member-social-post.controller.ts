@@ -14,6 +14,9 @@ import { formatDate } from "../../../helpers/helper";
 class MemberSocialPostController {
   async memberSocialPosts(req: Request, res: Response) {
     const filters = req.body.params.filters;
+    const offset = req.body.params.offset;
+    const limit = req.body.params.limit;
+    const order = req.body.params.order;
 
     const partnerIdMatch = filters.match(
       /\('partner_id'\s*,\s*'='\s*,\s*(\d+)\)/,
@@ -45,59 +48,66 @@ class MemberSocialPostController {
 
     const postCategory = postCategoryMatch ? postCategoryMatch[1] : undefined;
 
-    const socialPosts = await prisma.post.findMany({
-      where: {
-        // Social post only
-        shopId: null,
+    // Pagination
+    const skip = Math.max(0, Number(offset) || 0);
+    const take = Math.max(1, Number(limit) || 20);
+    const orderDirection =
+      String(order || "create_date desc").split(" ")[1]?.toLowerCase() === "asc"
+        ? "asc"
+        : "desc";
 
-        // If partner_id exists in filters, use it.
-        ...(memberId !== undefined && {
-          memberId,
-        }),
-
-        // caption ilike
-        ...(caption && {
-          caption: {
-            contains: caption,
-            mode: "insensitive",
-          },
-        }),
-
-        // partner_id.name ilike
-        ...(partnerName && {
-          member: {
-            profile: {
-              name: {
-                contains: partnerName,
-                mode: "insensitive",
-              },
+    const where = {
+      shopId: null,
+      ...(memberId !== undefined && {
+        memberId,
+      }),
+      ...(caption && {
+        caption: {
+          contains: caption,
+          mode: "insensitive" as const,
+        },
+      }),
+      ...(partnerName && {
+        member: {
+          profile: {
+            name: {
+              contains: partnerName,
+              mode: "insensitive" as const,
             },
           },
-        }),
-
-        // partner_id.client_code =
-        ...(clientCode && {
-          member: {
-            clientCode,
-          },
-        }),
-
-        // post_category =
-        ...(postCategory && {
-          postCategory: {
-            name: postCategory,
-          },
-        }),
-      },
-      include: {
-        member: {
-          include: {
-            profile: true,
-          },
         },
-        postCategory: true,
-      },
-    });
+      }),
+      ...(clientCode && {
+        member: {
+          clientCode,
+        },
+      }),
+      ...(postCategory && {
+        postCategory: {
+          name: postCategory,
+        },
+      }),
+    };
+
+    const [count, socialPosts] = await Promise.all([
+      prisma.post.count({ where }),
+      prisma.post.findMany({
+        where,
+        include: {
+          member: {
+            include: {
+              profile: true,
+            },
+          },
+          postCategory: true,
+        },
+        orderBy: {
+          createdAt: orderDirection,
+        },
+        skip,
+        take,
+      }),
+    ]);
 
     return res.json({
       jsonrpc: "2.0",
@@ -105,7 +115,7 @@ class MemberSocialPostController {
       result: {
         isFullFilled: true,
         data: {
-          count: socialPosts.length,
+          count: count,
           results: socialPosts.map((socialPost) => {
             return {
               id: socialPost.id,

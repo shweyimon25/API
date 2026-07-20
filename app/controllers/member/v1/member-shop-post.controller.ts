@@ -13,29 +13,50 @@ class ShopPostController {
   async memberShopPosts(req: Request, res: Response) {
     // Filter
     const filters = req.body.params.filters;
+    const offset = req.body.params.offset;
+    const limit = req.body.params.limit;
+    const order = req.body.params.order;
+
     const partnerIdMatch = filters.match(
       /\('partner_id'\s*,\s*'='\s*,\s*(\d+)\)/,
     );
 
     const memberId = partnerIdMatch ? Number(partnerIdMatch[1]) : undefined;
 
-    // Shop Post List
-    const shopPosts = await prisma.post.findMany({
-      where: {
-        memberId: memberId,
-        shopId: {
-          not: null,
-        },
+    // Pagination
+    const skip = Math.max(0, Number(offset) || 0);
+    const take = Math.max(1, Number(limit) || 20);
+    const orderDirection =
+      String(order || "create_date desc").split(" ")[1]?.toLowerCase() === "asc"
+        ? "asc"
+        : "desc";
+
+    const where = {
+      memberId: memberId,
+      shopId: {
+        not: null,
       },
-      include: {
-        shop: true,
-        member: {
-          include: {
-            profile: true,
+    };
+
+    const [count, shopPosts] = await Promise.all([
+      prisma.post.count({ where }),
+      prisma.post.findMany({
+        where,
+        include: {
+          shop: true,
+          member: {
+            include: {
+              profile: true,
+            },
           },
         },
-      },
-    });
+        orderBy: {
+          createdAt: orderDirection,
+        },
+        skip,
+        take,
+      }),
+    ]);
 
     return res.json({
       jsonrpc: "2.0",
@@ -43,7 +64,7 @@ class ShopPostController {
       result: {
         isFullFilled: true,
         data: {
-          count: shopPosts.length,
+          count: count,
           results: shopPosts.map((shopPost) => {
             return {
               id: shopPost.id,

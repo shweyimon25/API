@@ -12,6 +12,7 @@ class memberPostCommentController {
   async memberPostComments(req: Request, res: Response) {
     // Filter
     const filters = req.body.params.filters;
+    
     const socialPostIdMatch = filters.match(
       /\('social_post_id'\s*,\s*'='\s*,\s*(\d+)\)/,
     );
@@ -51,7 +52,7 @@ class memberPostCommentController {
         parent: true,
         replies: true,
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
     });
 
     return res.json({
