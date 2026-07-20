@@ -12,7 +12,7 @@ class memberPostCommentController {
   async memberPostComments(req: Request, res: Response) {
     // Filter
     const filters = req.body.params.filters;
-    
+
     const socialPostIdMatch = filters.match(
       /\('social_post_id'\s*,\s*'='\s*,\s*(\d+)\)/,
     );
@@ -31,7 +31,7 @@ class memberPostCommentController {
       where: {
         postId: postId,
         parentId: null,
-        ...(socialPostId ? { type: "post" } : { type: "shop" }),
+        ...(socialPostId ? { type: "social" } : { type: "shop" }),
       },
       include: {
         mentionsUsers: {
@@ -89,20 +89,28 @@ class memberPostCommentController {
                 image_1920: comment.member.profile?.coverPhoto ?? "",
               },
 
-              ...(comment.type === "shop"
-                ? {
-                    shop_post_id: {
+              shop_post_id:
+                comment.type === "shop"
+                  ? {
                       id: comment.postId,
                       caption: comment.post.caption,
+                    }
+                  : {
+                      id: null,
+                      caption: null,
                     },
-                  }
-                : {
-                    social_post_id: {
+
+              social_post_id:
+                comment.type === "shop"
+                  ? {
+                      id: null,
+                      caption: null,
+                    }
+                  : {
                       id: comment.postId,
                       is_react: false,
                       caption: comment.post.caption,
                     },
-                  }),
 
               parent_command_id: {
                 name: comment.parent?.comment ?? null,
@@ -231,7 +239,7 @@ class memberPostCommentController {
       data: {
         comment: data.name,
         postId: targetPost.id,
-        type: existingShopPost ? "shop" : "post",
+        type: existingShopPost ? "shop" : "social",
         memberId: +(req.user as Member).id,
         parentId: data.parent_command_id ? +data.parent_command_id : null,
         mentionsUsers: data.mention_member_ids
@@ -296,20 +304,28 @@ class memberPostCommentController {
             image_1920: newComment.member.profile?.coverPhoto ?? "",
           },
 
-          ...(newComment.type === "shop"
-            ? {
-                shop_post_id: {
+          shop_post_id:
+            newComment.type === "shop"
+              ? {
                   id: newComment.postId,
                   caption: newComment.post.caption,
+                }
+              : {
+                  id: null,
+                  caption: null,
                 },
-              }
-            : {
-                social_post_id: {
+
+          social_post_id:
+            newComment.type === "shop"
+              ? {
+                  id: null,
+                  caption: null,
+                }
+              : {
                   id: newComment.postId,
                   is_react: false,
                   caption: newComment.post.caption,
                 },
-              }),
 
           parent_command_id: {
             name: newComment.parent?.comment ?? null,
@@ -509,20 +525,28 @@ class memberPostCommentController {
             image_1920: updatedComment.member.profile?.coverPhoto ?? "",
           },
 
-          ...(updatedComment.type === "shop"
-            ? {
-                shop_post_id: {
+          shop_post_id:
+            updatedComment.type === "shop"
+              ? {
                   id: updatedComment.postId,
                   caption: updatedComment.post.caption,
+                }
+              : {
+                  id: null,
+                  caption: null,
                 },
-              }
-            : {
-                social_post_id: {
+
+          social_post_id:
+            updatedComment.type === "shop"
+              ? {
+                  id: null,
+                  caption: null,
+                }
+              : {
                   id: updatedComment.postId,
                   is_react: false,
                   caption: updatedComment.post.caption,
                 },
-              }),
 
           parent_command_id: {
             name: updatedComment.parent?.comment ?? null,

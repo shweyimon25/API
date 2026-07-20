@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Request, Response, Router } from "express";
 import PostController from "../../../app/controllers/member/v1/member-social-post.controller";
-import PostReactionController from "../../../app/controllers/member/v1/post-reaction.controller";
+import PostReactionController from "../../../app/controllers/member/v1/member-social-post-reaction.controller";
 import PostCommentController from "../../../app/controllers/member/v1/member-social-post-comment.controller";
 import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 
@@ -52,7 +52,7 @@ router.post("/member.post.save/:id/delete", [
   ),
 ]);
 
-router.get("/member.post.react", [
+router.post("/member.post.react", [
   auth,
   asyncHandler(
     async (req: Request, res: Response) =>
@@ -115,22 +115,5 @@ router.post("/member.social.post/:id/delete", [
       await postController.memberSocialPostDelete(req, res),
   ),
 ]);
-
-// router
-//   .route("/member.social.post/:id")
-//   .get([
-//     auth,
-//     asyncHandler(
-//       async (req: Request, res: Response) =>
-//         await postController.memberSocialPostDetail(req, res),
-//     ),
-//   ])
-//   .post([
-//     auth,
-//     asyncHandler(
-//       async (req: Request, res: Response) =>
-//         await postController.memberSocialPostDetail(req, res),
-//     ),
-//   ]);
 
 export default router;
