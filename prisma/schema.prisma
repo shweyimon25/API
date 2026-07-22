@@ -613,6 +613,7 @@ model PostComment {
   member           Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
   comment          String        @db.Text()
   mentionMemberIds Json          @default("[]")
+  mentionUsers     String?       
   type             String
   parentId         Int?
   parent           PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)

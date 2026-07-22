@@ -95,7 +95,8 @@ class memberPostCommentController {
               is_react: false,
               react_count: 0,
               create_date: formatDate(comment.createdAt),
-              mentioned_users: commentMentionIds.map((memberId) => {
+              mentioned_users: comment.mentionUsers ?? "",
+              mentioned_members: commentMentionIds.map((memberId) => {
                 const member = mentionMembers.find((m) => m.id === +memberId);
                 return {
                   id: member?.id,
@@ -149,7 +150,8 @@ class memberPostCommentController {
                   is_react: false,
                   react_count: reply.postCommentReactions?.length ?? 0,
                   create_date: formatDate(reply.createdAt),
-                  mentioned_users: replyMentionIds.map((memberId) => {
+                  mentioned_users: reply.mentionUsers ?? "",
+                  mentioned_members: replyMentionIds.map((memberId) => {
                     const member = mentionMembers.find((m) => m.id === +memberId);
                     return {
                       id: member?.id,
@@ -306,6 +308,7 @@ class memberPostCommentController {
         memberId: +(req.user as Member).id,
         parentId: data.parent_command_id ? +data.parent_command_id : null,
         mentionMemberIds,
+        mentionUsers: data.mentioned_users ?? "",
       },
       include: {
         member: {
@@ -351,7 +354,8 @@ class memberPostCommentController {
           is_react: false,
           react_count: 0,
           create_date: formatDate(newComment.createdAt),
-          mentioned_users: mentionMemberIds.map((memberId: number) => {
+          mentioned_users: newComment.mentionUsers ?? "",
+          mentioned_members: mentionMemberIds.map((memberId: number) => {
             const member = mentionMembers.find((m) => m.id === memberId);
             return {
               id: member?.id,
@@ -405,7 +409,7 @@ class memberPostCommentController {
               is_react: false,
               react_count: reply.postCommentReactions?.length ?? 0,
               create_date: formatDate(reply.createdAt),
-              mentioned_users: replyMentionIds.map((memberId) => {
+              mentioned_members: replyMentionIds.map((memberId) => {
                 const member = mentionMembers.find((m) => m.id === +memberId);
                 return {
                   id: member?.id,
@@ -585,6 +589,9 @@ class memberPostCommentController {
         ...(data.mention_member_ids !== undefined && {
           mentionMemberIds,
         }),
+        ...(data.mentioned_users !== undefined && {
+          mentionUsers: data.mentioned_users ?? "",
+        }),
       },
       include: {
         member: {
@@ -631,7 +638,8 @@ class memberPostCommentController {
           is_react: false,
           react_count: updatedComment.postCommentReactions?.length ?? 0,
           create_date: formatDate(updatedComment.createdAt),
-          mentioned_users: mentionMemberIds.map((memberId: number) => {
+          mentioned_users: updatedComment.mentionUsers ?? "",
+          mentioned_members: mentionMemberIds.map((memberId: number) => {
             const member = mentionMembers.find((m) => m.id === memberId);
             return {
               id: member?.id,
@@ -685,7 +693,8 @@ class memberPostCommentController {
               is_react: false,
               react_count: reply.postCommentReactions?.length ?? 0,
               create_date: formatDate(reply.createdAt),
-              mentioned_users: replyMentionIds.map((memberId) => {
+              mentioned_users: reply.mentionUsers ?? "",
+              mentioned_members: replyMentionIds.map((memberId) => {
                 const member = mentionMembers.find((m) => m.id === +memberId);
                 return {
                   id: member?.id,
