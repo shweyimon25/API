@@ -148,7 +148,7 @@ class MemberSocialPostController {
 
             return {
               id: socialPost.id,
-              caption: socialPost.caption,
+              caption: socialPost.caption ?? "",
               create_uid: socialPost.memberId,
               partner_id: {
                 id: socialPost.memberId,
@@ -175,7 +175,7 @@ class MemberSocialPostController {
               share_post_id: socialPost.sharePost
                 ? {
                     id: socialPost.sharePost.id,
-                    caption: socialPost.sharePost.caption,
+                    caption: socialPost.sharePost.caption ?? "",
                     create_uid: socialPost.sharePost.memberId,
                     partner_id: {
                       id: socialPost.sharePost.memberId,
@@ -325,7 +325,7 @@ class MemberSocialPostController {
     // Create Social Post
     const socialPost = await prisma.post.create({
       data: {
-        caption: data.caption,
+        caption: data.caption ?? "",
         privencyType: privencyType,
         postCategoryId: postCategory.id,
         memberId: member.id,
@@ -371,7 +371,7 @@ class MemberSocialPostController {
         isFullFilled: true,
         data: {
           id: socialPost.id,
-          caption: socialPost.caption,
+          caption: socialPost.caption ?? "",
           create_uid: socialPost.memberId,
           partner_id: {
             id: socialPost.member.id,
@@ -400,7 +400,7 @@ class MemberSocialPostController {
           share_post_id: socialPost.sharePost
             ? {
                 id: socialPost.sharePost.id,
-                caption: socialPost.sharePost.caption,
+                caption: socialPost.sharePost.caption ?? "",
                 create_uid: socialPost.sharePost.memberId,
                 partner_id: {
                   id: socialPost.sharePost.memberId,
@@ -508,7 +508,7 @@ class MemberSocialPostController {
     // Create Share Post
     const post = await prisma.post.create({
       data: {
-        caption: data.caption,
+        caption: data.caption ?? "",
         postCategoryId: existingPostCategory.id,
         privencyType,
         sharePostId: +data.share_post_id,
@@ -555,7 +555,7 @@ class MemberSocialPostController {
         isFullFilled: true,
         data: {
           id: post.id,
-          caption: post.caption,
+          caption: post.caption ?? "",
           create_uid: post.id,
           partner_id: {
             id: post.member.id,
@@ -583,7 +583,7 @@ class MemberSocialPostController {
           is_reels: false,
           share_post_id: {
             id: post.sharePost?.id,
-            caption: post.sharePost?.caption,
+            caption: post.sharePost?.caption ?? "",
             create_uid: post.sharePost?.id,
             partner_id: {
               id: post.sharePost?.memberId,
@@ -791,7 +791,7 @@ class MemberSocialPostController {
         isFullFilled: true,
         data: {
           id: updateSocialPost.id,
-          caption: updateSocialPost.caption,
+          caption: updateSocialPost.caption ?? "",
           create_uid: updateSocialPost.memberId,
           partner_id: {
             id: updateSocialPost.member.id,
@@ -820,7 +820,7 @@ class MemberSocialPostController {
           share_post_id: updateSocialPost.sharePost
             ? {
                 id: updateSocialPost.sharePost.id,
-                caption: updateSocialPost.sharePost.caption,
+                caption: updateSocialPost.sharePost.caption ?? "",
                 create_uid: updateSocialPost.sharePost.memberId,
                 partner_id: {
                   id: updateSocialPost.sharePost.memberId,
@@ -974,9 +974,9 @@ class MemberSocialPostController {
           },
           social_post_id: {
             id: savePost.socialPostId,
-            caption: savePost.socialPost?.caption,
+            caption: savePost.socialPost?.caption ?? "",
           },
-          caption: savePost.socialPost?.caption,
+          caption: savePost.socialPost?.caption ?? "",
           create_user: {
             id: savePost.socialPost?.memberId,
             name: savePost.socialPost?.member.name,

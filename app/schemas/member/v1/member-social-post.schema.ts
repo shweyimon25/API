@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const memberSocialPostCreateSchema = z.object({
-  caption: z.string("Caption is required.").min(1, "Caption is required."),
+  caption: z.string().optional(),
   view_type: z.enum(["public", "friend", "only_me"]),
   post_category: z
     .string("Post category is required.")
@@ -9,7 +9,7 @@ export const memberSocialPostCreateSchema = z.object({
 });
 
 export const memberSocialSharePostCreateSchema = z.object({
-  caption: z.string("Caption is required.").min(1, "Caption is required."),
+  caption: z.string().optional(),
   post_category: z
     .string("Post category is required.")
     .min(1, "Post category is required."),
@@ -19,8 +19,7 @@ export const memberSocialSharePostCreateSchema = z.object({
 
 export const memberSocialPostUpdateSchema = z.object({
   caption: z
-    .string("Caption is required.")
-    .min(1, "Caption is required.")
+    .string()
     .optional(),
   view_type: z.enum(["public", "friend", "only_me"]).optional(),
   post_category: z
