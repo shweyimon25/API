@@ -10,18 +10,8 @@ router.post("/create", [
   passport.authenticate("jwt", { session: false }),
   asyncHandler(
     async (req: Request, res: Response) =>
-      await paymentController.createRpc(req, res)
+      await paymentController.createPayment(req, res)
   ),
 ]);
-
-router
-    .route("/")
-    .post([
-        passport.authenticate("jwt", { session: false }),
-        asyncHandler(
-            async (req: Request, res: Response) =>
-                await paymentController.create(req, res)
-        ),
-    ]);
 
 export default router;

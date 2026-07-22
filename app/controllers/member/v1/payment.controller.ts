@@ -1,14 +1,10 @@
 import { Member } from "@prisma/client";
 import { Request, Response } from "express";
 import PaymentService from "../../../services/member/v1/payment.service";
-import { createPaymentSchema } from "../../../schemas/member/v1/payment.schema";
-import { validater } from "../../../helpers/validator";
 import {
   ValidationException,
   Exception,
 } from "../../../helpers/exceptions";
-import { successResponse } from "../../../helpers/response";
-import { PaymentResource } from "../../../resources/member/v1/payment/payment.resource";
 import {
   formatPaymentReference,
   parsePaymentRpcBody,
@@ -33,7 +29,7 @@ class PaymentController {
     });
   }
 
-  async createRpc(req: Request, res: Response) {
+  async createPayment(req: Request, res: Response) {
     const params = parsePaymentRpcBody(req.body as Record<string, unknown>);
     const files = (req.files as Express.Multer.File[]) ?? [];
     const memberId = (req.user as Member).id;
@@ -73,26 +69,6 @@ class PaymentController {
     }
   }
 
-  async create(req: Request, res: Response) {
-    const { data, error, success } = await validater(
-      createPaymentSchema,
-      req.body
-    );
-
-    if (!success) {
-      throw new ValidationException("Failed to create payment", error);
-    }
-
-    const memberId = (req.user as Member).id;
-    const files = req.files as Express.Multer.File[];
-    const payment = await this.paymentService.create(data, memberId, files);
-
-    return successResponse(
-      res,
-      "Payment created successfully",
-      PaymentResource.toResource(payment)
-    );
-  }
 }
 
 export default PaymentController;

@@ -17,6 +17,7 @@ class MemberSocialPostController {
     const offset = req.body.params.offset;
     const limit = req.body.params.limit;
     const order = req.body.params.order;
+    const currentMemberId = (req.user as Member).id;
 
     const partnerIdMatch = filters.match(
       /\('partner_id'\s*,\s*'='\s*,\s*(\d+)\)/,
@@ -104,6 +105,11 @@ class MemberSocialPostController {
           postReactions: true,
           postComments: true,
           sharedPosts: true,
+          socialSaves: {
+            where: {
+              memberId: currentMemberId,
+            },
+          },
           sharePost: {
             include: {
               member: {
@@ -135,6 +141,11 @@ class MemberSocialPostController {
         data: {
           count: count,
           results: socialPosts.map((socialPost) => {
+            const savedPost = socialPost.socialSaves[0];
+            const isReact = socialPost.postReactions.some(
+              (reaction) => reaction.memberId === currentMemberId,
+            );
+
             return {
               id: socialPost.id,
               caption: socialPost.caption,
@@ -151,15 +162,15 @@ class MemberSocialPostController {
                     ? "friend"
                     : "only_me",
               post_category: socialPost.postCategory?.name,
-              is_save: false,
-              saved_post_id: null,
+              is_save: !!savedPost,
+              saved_post_id: savedPost?.id ?? null,
               create_date: formatDate(socialPost.createdAt),
               media_line: socialPost.media,
               view_count: socialPost.socialViews.length,
               react_count: socialPost.postReactions.length,
               comment_count: socialPost.postComments.length,
               share_count: socialPost.sharedPosts.length,
-              is_react: false,
+              is_react: isReact,
               is_reels: false,
               share_post_id: socialPost.sharePost
                 ? {
@@ -186,7 +197,9 @@ class MemberSocialPostController {
                     react_count: socialPost.sharePost.postReactions.length,
                     comment_count: socialPost.sharePost.postComments.length,
                     share_count: socialPost.sharePost.sharedPosts.length,
-                    is_react: false,
+                    is_react: socialPost.sharePost.postReactions.some(
+                      (reaction) => reaction.memberId === currentMemberId,
+                    ),
                     is_reels: false,
                   }
                 : {
@@ -329,6 +342,11 @@ class MemberSocialPostController {
         postReactions: true,
         postComments: true,
         sharedPosts: true,
+        socialSaves: {
+          where: {
+            memberId: member.id,
+          },
+        },
         sharePost: {
           include: {
             member: {
@@ -367,15 +385,17 @@ class MemberSocialPostController {
                 ? "friend"
                 : "only_me",
           post_category: socialPost.postCategory?.name,
-          is_save: false,
-          saved_post_id: null,
+          is_save: !!socialPost.socialSaves[0],
+          saved_post_id: socialPost.socialSaves[0]?.id ?? null,
           create_date: formatDate(socialPost.createdAt),
           media_line: socialPost.media,
           view_count: socialPost?.socialViews?.length ?? 0,
           react_count: socialPost?.postReactions?.length ?? 0,
           comment_count: socialPost?.postComments?.length ?? 0,
           share_count: socialPost?.sharedPosts?.length ?? 0,
-          is_react: false,
+          is_react: socialPost.postReactions.some(
+            (reaction) => reaction.memberId === member.id,
+          ),
           is_reels: false,
           share_post_id: socialPost.sharePost
             ? {
@@ -401,7 +421,9 @@ class MemberSocialPostController {
                 react_count: socialPost.sharePost.postReactions.length,
                 comment_count: socialPost.sharePost.postComments.length,
                 share_count: socialPost.sharePost.sharedPosts.length,
-                is_react: false,
+                is_react: socialPost.sharePost.postReactions.some(
+                  (reaction) => reaction.memberId === member.id,
+                ),
                 is_reels: false,
               }
             : {
@@ -504,6 +526,11 @@ class MemberSocialPostController {
         postReactions: true,
         postComments: true,
         sharedPosts: true,
+        socialSaves: {
+          where: {
+            memberId: (req.user as Member).id,
+          },
+        },
         sharePost: {
           include: {
             member: {
@@ -542,15 +569,17 @@ class MemberSocialPostController {
                 ? "friend"
                 : "only_me",
           post_category: post.postCategory?.name,
-          is_save: false,
-          saved_post_id: null,
+          is_save: !!post.socialSaves[0],
+          saved_post_id: post.socialSaves[0]?.id ?? null,
           create_date: formatDate(post.createdAt),
           media_line: post.media,
           view_count: post?.socialViews?.length ?? 0,
           react_count: post?.postReactions?.length ?? 0,
           comment_count: post?.postComments?.length ?? 0,
           share_count: post?.sharedPosts?.length ?? 0,
-          is_react: false,
+          is_react: post.postReactions.some(
+            (reaction) => reaction.memberId === (req.user as Member).id,
+          ),
           is_reels: false,
           share_post_id: {
             id: post.sharePost?.id,
@@ -574,7 +603,10 @@ class MemberSocialPostController {
             react_count: post.sharePost?.postReactions?.length ?? 0,
             comment_count: post.sharePost?.postComments?.length ?? 0,
             share_count: post.sharePost?.sharedPosts?.length ?? 0,
-            is_react: false,
+            is_react:
+              post.sharePost?.postReactions.some(
+                (reaction) => reaction.memberId === (req.user as Member).id,
+              ) ?? false,
             is_reels: false,
           },
         },
@@ -730,6 +762,11 @@ class MemberSocialPostController {
         postReactions: true,
         postComments: true,
         sharedPosts: true,
+        socialSaves: {
+          where: {
+            memberId: member.id,
+          },
+        },
         sharePost: {
           include: {
             member: {
@@ -768,15 +805,17 @@ class MemberSocialPostController {
                 ? "friend"
                 : "only_me",
           post_category: updateSocialPost.postCategory?.name,
-          is_save: false,
-          saved_post_id: null,
+          is_save: !!updateSocialPost.socialSaves[0],
+          saved_post_id: updateSocialPost.socialSaves[0]?.id ?? null,
           create_date: formatDate(updateSocialPost.createdAt),
           media_line: updateSocialPost.media,
           view_count: updateSocialPost?.socialViews?.length ?? 0,
           react_count: updateSocialPost?.postReactions?.length ?? 0,
           comment_count: updateSocialPost?.postComments?.length ?? 0,
           share_count: updateSocialPost?.sharedPosts?.length ?? 0,
-          is_react: false,
+          is_react: updateSocialPost.postReactions.some(
+            (reaction) => reaction.memberId === member.id,
+          ),
           is_reels: false,
           share_post_id: updateSocialPost.sharePost
             ? {
@@ -803,7 +842,9 @@ class MemberSocialPostController {
                 react_count: updateSocialPost.sharePost.postReactions.length,
                 comment_count: updateSocialPost.sharePost.postComments.length,
                 share_count: updateSocialPost.sharePost.sharedPosts.length,
-                is_react: false,
+                is_react: updateSocialPost.sharePost.postReactions.some(
+                  (reaction) => reaction.memberId === member.id,
+                ),
                 is_reels: false,
               }
             : {
