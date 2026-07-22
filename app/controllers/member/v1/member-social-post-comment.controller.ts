@@ -53,31 +53,6 @@ class memberPostCommentController {
       orderBy: { createdAt: "desc" },
     });
 
-    const mentionMemberIds: number[] = [];
-
-    for (const comment of comments) {
-      const ids = (comment.mentionMemberIds as number[]) ?? [];
-      mentionMemberIds.push(...ids);
-
-      for (const reply of comment.replies) {
-        const replyIds = (reply.mentionMemberIds as number[]) ?? [];
-        mentionMemberIds.push(...replyIds);
-      }
-    }
-
-    const uniqueMentionIds = [...new Set(mentionMemberIds)];
-
-    const mentionMembers = uniqueMentionIds.length
-      ? await prisma.member.findMany({
-          where: {
-            id: { in: uniqueMentionIds },
-          },
-          include: {
-            profile: true,
-          },
-        })
-      : [];
-
     return res.json({
       jsonrpc: "2.0",
       id: null,
@@ -86,8 +61,6 @@ class memberPostCommentController {
         data: {
           count: comments.length,
           results: comments.map((comment) => {
-            const commentMentionIds = (comment.mentionMemberIds as number[]) ?? [];
-
             return {
               id: comment.id,
               name: comment.comment,
@@ -96,14 +69,7 @@ class memberPostCommentController {
               react_count: 0,
               create_date: formatDate(comment.createdAt),
               mentioned_users: comment.mentionUsers ?? "",
-              mentioned_members: commentMentionIds.map((memberId) => {
-                const member = mentionMembers.find((m) => m.id === +memberId);
-                return {
-                  id: member?.id,
-                  name: member?.name,
-                  image_1920: member?.profile?.coverPhoto ?? "",
-                };
-              }),
+              mention_ids: comment.mentionIds ?? [],
               create_uid: {
                 id: comment.member?.id,
                 name: comment.member.name,
@@ -141,8 +107,6 @@ class memberPostCommentController {
               },
               child_comment_count: comment.replies.length,
               child_comment_line: comment.replies.map((reply) => {
-                const replyMentionIds = (reply.mentionMemberIds as number[]) ?? [];
-
                 return {
                   id: reply.id,
                   name: reply.comment,
@@ -151,14 +115,7 @@ class memberPostCommentController {
                   react_count: reply.postCommentReactions?.length ?? 0,
                   create_date: formatDate(reply.createdAt),
                   mentioned_users: reply.mentionUsers ?? "",
-                  mentioned_members: replyMentionIds.map((memberId) => {
-                    const member = mentionMembers.find((m) => m.id === +memberId);
-                    return {
-                      id: member?.id,
-                      name: member?.name,
-                      image_1920: member?.profile?.coverPhoto ?? "",
-                    };
-                  }),
+                  mention_ids: reply.mentionIds ?? [],
                   create_uid: {
                     id: reply.member?.id,
                     name: reply.member?.name,
@@ -251,35 +208,6 @@ class memberPostCommentController {
       });
     }
 
-    const mentionMemberIds = (data.mention_member_ids ?? []).map(
-      (id: number) => +id,
-    );
-
-    if (mentionMemberIds.length > 0) {
-      const foundMembers = await prisma.member.findMany({
-        where: {
-          id: { in: mentionMemberIds },
-        },
-        select: { id: true },
-      });
-
-      const foundIds = foundMembers.map((member) => member.id);
-      const missingIds = mentionMemberIds.filter(
-        (id: number) => !foundIds.includes(id),
-      );
-
-      if (missingIds.length > 0) {
-        return res.json({
-          jsonrpc: "2.0",
-          id: null,
-          result: {
-            isFullFilled: false,
-            message: `Mentioned member(s) not found: ${missingIds.join(", ")}`,
-          },
-        });
-      }
-    }
-
     if (data.parent_command_id) {
       const existingParentComment = await prisma.postComment.findFirst({
         where: {
@@ -307,8 +235,8 @@ class memberPostCommentController {
         type: existingShopPost ? "shop" : "social",
         memberId: +(req.user as Member).id,
         parentId: data.parent_command_id ? +data.parent_command_id : null,
-        mentionMemberIds,
         mentionUsers: data.mentioned_users ?? "",
+        mentionIds: data.mention_ids ?? [],
       },
       include: {
         member: {
@@ -331,17 +259,6 @@ class memberPostCommentController {
       },
     });
 
-    const mentionMembers = mentionMemberIds.length
-      ? await prisma.member.findMany({
-          where: {
-            id: { in: mentionMemberIds },
-          },
-          include: {
-            profile: true,
-          },
-        })
-      : [];
-
     return res.json({
       jsonrpc: "2.0",
       id: null,
@@ -355,14 +272,7 @@ class memberPostCommentController {
           react_count: 0,
           create_date: formatDate(newComment.createdAt),
           mentioned_users: newComment.mentionUsers ?? "",
-          mentioned_members: mentionMemberIds.map((memberId: number) => {
-            const member = mentionMembers.find((m) => m.id === memberId);
-            return {
-              id: member?.id,
-              name: member?.name,
-              image_1920: member?.profile?.coverPhoto ?? "",
-            };
-          }),
+          mention_ids: newComment.mentionIds ?? [],
           create_uid: {
             id: newComment.memberId,
             name: newComment.member.name,
@@ -400,8 +310,6 @@ class memberPostCommentController {
           },
           child_comment_count: newComment.replies.length,
           child_comment_line: newComment.replies.map((reply) => {
-            const replyMentionIds = (reply.mentionMemberIds as number[]) ?? [];
-
             return {
               id: reply.id,
               name: reply.comment,
@@ -409,14 +317,8 @@ class memberPostCommentController {
               is_react: false,
               react_count: reply.postCommentReactions?.length ?? 0,
               create_date: formatDate(reply.createdAt),
-              mentioned_members: replyMentionIds.map((memberId) => {
-                const member = mentionMembers.find((m) => m.id === +memberId);
-                return {
-                  id: member?.id,
-                  name: member?.name,
-                  image_1920: member?.profile?.coverPhoto ?? "",
-                };
-              }),
+              mentioned_users: reply.mentionUsers ?? "",
+              mention_ids: reply.mentionIds ?? [],
               create_uid: {
                 id: reply.member?.id,
                 name: reply.member?.name,
@@ -516,36 +418,6 @@ class memberPostCommentController {
       });
     }
 
-    const mentionMemberIds =
-      data.mention_member_ids !== undefined
-        ? (data.mention_member_ids ?? []).map((id: number) => +id)
-        : ((existingComment.mentionMemberIds as number[]) ?? []);
-
-    if (data.mention_member_ids && data.mention_member_ids.length > 0) {
-      const foundMembers = await prisma.member.findMany({
-        where: {
-          id: { in: mentionMemberIds },
-        },
-        select: { id: true },
-      });
-
-      const foundIds = foundMembers.map((member) => member.id);
-      const missingIds = mentionMemberIds.filter(
-        (id: number) => !foundIds.includes(id),
-      );
-
-      if (missingIds.length > 0) {
-        return res.json({
-          jsonrpc: "2.0",
-          id: null,
-          result: {
-            isFullFilled: false,
-            message: `Mentioned member(s) not found: ${missingIds.join(", ")}`,
-          },
-        });
-      }
-    }
-
     if (data.parent_command_id) {
       if (+data.parent_command_id === existingComment.id) {
         return res.json({
@@ -586,8 +458,8 @@ class memberPostCommentController {
         ...(data.parent_command_id !== undefined && {
           parentId: data.parent_command_id ? +data.parent_command_id : null,
         }),
-        ...(data.mention_member_ids !== undefined && {
-          mentionMemberIds,
+        ...(data.mention_ids !== undefined && {
+          mentionIds: data.mention_ids ?? [],
         }),
         ...(data.mentioned_users !== undefined && {
           mentionUsers: data.mentioned_users ?? "",
@@ -615,17 +487,6 @@ class memberPostCommentController {
       },
     });
 
-    const mentionMembers = mentionMemberIds.length
-      ? await prisma.member.findMany({
-          where: {
-            id: { in: mentionMemberIds },
-          },
-          include: {
-            profile: true,
-          },
-        })
-      : [];
-
     return res.json({
       jsonrpc: "2.0",
       id: null,
@@ -639,14 +500,7 @@ class memberPostCommentController {
           react_count: updatedComment.postCommentReactions?.length ?? 0,
           create_date: formatDate(updatedComment.createdAt),
           mentioned_users: updatedComment.mentionUsers ?? "",
-          mentioned_members: mentionMemberIds.map((memberId: number) => {
-            const member = mentionMembers.find((m) => m.id === memberId);
-            return {
-              id: member?.id,
-              name: member?.name,
-              image_1920: member?.profile?.coverPhoto ?? "",
-            };
-          }),
+          mention_ids: updatedComment.mentionIds ?? [],
           create_uid: {
             id: updatedComment.member?.id,
             name: updatedComment.member.name,
@@ -684,8 +538,6 @@ class memberPostCommentController {
           },
           child_comment_count: updatedComment.replies.length,
           child_comment_line: updatedComment.replies.map((reply) => {
-            const replyMentionIds = (reply.mentionMemberIds as number[]) ?? [];
-
             return {
               id: reply.id,
               name: reply.comment,
@@ -694,14 +546,7 @@ class memberPostCommentController {
               react_count: reply.postCommentReactions?.length ?? 0,
               create_date: formatDate(reply.createdAt),
               mentioned_users: reply.mentionUsers ?? "",
-              mentioned_members: replyMentionIds.map((memberId) => {
-                const member = mentionMembers.find((m) => m.id === +memberId);
-                return {
-                  id: member?.id,
-                  name: member?.name,
-                  image_1920: member?.profile?.coverPhoto ?? "",
-                };
-              }),
+              mention_ids: reply.mentionIds ?? [],
               create_uid: {
                 id: reply.member?.id,
                 name: reply.member?.name,

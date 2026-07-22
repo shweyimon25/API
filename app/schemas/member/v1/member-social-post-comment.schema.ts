@@ -1,10 +1,16 @@
 import { z } from "zod";
 
+const mentionIdSchema = z.object({
+  partner_id: z.coerce.number(),
+  partner_name: z.string(),
+  user_id: z.coerce.number(),
+});
+
 export const memberSocialPostCommentCreateSchema = z
   .object({
     name: z.string("Name is required").min(1, "Name is required"),
     mentioned_users: z.string().optional(),
-    mention_member_ids: z.array(z.coerce.number()).optional(),
+    mention_ids: z.array(mentionIdSchema).optional(),
     social_post_id: z.coerce.string().optional(),
     shop_post_id: z.coerce.string().optional(),
     parent_command_id: z.coerce.string().optional(),
@@ -17,7 +23,7 @@ export const memberSocialPostCommentCreateSchema = z
 export const memberSocialPostCommentUpdateSchema = z.object({
   name: z.string("Name is required").min(1, "Name is required"),
   mentioned_users: z.string().optional(),
-  mention_member_ids: z.array(z.coerce.number()).optional(),
+  mention_ids: z.array(mentionIdSchema).optional(),
   parent_command_id: z.coerce.string().optional(),
 });
 

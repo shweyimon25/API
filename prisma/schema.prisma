@@ -606,20 +606,20 @@ enum PrivencyType {
 }
 
 model PostComment {
-  id               Int           @id @default(autoincrement())
-  post             Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId           Int
-  memberId         Int
-  member           Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  comment          String        @db.Text()
-  mentionMemberIds Json          @default("[]")
-  mentionUsers     String?       
-  type             String
-  parentId         Int?
-  parent           PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies          PostComment[] @relation("CommentReplies")
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id           Int           @id @default(autoincrement())
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId       Int
+  memberId     Int
+  member       Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  comment      String        @db.Text()
+  mentionIds   Json          @default("[]")
+  mentionUsers String?
+  type         String
+  parentId     Int?
+  parent       PostComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      PostComment[] @relation("CommentReplies")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   postCommentReactions PostCommentReaction[]
 }

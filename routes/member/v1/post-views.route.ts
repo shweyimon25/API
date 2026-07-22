@@ -8,7 +8,7 @@ const postViewsController = new PostViewsController();
 
 const auth = passport.authenticate("jwt", { session: false });
 
-router.get("/member.post.views", [
+router.post("/member.post.views", [
   auth,
   asyncHandler(
     async (req: Request, res: Response) =>
