@@ -104,6 +104,20 @@ class MemberSocialPostController {
           postReactions: true,
           postComments: true,
           sharedPosts: true,
+          sharePost: {
+            include: {
+              member: {
+                include: {
+                  profile: true,
+                },
+              },
+              postCategory: true,
+              socialViews: true,
+              postReactions: true,
+              postComments: true,
+              sharedPosts: true,
+            },
+          },
         },
         orderBy: {
           createdAt: orderDirection,
@@ -147,17 +161,45 @@ class MemberSocialPostController {
               share_count: socialPost.sharedPosts.length,
               is_react: false,
               is_reels: false,
-              share_post_id: {
-                id: null,
-                caption: null,
-                create_uid: null,
-                partner_id: {
-                  id: null,
-                  name: null,
-                  image_1920:
-                    "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
-                },
-              },
+              share_post_id: socialPost.sharePost
+                ? {
+                    id: socialPost.sharePost.id,
+                    caption: socialPost.sharePost.caption,
+                    create_uid: socialPost.sharePost.memberId,
+                    partner_id: {
+                      id: socialPost.sharePost.memberId,
+                      name: socialPost.sharePost.member.name,
+                      image_1920:
+                        socialPost.sharePost.member.profile?.coverPhoto ?? "",
+                    },
+                    view_type:
+                      socialPost.sharePost.privencyType === PrivencyType.PUBLIC
+                        ? "public"
+                        : socialPost.sharePost.privencyType ===
+                            PrivencyType.FRIEND
+                          ? "friend"
+                          : "only_me",
+                    post_category: socialPost.sharePost.postCategory?.name,
+                    create_date: formatDate(socialPost.sharePost.createdAt),
+                    media_line: socialPost.sharePost.media,
+                    view_count: socialPost.sharePost.socialViews.length,
+                    react_count: socialPost.sharePost.postReactions.length,
+                    comment_count: socialPost.sharePost.postComments.length,
+                    share_count: socialPost.sharePost.sharedPosts.length,
+                    is_react: false,
+                    is_reels: false,
+                  }
+                : {
+                    id: null,
+                    caption: null,
+                    create_uid: null,
+                    partner_id: {
+                      id: null,
+                      name: null,
+                      image_1920:
+                        "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
+                    },
+                  },
             };
           }),
         },
@@ -287,6 +329,20 @@ class MemberSocialPostController {
         postReactions: true,
         postComments: true,
         sharedPosts: true,
+        sharePost: {
+          include: {
+            member: {
+              include: {
+                profile: true,
+              },
+            },
+            postCategory: true,
+            socialViews: true,
+            postReactions: true,
+            postComments: true,
+            sharedPosts: true,
+          },
+        },
       },
     });
 
@@ -321,17 +377,44 @@ class MemberSocialPostController {
           share_count: socialPost?.sharedPosts?.length ?? 0,
           is_react: false,
           is_reels: false,
-          share_post_id: {
-            id: null,
-            caption: null,
-            create_uid: null,
-            partner_id: {
-              id: null,
-              name: null,
-              image_1920:
-                "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
-            },
-          },
+          share_post_id: socialPost.sharePost
+            ? {
+                id: socialPost.sharePost.id,
+                caption: socialPost.sharePost.caption,
+                create_uid: socialPost.sharePost.memberId,
+                partner_id: {
+                  id: socialPost.sharePost.memberId,
+                  name: socialPost.sharePost.member.name,
+                  image_1920:
+                    socialPost.sharePost.member.profile?.coverPhoto ?? "",
+                },
+                view_type:
+                  socialPost.sharePost.privencyType === PrivencyType.PUBLIC
+                    ? "public"
+                    : socialPost.sharePost.privencyType === PrivencyType.FRIEND
+                      ? "friend"
+                      : "only_me",
+                post_category: socialPost.sharePost.postCategory?.name,
+                create_date: formatDate(socialPost.sharePost.createdAt),
+                media_line: socialPost.sharePost.media,
+                view_count: socialPost.sharePost.socialViews.length,
+                react_count: socialPost.sharePost.postReactions.length,
+                comment_count: socialPost.sharePost.postComments.length,
+                share_count: socialPost.sharePost.sharedPosts.length,
+                is_react: false,
+                is_reels: false,
+              }
+            : {
+                id: null,
+                caption: null,
+                create_uid: null,
+                partner_id: {
+                  id: null,
+                  name: null,
+                  image_1920:
+                    "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
+                },
+              },
         },
       },
     });
@@ -647,6 +730,20 @@ class MemberSocialPostController {
         postReactions: true,
         postComments: true,
         sharedPosts: true,
+        sharePost: {
+          include: {
+            member: {
+              include: {
+                profile: true,
+              },
+            },
+            postCategory: true,
+            socialViews: true,
+            postReactions: true,
+            postComments: true,
+            sharedPosts: true,
+          },
+        },
       },
     });
 
@@ -681,17 +778,45 @@ class MemberSocialPostController {
           share_count: updateSocialPost?.sharedPosts?.length ?? 0,
           is_react: false,
           is_reels: false,
-          share_post_id: {
-            id: null,
-            caption: null,
-            create_uid: null,
-            partner_id: {
-              id: null,
-              name: null,
-              image_1920:
-                "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
-            },
-          },
+          share_post_id: updateSocialPost.sharePost
+            ? {
+                id: updateSocialPost.sharePost.id,
+                caption: updateSocialPost.sharePost.caption,
+                create_uid: updateSocialPost.sharePost.memberId,
+                partner_id: {
+                  id: updateSocialPost.sharePost.memberId,
+                  name: updateSocialPost.sharePost.member.name,
+                  image_1920:
+                    updateSocialPost.sharePost.member.profile?.coverPhoto ?? "",
+                },
+                view_type:
+                  updateSocialPost.sharePost.privencyType === PrivencyType.PUBLIC
+                    ? "public"
+                    : updateSocialPost.sharePost.privencyType ===
+                        PrivencyType.FRIEND
+                      ? "friend"
+                      : "only_me",
+                post_category: updateSocialPost.sharePost.postCategory?.name,
+                create_date: formatDate(updateSocialPost.sharePost.createdAt),
+                media_line: updateSocialPost.sharePost.media,
+                view_count: updateSocialPost.sharePost.socialViews.length,
+                react_count: updateSocialPost.sharePost.postReactions.length,
+                comment_count: updateSocialPost.sharePost.postComments.length,
+                share_count: updateSocialPost.sharePost.sharedPosts.length,
+                is_react: false,
+                is_reels: false,
+              }
+            : {
+                id: null,
+                caption: null,
+                create_uid: null,
+                partner_id: {
+                  id: null,
+                  name: null,
+                  image_1920:
+                    "http://localhost:8069/web/image/?model=res.partner&id=False&field=image_1920",
+                },
+              },
         },
       },
     });
