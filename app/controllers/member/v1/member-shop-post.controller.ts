@@ -16,12 +16,26 @@ class ShopPostController {
     const offset = req.body.params.offset;
     const limit = req.body.params.limit;
     const order = req.body.params.order;
+    const currentMemberId = (req.user as Member).id;
 
     const partnerIdMatch = filters.match(
       /\('partner_id'\s*,\s*'='\s*,\s*(\d+)\)/,
     );
 
-    const memberId = partnerIdMatch ? Number(partnerIdMatch[1]) : undefined;
+    const partnerId = partnerIdMatch ? Number(partnerIdMatch[1]) : undefined;
+
+    const createUidMatch = filters.match(
+      /\('create_uid'\s*,\s*'='\s*,\s*(\d+)\)/,
+    );
+
+    const createUid = createUidMatch ? Number(createUidMatch[1]) : undefined;
+    const memberId = partnerId ?? createUid;
+
+    const captionMatch = filters.match(
+      /\('caption'\s*,\s*'ilike'\s*,\s*'([^']*)'\)/,
+    );
+
+    const caption = captionMatch ? captionMatch[1] : undefined;
 
     // Pagination
     const skip = Math.max(0, Number(offset) || 0);
@@ -32,10 +46,18 @@ class ShopPostController {
         : "desc";
 
     const where = {
-      memberId: memberId,
       shopId: {
         not: null,
       },
+      ...(memberId !== undefined && {
+        memberId,
+      }),
+      ...(caption && {
+        caption: {
+          contains: caption,
+          mode: "insensitive" as const,
+        },
+      }),
     };
 
     const [count, shopPosts] = await Promise.all([
@@ -49,6 +71,10 @@ class ShopPostController {
               profile: true,
             },
           },
+          shopViews: true,
+          postReactions: true,
+          postComments: true,
+          sharedPosts: true,
         },
         orderBy: {
           createdAt: orderDirection,
@@ -66,9 +92,14 @@ class ShopPostController {
         data: {
           count: count,
           results: shopPosts.map((shopPost) => {
+            const isReact = shopPost.postReactions.some(
+              (reaction) => reaction.memberId === currentMemberId,
+            );
+
             return {
               id: shopPost.id,
               caption: shopPost.caption,
+              create_uid: shopPost.memberId,
               partner_id: {
                 id: shopPost.member.id,
                 image_1920: shopPost.member.profile?.coverPhoto ?? "",
@@ -82,11 +113,11 @@ class ShopPostController {
                     : "only_me",
               create_date: formatDate(shopPost.createdAt),
               media_line: shopPost.media,
-              view_count: 9,
-              react_count: 0,
-              comment_count: 6,
-              share_count: 0,
-              is_react: false,
+              view_count: shopPost.shopViews.length,
+              react_count: shopPost.postReactions.length,
+              comment_count: shopPost.postComments.length,
+              share_count: shopPost.sharedPosts.length,
+              is_react: isReact,
             };
           }),
         },
@@ -240,6 +271,12 @@ class ShopPostController {
         memberId: member.id,
         shopId: shop.id,
       },
+      include: {
+        shopViews: true,
+        postReactions: true,
+        postComments: true,
+        sharedPosts: true,
+      },
     });
 
     return res.json({
@@ -263,11 +300,13 @@ class ShopPostController {
                 : "only_me",
           create_date: formatDate(shopPost.createdAt),
           media_line: shopPost.media,
-          view_count: 0,
-          react_count: 0,
-          comment_count: 0,
-          share_count: 0,
-          is_react: false,
+          view_count: shopPost.shopViews.length,
+          react_count: shopPost.postReactions.length,
+          comment_count: shopPost.postComments.length,
+          share_count: shopPost.sharedPosts.length,
+          is_react: shopPost.postReactions.some(
+            (reaction) => reaction.memberId === member.id,
+          ),
         },
       },
     });
@@ -389,6 +428,12 @@ class ShopPostController {
           media.length > 0 ? media : (shopPost.media as Prisma.InputJsonValue),
         currency: data.currency ?? shopPost.currency,
       },
+      include: {
+        shopViews: true,
+        postReactions: true,
+        postComments: true,
+        sharedPosts: true,
+      },
     });
 
     return res.json({
@@ -413,11 +458,13 @@ class ShopPostController {
                 : "only_me",
           create_date: formatDate(updateShopPost.createdAt),
           media_line: updateShopPost.media,
-          view_count: 1,
-          react_count: 0,
-          comment_count: 0,
-          share_count: 0,
-          is_react: false,
+          view_count: updateShopPost.shopViews.length,
+          react_count: updateShopPost.postReactions.length,
+          comment_count: updateShopPost.postComments.length,
+          share_count: updateShopPost.sharedPosts.length,
+          is_react: updateShopPost.postReactions.some(
+            (reaction) => reaction.memberId === member.id,
+          ),
         },
       },
     });

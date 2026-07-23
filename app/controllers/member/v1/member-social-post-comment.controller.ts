@@ -11,6 +11,7 @@ import { formatDate } from "../../../helpers/helper";
 class memberPostCommentController {
   async memberPostComments(req: Request, res: Response) {
     const filters = req.body.params.filters;
+    const currentMemberId = (req.user as Member).id;
 
     const socialPostIdMatch = filters.match(
       /\('social_post_id'\s*,\s*'='\s*,\s*(\d+)\)/,
@@ -37,8 +38,13 @@ class memberPostCommentController {
             profile: true,
           },
         },
-        post: true,
+        post: {
+          include: {
+            postReactions: true,
+          },
+        },
         parent: true,
+        postCommentReactions: true,
         replies: {
           include: {
             member: {
@@ -65,8 +71,10 @@ class memberPostCommentController {
               id: comment.id,
               name: comment.comment,
               type: comment.type,
-              is_react: false,
-              react_count: 0,
+              react_count: comment.postCommentReactions.length,
+              is_react: comment.post.postReactions.some(
+                (reaction) => reaction.memberId === currentMemberId,
+              ),
               create_date: formatDate(comment.createdAt),
               mentioned_users: comment.mentionUsers ?? "",
               mention_ids: comment.mentionIds ?? [],
@@ -83,36 +91,44 @@ class memberPostCommentController {
               shop_post_id:
                 comment.type === "shop"
                   ? {
-                      id: comment.postId,
-                      caption: comment.post.caption,
-                    }
+                    id: comment.postId,
+                    caption: comment.post.caption ?? "",
+                  }
                   : {
-                      id: null,
-                      caption: null,
-                    },
+                    id: null,
+                    caption: null,
+                  },
               social_post_id:
                 comment.type === "shop"
                   ? {
-                      id: null,
-                      caption: null,
-                    }
+                    id: null,
+                    caption: null,
+                  }
                   : {
-                      id: comment.postId,
-                      is_react: false,
-                      caption: comment.post.caption,
-                    },
+                    id: comment.postId,
+                    caption: comment.post.caption ?? "",
+                    is_react: comment.post.postReactions.some(
+                      (reaction) => reaction.memberId === currentMemberId,
+                    ),
+                  },
               parent_command_id: {
                 name: comment.parent?.comment ?? null,
                 id: comment.parentId ?? null,
               },
               child_comment_count: comment.replies.length,
               child_comment_line: comment.replies.map((reply) => {
+                const replyIsReact = reply.postCommentReactions.some(
+                  (reaction) => reaction.memberId === currentMemberId,
+                );
+
                 return {
                   id: reply.id,
                   name: reply.comment,
                   type: reply.type,
-                  is_react: false,
-                  react_count: reply.postCommentReactions?.length ?? 0,
+                  react_count: reply.postCommentReactions.length,
+                  is_react: reply.postCommentReactions.some(
+                    (reaction) => reaction.memberId === currentMemberId,
+                  ),
                   create_date: formatDate(reply.createdAt),
                   mentioned_users: reply.mentionUsers ?? "",
                   mention_ids: reply.mentionIds ?? [],
@@ -129,24 +145,27 @@ class memberPostCommentController {
                   shop_post_id:
                     reply.type === "shop"
                       ? {
-                          id: comment.postId,
-                          caption: comment.post.caption,
-                        }
+                        id: comment.postId,
+                        caption: comment.post.caption ?? "",
+                      }
                       : {
-                          id: null,
-                          caption: null,
-                        },
+                        id: null,
+                        caption: null,
+                      },
                   social_post_id:
                     reply.type === "shop"
                       ? {
-                          id: null,
-                          caption: null,
-                        }
+                        id: null,
+                        caption: null,
+                      }
                       : {
-                          id: comment.postId,
-                          caption: comment.post.caption,
-                          is_react: false,
-                        },
+                        id: comment.postId,
+                        caption: comment.post.caption ?? "",
+                        is_react: comment.post.postReactions.some(
+                          (reaction) =>
+                            reaction.memberId === currentMemberId,
+                        ),
+                      },
                 };
               }),
             };
@@ -172,6 +191,8 @@ class memberPostCommentController {
         },
       });
     }
+
+    const currentMemberId = (req.user as Member).id;
 
     let existingSocialPost;
     if (data.social_post_id) {
@@ -233,7 +254,7 @@ class memberPostCommentController {
         comment: data.name,
         postId: targetPost.id,
         type: existingShopPost ? "shop" : "social",
-        memberId: +(req.user as Member).id,
+        memberId: currentMemberId,
         parentId: data.parent_command_id ? +data.parent_command_id : null,
         mentionUsers: data.mentioned_users ?? "",
         mentionIds: data.mention_ids ?? [],
@@ -244,8 +265,13 @@ class memberPostCommentController {
             profile: true,
           },
         },
-        post: true,
+        post: {
+          include: {
+            postReactions: true,
+          },
+        },
         parent: true,
+        postCommentReactions: true,
         replies: {
           include: {
             member: {
@@ -268,8 +294,10 @@ class memberPostCommentController {
           id: newComment.id,
           name: newComment.comment,
           type: newComment.type,
-          is_react: false,
-          react_count: 0,
+          react_count: newComment.postCommentReactions.length,
+          is_react: newComment.post.postReactions.some(
+            (reaction) => reaction.memberId === currentMemberId,
+          ),
           create_date: formatDate(newComment.createdAt),
           mentioned_users: newComment.mentionUsers ?? "",
           mention_ids: newComment.mentionIds ?? [],
@@ -286,36 +314,42 @@ class memberPostCommentController {
           shop_post_id:
             newComment.type === "shop"
               ? {
-                  id: newComment.postId,
-                  caption: newComment.post.caption,
-                }
+                id: newComment.postId,
+                caption: newComment.post.caption ?? "",
+              }
               : {
-                  id: null,
-                  caption: null,
-                },
+                id: null,
+                caption: null,
+              },
           social_post_id:
             newComment.type === "shop"
               ? {
-                  id: null,
-                  caption: null,
-                }
+                id: null,
+                caption: null,
+              }
               : {
-                  id: newComment.postId,
-                  is_react: false,
-                  caption: newComment.post.caption,
-                },
+                id: newComment.postId,
+                caption: newComment.post.caption ?? "",
+                is_react: newComment.post.postReactions.some(
+                  (reaction) => reaction.memberId === currentMemberId,
+                ),
+              },
           parent_command_id: {
             name: newComment.parent?.comment ?? null,
             id: newComment.parentId ?? null,
           },
           child_comment_count: newComment.replies.length,
           child_comment_line: newComment.replies.map((reply) => {
+            const replyIsReact = reply.postCommentReactions.some(
+              (reaction) => reaction.memberId === currentMemberId,
+            );
+
             return {
               id: reply.id,
               name: reply.comment,
               type: reply.type,
-              is_react: false,
-              react_count: reply.postCommentReactions?.length ?? 0,
+              react_count: reply.postCommentReactions.length,
+              is_react: replyIsReact,
               create_date: formatDate(reply.createdAt),
               mentioned_users: reply.mentionUsers ?? "",
               mention_ids: reply.mentionIds ?? [],
@@ -332,24 +366,26 @@ class memberPostCommentController {
               shop_post_id:
                 reply.type === "shop"
                   ? {
-                      id: newComment.postId,
-                      caption: newComment.post.caption,
-                    }
+                    id: newComment.postId,
+                    caption: newComment.post.caption ?? "",
+                  }
                   : {
-                      id: null,
-                      caption: null,
-                    },
+                    id: null,
+                    caption: null,
+                  },
               social_post_id:
                 reply.type === "shop"
                   ? {
-                      id: null,
-                      caption: null,
-                    }
+                    id: null,
+                    caption: null,
+                  }
                   : {
-                      id: newComment.postId,
-                      caption: newComment.post.caption,
-                      is_react: false,
-                    },
+                    id: newComment.postId,
+                    caption: newComment.post.caption ?? "",
+                    is_react: newComment.post.postReactions.some(
+                      (reaction) => reaction.memberId === currentMemberId,
+                    ),
+                  },
             };
           }),
         },
@@ -373,6 +409,8 @@ class memberPostCommentController {
         },
       });
     }
+
+    const currentMemberId = (req.user as Member).id;
 
     const existingComment = await prisma.postComment.findFirst({
       where: {
@@ -407,7 +445,7 @@ class memberPostCommentController {
       });
     }
 
-    if (existingComment.memberId !== +(req.user as Member).id) {
+    if (existingComment.memberId !== currentMemberId) {
       return res.json({
         jsonrpc: "2.0",
         id: null,
@@ -471,7 +509,11 @@ class memberPostCommentController {
             profile: true,
           },
         },
-        post: true,
+        post: {
+          include: {
+            postReactions: true,
+          },
+        },
         parent: true,
         replies: {
           include: {
@@ -496,8 +538,10 @@ class memberPostCommentController {
           id: updatedComment.id,
           name: updatedComment.comment,
           type: updatedComment.type,
-          is_react: false,
-          react_count: updatedComment.postCommentReactions?.length ?? 0,
+          react_count: updatedComment.postCommentReactions.length,
+          is_react: updatedComment.post.postReactions.some(
+            (reaction) => reaction.memberId === currentMemberId,
+          ),
           create_date: formatDate(updatedComment.createdAt),
           mentioned_users: updatedComment.mentionUsers ?? "",
           mention_ids: updatedComment.mentionIds ?? [],
@@ -514,24 +558,26 @@ class memberPostCommentController {
           shop_post_id:
             updatedComment.type === "shop"
               ? {
-                  id: updatedComment.postId,
-                  caption: updatedComment.post.caption,
-                }
+                id: updatedComment.postId,
+                caption: updatedComment.post.caption ?? "",
+              }
               : {
-                  id: null,
-                  caption: null,
-                },
+                id: null,
+                caption: null,
+              },
           social_post_id:
             updatedComment.type === "shop"
               ? {
-                  id: null,
-                  caption: null,
-                }
+                id: null,
+                caption: null,
+              }
               : {
-                  id: updatedComment.postId,
-                  is_react: false,
-                  caption: updatedComment.post.caption,
-                },
+                id: updatedComment.postId,
+                caption: updatedComment.post.caption ?? "",
+                is_react: updatedComment.post.postReactions.some(
+                  (reaction) => reaction.memberId === currentMemberId,
+                ),
+              },
           parent_command_id: {
             name: updatedComment.parent?.comment ?? null,
             id: updatedComment.parentId ?? null,
@@ -542,8 +588,10 @@ class memberPostCommentController {
               id: reply.id,
               name: reply.comment,
               type: reply.type,
-              is_react: false,
-              react_count: reply.postCommentReactions?.length ?? 0,
+              react_count: reply.postCommentReactions.length,
+              is_react: reply.postCommentReactions.some(
+                (reaction) => reaction.memberId === currentMemberId,
+              ),
               create_date: formatDate(reply.createdAt),
               mentioned_users: reply.mentionUsers ?? "",
               mention_ids: reply.mentionIds ?? [],
@@ -560,24 +608,26 @@ class memberPostCommentController {
               shop_post_id:
                 reply.type === "shop"
                   ? {
-                      id: updatedComment.postId,
-                      caption: updatedComment.post.caption,
-                    }
+                    id: updatedComment.postId,
+                    caption: updatedComment.post.caption ?? "",
+                  }
                   : {
-                      id: null,
-                      caption: null,
-                    },
+                    id: null,
+                    caption: null,
+                  },
               social_post_id:
                 reply.type === "shop"
                   ? {
-                      id: null,
-                      caption: null,
-                    }
+                    id: null,
+                    caption: null,
+                  }
                   : {
-                      id: updatedComment.postId,
-                      caption: updatedComment.post.caption,
-                      is_react: false,
-                    },
+                    id: updatedComment.postId,
+                    caption: updatedComment.post.caption ?? "",
+                    is_react: updatedComment.post.postReactions.some(
+                      (reaction) => reaction.memberId === currentMemberId,
+                    ),
+                  },
             };
           }),
         },
