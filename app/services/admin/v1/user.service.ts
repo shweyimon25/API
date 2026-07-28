@@ -10,113 +10,61 @@ import {
   UpdateUserInput,
 } from "../../../schemas/admin/v1/user.schema";
 
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  employeeId: true,
+  status: true,
+  role: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.UserSelect;
+
 class UserService {
   async findAll(where?: Prisma.UserWhereInput) {
-    const users = await prisma.user.findMany({
+    return prisma.user.findMany({
       where,
-      orderBy: {
-        id: "desc",
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        username: true,
-        status: true,
-        roles: {
-          select: {
-            role: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            name: true
-          },
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
-      },
+      orderBy: { id: "desc" },
+      select: userSelect,
     });
-
-    return users;
   }
 
   async findCommonAll(where?: Prisma.UserWhereInput) {
-    const users = await prisma.user.findMany({
+    return prisma.user.findMany({
       where: {
         ...where,
         status: Status.ACTIVE,
       },
-      orderBy: {
-        id: "desc",
-      },
+      orderBy: { id: "desc" },
       select: {
         id: true,
         name: true,
         email: true,
-        username: true,
+        employeeId: true,
       },
     });
-
-    return users;
   }
 
-  async findByPaginate(page: number, perPage: number, where?: Prisma.UserWhereInput) {
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    where?: Prisma.UserWhereInput,
+  ) {
     const users = await prisma.user.findMany({
       where,
-      orderBy: {
-        id: "desc",
-      },
+      orderBy: { id: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        username: true,
-        status: true,
-        roles: {
-          select: {
-            role: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            name: true
-          },
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true
-          },
-        },
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: userSelect,
     });
 
-    const totalUsers = await prisma.user.count({
-      where,
-    });
+    const totalUsers = await prisma.user.count({ where });
 
     return {
       data: users,
@@ -135,40 +83,8 @@ class UserService {
 
   async findOne(id: number) {
     const user = await prisma.user.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        username: true,
-        status: true,
-        roles: {
-          select: {
-            role: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        createdAt: true,
-        updatedAt: true,
-      },
+      where: { id },
+      select: userSelect,
     });
 
     if (!user) {
@@ -178,34 +94,29 @@ class UserService {
     return user;
   }
 
-  async create(createUserInput: CreateUserInput, userId: number) {
-    const { name, username, email, password, status, roleId } = createUserInput;
+  async create(createUserInput: CreateUserInput) {
+    const { name, employeeId, email, password, status, roleId } =
+      createUserInput;
 
-    // Check user username is existed
-    const existingUsername = await prisma.user.findFirst({
-      where: {
-        username,
-      },
+    const existingEmployeeId = await prisma.user.findFirst({
+      where: { employeeId },
     });
 
-    if (existingUsername) {
-      throw new ValidationException("Failed to created user", [
+    if (existingEmployeeId) {
+      throw new ValidationException("Failed to create user", [
         {
-          field: "username",
-          issue: "Username is already existed",
+          field: "employeeId",
+          issue: "Employee ID is already existed",
         },
       ]);
     }
 
-    // Check user email is existed
     const existingEmail = await prisma.user.findFirst({
-      where: {
-        email,
-      },
+      where: { email },
     });
 
     if (existingEmail) {
-      throw new ValidationException("Failed to created user", [
+      throw new ValidationException("Failed to create user", [
         {
           field: "email",
           issue: "Email is already existed",
@@ -213,70 +124,50 @@ class UserService {
       ]);
     }
 
-    // Check role is existed
     const role = await prisma.role.findFirst({
-      where: {
-        id: roleId,
-      },
+      where: { id: roleId },
     });
 
     if (!role) {
-      throw new ValidationException("Failed to created user", [
+      throw new ValidationException("Failed to create user", [
         {
           field: "roleId",
-          issue: "Role is not existed",
+          issue: "Role does not exist",
         },
       ]);
     }
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        username,
+        employeeId,
+        roleId,
         password: hashPassword(password),
         status: status ?? Status.ACTIVE,
-        roles: {
-          create: {
-            role: {
-              connect: {
-                id: roleId,
-              },
-            },
-          },
-        },
-        createdBy: {
-          connect: { id: userId }
-        },
       },
     });
 
     return this.findOne(user.id);
   }
 
-  async update(id: number, updateUserInput: UpdateUserInput, userId: number) {
-    const { name, username, email, password, status, roleId } = updateUserInput;
+  async update(id: number, updateUserInput: UpdateUserInput) {
+    const { name, employeeId, email, password, status, roleId } =
+      updateUserInput;
 
-    // Check user is existed
     const existingUser = await prisma.user.findUnique({
-      where: {
-        id,
-      },
+      where: { id },
     });
 
     if (!existingUser) {
       throw new NotFoundException("User not found");
     }
 
-    // Check user email is existed (only if email is being updated)
     if (email && email !== existingUser.email) {
       const existingEmail = await prisma.user.findFirst({
         where: {
           email,
-          NOT: {
-            id,
-          },
+          NOT: { id },
         },
       });
 
@@ -290,76 +181,50 @@ class UserService {
       }
     }
 
-    // Check user username is existed (only if username is being updated)
-    if (username && username !== existingUser.username) {
-      const existingUsername = await prisma.user.findFirst({
+    if (employeeId && employeeId !== existingUser.employeeId) {
+      const existingEmployeeIdRecord = await prisma.user.findFirst({
         where: {
-          username,
-          NOT: {
-            id,
-          },
+          employeeId,
+          NOT: { id },
         },
       });
 
-      if (existingUsername) {
+      if (existingEmployeeIdRecord) {
         throw new ValidationException("Failed to update user", [
           {
-            field: "username",
-            issue: "Username is already existed",
+            field: "employeeId",
+            issue: "Employee ID is already existed",
           },
         ]);
       }
     }
 
-    // Check role is existed (only if roleId is provided)
     if (roleId) {
       const existingRole = await prisma.role.findFirst({
-        where: {
-          id: roleId,
-        },
+        where: { id: roleId },
       });
 
       if (!existingRole) {
         throw new ValidationException("Failed to update user", [
           {
             field: "roleId",
-            issue: "Role is not existed",
+            issue: "Role does not exist",
           },
         ]);
       }
     }
 
     await prisma.user.update({
-      where: {
-        id,
-      },
+      where: { id },
       data: {
-        name: name || existingUser.name,
-        email: email || existingUser.email,
-        username: username || existingUser.username,
-        password: password ? hashPassword(password) : existingUser.password,
-        status: status ?? existingUser.status,
-        updatedBy: {
-          connect: { id: userId }
-        },
+        ...(name !== undefined && { name }),
+        ...(email !== undefined && { email }),
+        ...(employeeId !== undefined && { employeeId }),
+        ...(password !== undefined && { password: hashPassword(password) }),
+        ...(status !== undefined && { status }),
+        ...(roleId !== undefined && { roleId }),
       },
     });
-
-    if (roleId) {
-      await prisma.$transaction([
-        prisma.userRole.deleteMany({
-          where: {
-            userId: id,
-          },
-        }),
-        prisma.userRole.create({
-          data: {
-            userId: id,
-            roleId,
-          },
-        }),
-      ]);
-    }
 
     return this.findOne(id);
   }

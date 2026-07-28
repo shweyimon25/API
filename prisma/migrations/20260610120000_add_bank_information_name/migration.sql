@@ -1,1 +1,0 @@
-ALTER TABLE "BankInformation" ADD COLUMN "name" TEXT NOT NULL DEFAULT '';

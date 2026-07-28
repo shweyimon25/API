@@ -7,18 +7,9 @@ import {
   UnauthorizedException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import UserService from "../../../services/admin/v1/user.service";
-import { UserResource } from "../../../resources/admin/v1/user/user.resource";
 import { Status } from "@prisma/client";
 import prisma from "../../../../prisma/client";
-
 class AuthController {
-  private userService: UserService;
-
-  constructor() {
-    this.userService = new UserService();
-  }
-
   async signIn(req: Request, res: Response) {
     const { data, error, success } = await validater(signInSchema, req.body);
 
@@ -28,25 +19,15 @@ class AuthController {
 
     const user = await prisma.user.findFirst({
       include: {
-        roles: true,
+        role: true,
       },
       where: {
         OR: [
           {
-            email: data.emailOrUsername,
-          },
-          {
-            username: data.emailOrUsername,
-          },
+            email: data.email,
+          }
         ],
         status: Status.ACTIVE,
-        roles: {
-          some: {
-            role: {
-              name: "SuperAdmin",
-            },
-          },
-        },
       },
     });
 
@@ -66,7 +47,6 @@ class AuthController {
     }, "30d");
 
     return successResponse(res, "User sign in successfully", {
-      user: UserResource.toResource(await this.userService.findOne(user.id)),
       token,
     });
   }

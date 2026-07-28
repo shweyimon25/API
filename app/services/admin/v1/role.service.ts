@@ -1,95 +1,57 @@
 import prisma from "../../../../prisma/client";
+import { Prisma } from "@prisma/client";
 import {
+  ForbiddenException,
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import {
-  CreateRoleInput,
-  UpdateRoleInput,
-} from "../../../schemas/admin/v1/role.schema";
-import { Prisma, Status } from "@prisma/client";
+import { UpdateRoleInput } from "../../../schemas/admin/v1/role.schema";
+
+export const HIDDEN_ROLE_NAME = "Developer";
+
+const roleSelect = {
+  id: true,
+  name: true,
+  description: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.RoleSelect;
+
+const excludeDeveloper: Prisma.RoleWhereInput = {
+  NOT: { name: HIDDEN_ROLE_NAME },
+};
 
 class RoleService {
   async findAll(where?: Prisma.RoleWhereInput) {
-    const roles = await prisma.role.findMany({
-      where,
-      orderBy: {
-        id: "desc",
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        }
-      }
-    });
-
-    return roles;
-  }
-
-  async findCommonAll(where?: Prisma.RoleWhereInput) {
-    const roles = await prisma.role.findMany({
+    return prisma.role.findMany({
       where: {
         ...where,
-        status: Status.ACTIVE,
+        ...excludeDeveloper,
       },
-      orderBy: {
-        id: "desc"
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      }
+      orderBy: { id: "desc" },
+      select: roleSelect,
     });
-
-    return roles;
   }
 
-  async findByPaginate(page: number, perPage: number, where?: Prisma.RoleWhereInput) {
+  async findByPaginate(
+    page: number,
+    perPage: number,
+    where?: Prisma.RoleWhereInput,
+  ) {
+    const roleWhere: Prisma.RoleWhereInput = {
+      ...where,
+      ...excludeDeveloper,
+    };
+
     const roles = await prisma.role.findMany({
-      where,
-      orderBy: {
-        id: "desc",
-      },
+      where: roleWhere,
+      orderBy: { id: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        }
-      }
+      select: roleSelect,
     });
 
-    const totalRoles = await prisma.role.count({
-      where,
-    });
+    const totalRoles = await prisma.role.count({ where: roleWhere });
 
     return {
       data: roles,
@@ -108,201 +70,59 @@ class RoleService {
 
   async findOne(id: number) {
     const role = await prisma.role.findUnique({
-      where: {
-        id,
-      },
-      include: {
-        permissions: {
-          select: {
-            permission: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        updatedBy: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      where: { id },
+      select: roleSelect,
     });
 
-    if (!role) {
+    if (!role || role.name === HIDDEN_ROLE_NAME) {
       throw new NotFoundException("Role not found");
     }
 
     return role;
   }
 
-  async create(createRoleInput: CreateRoleInput, userId: number) {
-    const { name, status, permissions } = createRoleInput;
-
-    // Check role name unique
-    const roleName = await prisma.role.findFirst({
-      where: {
-        name,
-      },
-    });
-
-    if (roleName) {
-      throw new ValidationException("Failed to created role", [
-        {
-          field: "name",
-          issue: "Name is already existed",
-        },
-      ]);
-    }
-
-    // Check permissions exist and are active
-    if (permissions && permissions.length > 0) {
-      const existingPermissions = await prisma.permission.findMany({
-        where: {
-          id: { in: permissions },
-          status: Status.ACTIVE,
-        },
-        select: { id: true },
-      });
-
-      const existingPermissionIds = existingPermissions.map((p) => p.id);
-      const invalidPermissionIds = permissions.filter(
-        (id) => !existingPermissionIds.includes(id)
-      );
-
-      if (invalidPermissionIds.length > 0) {
-        throw new ValidationException("Failed to create role", [
-          {
-            field: "permissions",
-            issue: `Permission(s) with ID(s) ${invalidPermissionIds.join(", ")} do not exist or are inactive`,
-          },
-        ]);
-      }
-    }
-
-    // Create new role with permissions
-    const role = await prisma.role.create({
-      data: {
-        name,
-        status: status ?? Status.ACTIVE,
-        permissions:
-          permissions && permissions.length > 0
-            ? {
-              create: permissions.map((permissionId) => ({
-                permission: { connect: { id: permissionId } },
-              })),
-            }
-            : undefined,
-        createdBy: {
-          connect: { id: userId }
-        }
-      },
-    });
-
-    return this.findOne(role.id);
-  }
-
-  async update(id: number, updateRoleInput: UpdateRoleInput, userId: number) {
-    const { name, status, permissions } = updateRoleInput;
-
-    // Check role is existed
+  async update(id: number, updateRoleInput: UpdateRoleInput) {
     const existingRole = await prisma.role.findUnique({
       where: { id },
     });
 
-    if (!existingRole) {
+    if (!existingRole || existingRole.name === HIDDEN_ROLE_NAME) {
       throw new NotFoundException("Role not found");
     }
 
-    // Check role name is unique
+    const { name, description } = updateRoleInput;
+
+    if (name === HIDDEN_ROLE_NAME) {
+      throw new ForbiddenException("Developer role name is not allowed");
+    }
+
     if (name && name !== existingRole.name) {
-      const roleName = await prisma.role.findFirst({
+      const existingName = await prisma.role.findFirst({
         where: {
           name,
-          NOT: {
-            id,
-          },
+          NOT: { id },
         },
       });
 
-      if (roleName) {
-        throw new ValidationException("Failed to updated role", [
+      if (existingName) {
+        throw new ValidationException("Failed to update role", [
           {
-            issue: "Name is already existed",
             field: "name",
+            issue: "Role name is already existed",
           },
         ]);
       }
     }
 
-    // Check permissions exist and are active
-    if (permissions !== undefined) {
-      if (permissions.length > 0) {
-        const existingPermissions = await prisma.permission.findMany({
-          where: {
-            id: { in: permissions },
-            status: Status.ACTIVE,
-          },
-          select: { id: true },
-        });
-
-        const existingPermissionIds = existingPermissions.map((p) => p.id);
-        const invalidPermissionIds = permissions.filter(
-          (id) => !existingPermissionIds.includes(id)
-        );
-
-        if (invalidPermissionIds.length > 0) {
-          throw new ValidationException("Failed to update role", [
-            {
-              field: "permissions",
-              issue: `Permission(s) with ID(s) ${invalidPermissionIds.join(", ")} do not exist or are inactive`,
-            },
-          ]);
-        }
-      }
-    }
-
-    // Update role with permissions
-    const role = await prisma.role.update({
+    await prisma.role.update({
       where: { id },
       data: {
-        name: name ?? existingRole.name,
-        status: status ?? existingRole.status,
-        permissions:
-          permissions !== undefined
-            ? {
-              deleteMany: {},
-              create:
-                permissions.length > 0
-                  ? permissions.map((permissionId) => ({
-                    permission: { connect: { id: permissionId } },
-                  }))
-                  : [],
-            }
-            : undefined,
-        updatedBy: {
-          connect: { id: userId }
-        }
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
       },
     });
 
-    return this.findOne(role.id);
-  }
-
-  async destory(id: number) {
-    await this.findOne(id);
-
-    await prisma.role.delete({
-      where: { id },
-    });
+    return this.findOne(id);
   }
 }
 

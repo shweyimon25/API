@@ -1,15 +1,10 @@
 import { Request, Response } from "express";
 import { successResponse } from "../../../helpers/response";
-import RoleService from "../../../services/admin/v1/role.service";
-import { RoleResource } from "../../../resources/admin/v1/role/role.resource";
-import { RoleCollection } from "../../../resources/admin/v1/role/role.collection";
-import { ValidationException } from "../../../helpers/exceptions";
 import { validater } from "../../../helpers/validator";
-import {
-  createRoleSchema,
-  updateRoleSchema,
-} from "../../../schemas/admin/v1/role.schema";
+import { updateRoleSchema } from "../../../schemas/admin/v1/role.schema";
+import { ValidationException } from "../../../helpers/exceptions";
 import { roleScope } from "../../../scopes/admin/v1/role.scope";
+import RoleService from "../../../services/admin/v1/role.service";
 
 class RoleController {
   private roleService: RoleService;
@@ -20,89 +15,38 @@ class RoleController {
 
   async findAll(req: Request, res: Response) {
     const { page, perPage } = req.query;
-
     const where = roleScope(req.query);
 
     if (page && perPage) {
-      const roles = await this.roleService.findByPaginate(+page, +perPage, where);
-      return successResponse(
-        res,
-        "Role list successfully",
-        RoleCollection.withPagination(roles)
+      const roles = await this.roleService.findByPaginate(
+        +page,
+        +perPage,
+        where,
       );
+      return successResponse(res, "Role list successfully", roles);
     }
 
     const roles = await this.roleService.findAll(where);
-
-    return successResponse(
-      res,
-      "Role list successfully",
-      RoleCollection.toCollection(roles)
-    );
-  }
-
-  async findCommonAll(req: Request, res: Response) {
-    const where = roleScope(req.query);
-
-    const roles = await this.roleService.findCommonAll(where);
-
-    return successResponse(
-      res,
-      "Common Role list successfully",
-      RoleCollection.toCommonCollection(roles)
-    );
+    return successResponse(res, "Role list successfully", roles);
   }
 
   async findOne(req: Request, res: Response) {
     const role = await this.roleService.findOne(+req.params.id);
-    return successResponse(
-      res,
-      "Role details successfully",
-      RoleResource.toResource(role)
-    );
-  }
-
-  async create(req: Request, res: Response) {
-    const { data, error, success } = await validater(
-      createRoleSchema,
-      req.body
-    );
-
-    if (!success) {
-      throw new ValidationException("Role created failed", error);
-    }
-
-    const role = await this.roleService.create(data, (req.user as any).id);
-
-    return successResponse(
-      res,
-      "Role created successfully",
-      RoleResource.toResource(role)
-    );
+    return successResponse(res, "Role detail successfully", role);
   }
 
   async update(req: Request, res: Response) {
     const { data, error, success } = await validater(
       updateRoleSchema,
-      req.body
+      req.body,
     );
 
     if (!success) {
       throw new ValidationException("Role updated failed", error);
     }
 
-    const role = await this.roleService.update(+req.params.id, data, (req.user as any).id);
-
-    return successResponse(
-      res,
-      "Role updated successfully",
-      RoleResource.toResource(role)
-    );
-  }
-
-  async destroy(req: Request, res: Response) {
-    await this.roleService.destory(+req.params.id);
-    return successResponse(res, "Role deleted successfully");
+    const role = await this.roleService.update(+req.params.id, data);
+    return successResponse(res, "Role updated successfully", role);
   }
 }
 

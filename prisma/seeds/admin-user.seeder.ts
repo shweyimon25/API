@@ -1,36 +1,39 @@
 import { Status } from "@prisma/client";
-import { hashPassword } from "../../app/helpers/helper";
+import bcrypt from "bcrypt";
 import prisma from "../client";
 
 const adminUserSeeder = async () => {
   console.log("Admin User seeding ...");
 
+  const developerRole = await prisma.role.findUnique({
+    where: { name: "Developer" },
+  });
+
+  if (!developerRole) {
+    throw new Error("Developer role not found. Seed roles first.");
+  }
+
   const adminData = {
-    name: "Admin",
-    email: "admin@admin.com",
-    username: "admin",
-    password: hashPassword("Admin@123"),
+    name: "Developer",
+    email: "developer@ayabank.com",
+    employeeId: "0000",
+    password: bcrypt.hashSync("Developer@123", 10),
     status: Status.ACTIVE,
+    roleId: developerRole.id,
   };
 
   await prisma.user.upsert({
     where: { email: adminData.email },
     update: {
       name: adminData.name,
-      username: adminData.username,
+      employeeId: adminData.employeeId,
       password: adminData.password,
       status: adminData.status,
+      roleId: adminData.roleId,
     },
-    create: {
-      name: adminData.name,
-      email: adminData.email,
-      password: adminData.password,
-      username: adminData.username,
-      status: adminData.status,
-    },
+    create: adminData,
   });
 
-  // Role assignment happens in main.ts (assignAdminRole) after roleSeeder runs
   console.log("Admin User seeded successfully");
 };
 
