@@ -34,7 +34,7 @@ class UserController {
 
     return successResponse(res, "User list successfully", users);
   }
-  
+
   async findOne(req: Request, res: Response) {
     const user = await this.userService.findOne(+req.params.id);
     return successResponse(res, "User detail successfully", user);

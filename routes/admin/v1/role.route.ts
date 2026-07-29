@@ -6,13 +6,22 @@ import { asyncHandler } from "../../../app/middlewares/handlers/async.handler";
 const router = Router();
 const roleController = new RoleController();
 
-router.route("/").get([
-  passport.authenticate("jwt", { session: false }),
-  asyncHandler(
-    async (req: Request, res: Response) =>
-      await roleController.findAll(req, res),
-  ),
-]);
+router
+  .route("/")
+  .get([
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await roleController.findAll(req, res),
+    ),
+  ])
+  .post([
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await roleController.create(req, res),
+    ),
+  ]);
 
 router
   .route("/:id")
@@ -28,6 +37,13 @@ router
     asyncHandler(
       async (req: Request, res: Response) =>
         await roleController.update(req, res),
+    ),
+  ])
+  .delete([
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await roleController.destroy(req, res),
     ),
   ]);
 

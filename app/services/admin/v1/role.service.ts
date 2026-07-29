@@ -5,7 +5,14 @@ import {
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
-import { UpdateRoleInput } from "../../../schemas/admin/v1/role.schema";
+import {
+  assertFullControl,
+  UserWithRole,
+} from "../../../helpers/permission";
+import {
+  CreateRoleInput,
+  UpdateRoleInput,
+} from "../../../schemas/admin/v1/role.schema";
 
 export const HIDDEN_ROLE_NAME = "Developer";
 
@@ -13,6 +20,7 @@ const roleSelect = {
   id: true,
   name: true,
   description: true,
+  permission: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.RoleSelect;
@@ -81,6 +89,39 @@ class RoleService {
     return role;
   }
 
+  async create(createRoleInput: CreateRoleInput, currentUser: UserWithRole) {
+    assertFullControl(currentUser);
+
+    const { name, description, permission } = createRoleInput;
+
+    if (name === HIDDEN_ROLE_NAME) {
+      throw new ForbiddenException("Developer role name is not allowed");
+    }
+
+    const existingName = await prisma.role.findFirst({
+      where: { name },
+    });
+
+    if (existingName) {
+      throw new ValidationException("Failed to create role", [
+        {
+          field: "name",
+          issue: "Role name is already existed",
+        },
+      ]);
+    }
+
+    const role = await prisma.role.create({
+      data: {
+        name,
+        description,
+        ...(permission !== undefined && { permission }),
+      },
+    });
+
+    return this.findOne(role.id);
+  }
+
   async update(id: number, updateRoleInput: UpdateRoleInput) {
     const existingRole = await prisma.role.findUnique({
       where: { id },
@@ -90,7 +131,7 @@ class RoleService {
       throw new NotFoundException("Role not found");
     }
 
-    const { name, description } = updateRoleInput;
+    const { name, description, permission } = updateRoleInput;
 
     if (name === HIDDEN_ROLE_NAME) {
       throw new ForbiddenException("Developer role name is not allowed");
@@ -119,10 +160,41 @@ class RoleService {
       data: {
         ...(name !== undefined && { name }),
         ...(description !== undefined && { description }),
+        ...(permission !== undefined && { permission }),
       },
     });
 
     return this.findOne(id);
+  }
+
+  async destroy(id: number, currentUser: UserWithRole) {
+    assertFullControl(currentUser);
+
+    const existingRole = await prisma.role.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { users: true },
+        },
+      },
+    });
+
+    if (!existingRole || existingRole.name === HIDDEN_ROLE_NAME) {
+      throw new NotFoundException("Role not found");
+    }
+
+    if (existingRole._count.users > 0) {
+      throw new ValidationException("Failed to delete role", [
+        {
+          field: "id",
+          issue: "Role cannot be deleted while users are assigned to it",
+        },
+      ]);
+    }
+
+    await prisma.role.delete({
+      where: { id },
+    });
   }
 }
 

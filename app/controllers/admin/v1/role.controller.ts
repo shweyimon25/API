@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
 import { successResponse } from "../../../helpers/response";
 import { validater } from "../../../helpers/validator";
-import { updateRoleSchema } from "../../../schemas/admin/v1/role.schema";
+import {
+  createRoleSchema,
+  updateRoleSchema,
+} from "../../../schemas/admin/v1/role.schema";
 import { ValidationException } from "../../../helpers/exceptions";
 import { roleScope } from "../../../scopes/admin/v1/role.scope";
 import RoleService from "../../../services/admin/v1/role.service";
+import { UserWithRole } from "../../../helpers/permission";
 
 class RoleController {
   private roleService: RoleService;
@@ -35,6 +39,20 @@ class RoleController {
     return successResponse(res, "Role detail successfully", role);
   }
 
+  async create(req: Request, res: Response) {
+    const { data, error, success } = await validater(
+      createRoleSchema,
+      req.body,
+    );
+
+    if (!success) {
+      throw new ValidationException("Role created failed", error);
+    }
+
+    const role = await this.roleService.create(data, req.user as UserWithRole);
+    return successResponse(res, "Role created successfully", role);
+  }
+
   async update(req: Request, res: Response) {
     const { data, error, success } = await validater(
       updateRoleSchema,
@@ -47,6 +65,11 @@ class RoleController {
 
     const role = await this.roleService.update(+req.params.id, data);
     return successResponse(res, "Role updated successfully", role);
+  }
+
+  async destroy(req: Request, res: Response) {
+    await this.roleService.destroy(+req.params.id, req.user as UserWithRole);
+    return successResponse(res, "Role deleted successfully");
   }
 }
 

@@ -21,7 +21,11 @@ const projectSelect = {
   objectives: true,
   keyResults: true,
   rag: true,
+  risk: true,
+  strategicAlignment: true,
+  currentStatus: true,
   status: true,
+  stage: true,
   totalPercentage: true,
   createdAt: true,
   updatedAt: true,
@@ -190,7 +194,11 @@ class ProjectService {
       objectives,
       keyResults,
       rag,
+      risk,
+      strategicAlignment,
+      currentStatus,
       status,
+      stage,
     } = updateProjectInput;
 
     if (status === ProjectStatus.COMPLETED) {
@@ -210,7 +218,11 @@ class ProjectService {
         ...(objectives !== undefined && { objectives }),
         ...(keyResults !== undefined && { keyResults }),
         ...(rag !== undefined && { rag }),
+        ...(risk !== undefined && { risk }),
+        ...(strategicAlignment !== undefined && { strategicAlignment }),
+        ...(currentStatus !== undefined && { currentStatus }),
         ...(status !== undefined && { status }),
+        ...(stage !== undefined && { stage }),
       },
     });
 

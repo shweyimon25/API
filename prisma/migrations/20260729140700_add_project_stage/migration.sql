@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Project" ADD COLUMN "stage" TEXT NOT NULL DEFAULT 'INITIATION';

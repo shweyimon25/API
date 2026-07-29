@@ -1,5 +1,5 @@
 import z from "zod";
-import { ProjectStatus } from "@prisma/client";
+import { ProjectStage, ProjectStatus } from "@prisma/client";
 
 const projectStatusEnum = z.enum(
   [
@@ -8,8 +8,20 @@ const projectStatusEnum = z.enum(
     ProjectStatus.INDICATION_OF_DELAY,
     ProjectStatus.DELAYED,
     ProjectStatus.COMPLETED,
+    ProjectStatus.CLOSE
   ],
   { message: "Invalid project status" },
+);
+
+const projectStageEnum = z.enum(
+  [
+    ProjectStage.INITIATION,
+    ProjectStage.PLANNING,
+    ProjectStage.EXECUTION_AND_IMPLEMENTATION,
+    ProjectStage.CLOSING_AND_DONE,
+    ProjectStage.POST_IMPLEMENTATION,
+  ],
+  { message: "Invalid project stage" },
 );
 
 export const createProjectSchema = z.object({
@@ -23,7 +35,11 @@ export const createProjectSchema = z.object({
   objectives: z.string().optional().nullable(),
   keyResults: z.string().optional().nullable(),
   rag: z.string().optional().nullable(),
+  risk: z.string().optional().nullable(),
+  strategicAlignment: z.string().optional().nullable(),
+  currentStatus: z.string().optional().nullable(),
   status: projectStatusEnum.optional(),
+  stage: projectStageEnum.optional(),
 });
 
 export const updateProjectSchema = z.object({
@@ -37,7 +53,11 @@ export const updateProjectSchema = z.object({
   objectives: z.string().optional().nullable(),
   keyResults: z.string().optional().nullable(),
   rag: z.string().optional().nullable(),
+  risk: z.string().optional().nullable(),
+  strategicAlignment: z.string().optional().nullable(),
+  currentStatus: z.string().optional().nullable(),
   status: projectStatusEnum.optional(),
+  stage: projectStageEnum.optional(),
 });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;

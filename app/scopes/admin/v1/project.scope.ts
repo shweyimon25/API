@@ -1,17 +1,31 @@
-import { Prisma, ProjectStatus } from "@prisma/client";
+import { Prisma, ProjectStage, ProjectStatus } from "@prisma/client";
 
 interface ProjectScopeQuery {
   name?: string;
   department?: string;
   projectPhase?: string;
   rag?: string;
+  risk?: string;
+  strategicAlignment?: string;
+  currentStatus?: string;
   status?: string;
+  stage?: string;
 }
 
 export const projectScope = (
   query: ProjectScopeQuery,
 ): Prisma.ProjectWhereInput => {
-  const { name, department, projectPhase, rag, status } = query;
+  const {
+    name,
+    department,
+    projectPhase,
+    rag,
+    risk,
+    strategicAlignment,
+    currentStatus,
+    status,
+    stage,
+  } = query;
   const where: Prisma.ProjectWhereInput = {};
 
   if (name) {
@@ -30,8 +44,24 @@ export const projectScope = (
     where.rag = { contains: rag };
   }
 
+  if (risk) {
+    where.risk = { contains: risk };
+  }
+
+  if (strategicAlignment) {
+    where.strategicAlignment = { contains: strategicAlignment };
+  }
+
+  if (currentStatus) {
+    where.currentStatus = { contains: currentStatus };
+  }
+
   if (status) {
     where.status = status as ProjectStatus;
+  }
+
+  if (stage) {
+    where.stage = stage as ProjectStage;
   }
 
   return where;

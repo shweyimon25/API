@@ -28,11 +28,12 @@ model User {
 }
 
 model Role {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
+  permission  Permission @default(PROJECT_MANAGEMENT)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
   users       User[]
 }
 
@@ -41,22 +42,32 @@ enum Status {
   INACTIVE
 }
 
+enum Permission {
+  FULL_CONTROL
+  PROJECT_MANAGEMENT
+}
+
 model Project {
-  id              Int           @id @default(autoincrement())
-  name            String
-  achievements    String?
-  nextPlans       String?
-  remark          String?
-  department      String?
-  keyProjects     String?
-  projectPhase    String?
-  objectives      String?
-  keyResults      String?
-  rag             String?
-  status          ProjectStatus @default(OPEN)
-  totalPercentage Float         @default(0)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
+  id                 Int           @id @default(autoincrement())
+  name               String
+  achievements       String?
+  nextPlans          String?
+  remark             String?
+  department         String?
+  keyProjects        String?
+  projectPhase       String?
+  objectives         String?
+  keyResults         String?
+  rag                String?
+  risk               String?
+  strategicAlignment String?
+  currentStatus      String?
+  status             ProjectStatus @default(OPEN)
+  stage              ProjectStage  @default(INITIATION)
+
+  totalPercentage Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
 
   deliveriables deliveriable[]
 }
@@ -67,6 +78,15 @@ enum ProjectStatus {
   INDICATION_OF_DELAY
   DELAYED
   COMPLETED
+  CLOSE
+}
+
+enum ProjectStage {
+  INITIATION
+  PLANNING
+  EXECUTION_AND_IMPLEMENTATION
+  CLOSING_AND_DONE
+  POST_IMPLEMENTATION
 }
 
 model deliveriable {
