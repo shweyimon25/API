@@ -1,5 +1,11 @@
 import prisma from "../../../../prisma/client";
-import { DeliverableStatus, Prisma, ProjectStatus } from "@prisma/client";
+import {
+  DeliverableStatus,
+  Permission,
+  Prisma,
+  ProjectStatus,
+  Status,
+} from "@prisma/client";
 import {
   NotFoundException,
   ValidationException,
@@ -9,6 +15,33 @@ import {
   UpdateProjectInput,
 } from "../../../schemas/admin/v1/project.schema";
 import { generateProjectCode } from "../../../helpers/project-code";
+import { formatDateDMY } from "../../../helpers/helper";
+import {
+  assertCanEditProject,
+  assertFullControl,
+  UserWithRole,
+} from "../../../helpers/permission";
+
+const projectOwnerSelect = {
+  id: true,
+  userId: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      employeeId: true,
+      status: true,
+      role: {
+        select: {
+          id: true,
+          name: true,
+          permission: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.ProjectOwnerSelect;
 
 const projectSelect = {
   id: true,
@@ -31,6 +64,10 @@ const projectSelect = {
   totalPercentage: true,
   createdAt: true,
   updatedAt: true,
+  projectOwners: {
+    select: projectOwnerSelect,
+    orderBy: { id: "asc" as const },
+  },
 } satisfies Prisma.ProjectSelect;
 
 const projectDetailSelect = {
@@ -50,6 +87,59 @@ const projectDetailSelect = {
 } satisfies Prisma.ProjectSelect;
 
 class ProjectService {
+  private uniqueOwnerIds(ownerIds: number[]) {
+    return [...new Set(ownerIds)];
+  }
+
+  private async assertValidProjectOwners(ownerIds: number[]) {
+    const uniqueIds = this.uniqueOwnerIds(ownerIds);
+
+    const users = await prisma.user.findMany({
+      where: {
+        id: { in: uniqueIds },
+      },
+      select: {
+        id: true,
+        status: true,
+        role: {
+          select: {
+            permission: true,
+          },
+        },
+      },
+    });
+
+    const foundIds = new Set(users.map((user) => user.id));
+    const missingIds = uniqueIds.filter((id) => !foundIds.has(id));
+
+    if (missingIds.length > 0) {
+      throw new ValidationException("Failed to save project", [
+        {
+          field: "ownerIds",
+          issue: `User(s) not found: ${missingIds.join(", ")}`,
+        },
+      ]);
+    }
+
+    const invalidOwners = users.filter(
+      (user) =>
+        user.status !== Status.ACTIVE ||
+        user.role.permission !== Permission.PROJECT_MANAGEMENT,
+    );
+
+    if (invalidOwners.length > 0) {
+      throw new ValidationException("Failed to save project", [
+        {
+          field: "ownerIds",
+          issue:
+            "All project owners must be ACTIVE users with PROJECT_MANAGEMENT permission",
+        },
+      ]);
+    }
+
+    return uniqueIds;
+  }
+
   private async assertCanComplete(projectId: number) {
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -151,11 +241,24 @@ class ProjectService {
       throw new NotFoundException("Project not found");
     }
 
-    return project;
+    return {
+      ...project,
+      deliveriables: project.deliveriables.map((item) => ({
+        ...item,
+        tac: formatDateDMY(item.tac),
+      })),
+    };
   }
 
-  async create(createProjectInput: CreateProjectInput) {
-    if (createProjectInput.status === ProjectStatus.COMPLETED) {
+  async create(
+    createProjectInput: CreateProjectInput,
+    currentUser: UserWithRole,
+  ) {
+    assertFullControl(currentUser);
+
+    const { ownerIds, ...projectData } = createProjectInput;
+
+    if (projectData.status === ProjectStatus.COMPLETED) {
       throw new ValidationException("Failed to create project", [
         {
           field: "status",
@@ -165,19 +268,30 @@ class ProjectService {
       ]);
     }
 
+    const validOwnerIds = await this.assertValidProjectOwners(ownerIds);
+
     const project = await prisma.project.create({
       data: {
-        ...createProjectInput,
+        ...projectData,
         code: await generateProjectCode(),
-        status: createProjectInput.status ?? ProjectStatus.OPEN,
+        status: projectData.status ?? ProjectStatus.OPEN,
         totalPercentage: 0,
+        projectOwners: {
+          create: validOwnerIds.map((userId) => ({ userId })),
+        },
       },
     });
 
     return this.findOne(project.id);
   }
 
-  async update(id: number, updateProjectInput: UpdateProjectInput) {
+  async update(
+    id: number,
+    updateProjectInput: UpdateProjectInput,
+    currentUser: UserWithRole,
+  ) {
+    await assertCanEditProject(currentUser, id);
+
     const existingProject = await prisma.project.findUnique({
       where: { id },
     });
@@ -202,31 +316,52 @@ class ProjectService {
       currentStatus,
       status,
       stage,
+      ownerIds,
     } = updateProjectInput;
 
     if (status === ProjectStatus.COMPLETED) {
       await this.assertCanComplete(id);
     }
 
-    await prisma.project.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(achievements !== undefined && { achievements }),
-        ...(nextPlans !== undefined && { nextPlans }),
-        ...(remark !== undefined && { remark }),
-        ...(department !== undefined && { department }),
-        ...(keyProjects !== undefined && { keyProjects }),
-        ...(projectPhase !== undefined && { projectPhase }),
-        ...(objectives !== undefined && { objectives }),
-        ...(keyResults !== undefined && { keyResults }),
-        ...(rag !== undefined && { rag }),
-        ...(risk !== undefined && { risk }),
-        ...(strategicAlignment !== undefined && { strategicAlignment }),
-        ...(currentStatus !== undefined && { currentStatus }),
-        ...(status !== undefined && { status }),
-        ...(stage !== undefined && { stage }),
-      },
+    const validOwnerIds =
+      ownerIds !== undefined
+        ? await this.assertValidProjectOwners(ownerIds)
+        : undefined;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.project.update({
+        where: { id },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(achievements !== undefined && { achievements }),
+          ...(nextPlans !== undefined && { nextPlans }),
+          ...(remark !== undefined && { remark }),
+          ...(department !== undefined && { department }),
+          ...(keyProjects !== undefined && { keyProjects }),
+          ...(projectPhase !== undefined && { projectPhase }),
+          ...(objectives !== undefined && { objectives }),
+          ...(keyResults !== undefined && { keyResults }),
+          ...(rag !== undefined && { rag }),
+          ...(risk !== undefined && { risk }),
+          ...(strategicAlignment !== undefined && { strategicAlignment }),
+          ...(currentStatus !== undefined && { currentStatus }),
+          ...(status !== undefined && { status }),
+          ...(stage !== undefined && { stage }),
+        },
+      });
+
+      if (validOwnerIds !== undefined) {
+        await tx.projectOwner.deleteMany({
+          where: { projectId: id },
+        });
+
+        await tx.projectOwner.createMany({
+          data: validOwnerIds.map((userId) => ({
+            userId,
+            projectId: id,
+          })),
+        });
+      }
     });
 
     return this.findOne(id);

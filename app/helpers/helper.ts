@@ -120,3 +120,41 @@ export const formatDate = (date: string | Date) => {
 
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
 };
+
+const DMY_DATE_REGEX = /^(\d{2})-(\d{2})-(\d{4})$/;
+
+export const parseDateDMY = (value: string): Date | null => {
+  const match = value.match(DMY_DATE_REGEX);
+  if (!match) {
+    return null;
+  }
+
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+};
+
+export const formatDateDMY = (date: string | Date) => {
+  const d = date instanceof Date ? date : new Date(date);
+
+  if (Number.isNaN(d.getTime())) {
+    return "";
+  }
+
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+
+  return `${day}-${month}-${year}`;
+};

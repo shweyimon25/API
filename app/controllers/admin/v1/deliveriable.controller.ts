@@ -8,6 +8,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { deliveriableScope } from "../../../scopes/admin/v1/deliveriable.scope";
 import DeliveriableService from "../../../services/admin/v1/deliveriable.service";
+import { UserWithRole } from "../../../helpers/permission";
 
 class DeliveriableController {
   private deliveriableService: DeliveriableService;
@@ -60,7 +61,10 @@ class DeliveriableController {
       throw new ValidationException("Deliveriable created failed", error);
     }
 
-    const deliveriable = await this.deliveriableService.create(data);
+    const deliveriable = await this.deliveriableService.create(
+      data,
+      req.user as UserWithRole,
+    );
     return successResponse(
       res,
       "Deliveriable created successfully",
@@ -81,6 +85,7 @@ class DeliveriableController {
     const deliveriable = await this.deliveriableService.update(
       +req.params.id,
       data,
+      req.user as UserWithRole,
     );
     return successResponse(
       res,
@@ -90,7 +95,10 @@ class DeliveriableController {
   }
 
   async destroy(req: Request, res: Response) {
-    await this.deliveriableService.destroy(+req.params.id);
+    await this.deliveriableService.destroy(
+      +req.params.id,
+      req.user as UserWithRole,
+    );
     return successResponse(res, "Deliveriable deleted successfully");
   }
 }

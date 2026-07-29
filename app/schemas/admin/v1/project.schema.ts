@@ -8,7 +8,7 @@ const projectStatusEnum = z.enum(
     ProjectStatus.INDICATION_OF_DELAY,
     ProjectStatus.DELAYED,
     ProjectStatus.COMPLETED,
-    ProjectStatus.CLOSE
+    ProjectStatus.CLOSE,
   ],
   { message: "Invalid project status" },
 );
@@ -23,6 +23,10 @@ const projectStageEnum = z.enum(
   ],
   { message: "Invalid project stage" },
 );
+
+const ownerIdsSchema = z
+  .array(z.coerce.number().min(1, { message: "Invalid owner id" }))
+  .min(1, { message: "At least one project owner is required" });
 
 export const createProjectSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
@@ -40,6 +44,7 @@ export const createProjectSchema = z.object({
   currentStatus: z.string().optional().nullable(),
   status: projectStatusEnum.optional(),
   stage: projectStageEnum.optional(),
+  ownerIds: ownerIdsSchema,
 });
 
 export const updateProjectSchema = z.object({
@@ -58,6 +63,7 @@ export const updateProjectSchema = z.object({
   currentStatus: z.string().optional().nullable(),
   status: projectStatusEnum.optional(),
   stage: projectStageEnum.optional(),
+  ownerIds: ownerIdsSchema.optional(),
 });
 
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;

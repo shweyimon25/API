@@ -122,7 +122,13 @@ class RoleService {
     return this.findOne(role.id);
   }
 
-  async update(id: number, updateRoleInput: UpdateRoleInput) {
+  async update(
+    id: number,
+    updateRoleInput: UpdateRoleInput,
+    currentUser: UserWithRole,
+  ) {
+    assertFullControl(currentUser);
+
     const existingRole = await prisma.role.findUnique({
       where: { id },
     });

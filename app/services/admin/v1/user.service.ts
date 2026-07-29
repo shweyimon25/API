@@ -9,6 +9,10 @@ import {
   CreateUserInput,
   UpdateUserInput,
 } from "../../../schemas/admin/v1/user.schema";
+import {
+  assertFullControl,
+  UserWithRole,
+} from "../../../helpers/permission";
 
 const userSelect = {
   id: true,
@@ -94,7 +98,9 @@ class UserService {
     return user;
   }
 
-  async create(createUserInput: CreateUserInput) {
+  async create(createUserInput: CreateUserInput, currentUser: UserWithRole) {
+    assertFullControl(currentUser);
+
     const { name, employeeId, email, password, status, roleId } =
       createUserInput;
 
@@ -151,7 +157,13 @@ class UserService {
     return this.findOne(user.id);
   }
 
-  async update(id: number, updateUserInput: UpdateUserInput) {
+  async update(
+    id: number,
+    updateUserInput: UpdateUserInput,
+    currentUser: UserWithRole,
+  ) {
+    assertFullControl(currentUser);
+
     const { name, employeeId, email, password, status, roleId } =
       updateUserInput;
 
@@ -229,7 +241,9 @@ class UserService {
     return this.findOne(id);
   }
 
-  async destory(id: number) {
+  async destory(id: number, currentUser: UserWithRole) {
+    assertFullControl(currentUser);
+
     await this.findOne(id);
 
     await prisma.user.delete({

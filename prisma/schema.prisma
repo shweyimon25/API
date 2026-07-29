@@ -15,16 +15,17 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  name       String
-  email      String   @unique
-  employeeId String   @unique
-  password   String
-  status     Status   @default(ACTIVE)
-  role       Role     @relation(fields: [roleId], references: [id])
-  roleId     Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  employeeId    String         @unique
+  password      String
+  status        Status         @default(ACTIVE)
+  role          Role           @relation(fields: [roleId], references: [id])
+  roleId        Int
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @default(now()) @updatedAt
+  projectOwners ProjectOwner[]
 }
 
 model Role {
@@ -71,6 +72,20 @@ model Project {
   updatedAt       DateTime @default(now()) @updatedAt
 
   deliveriables deliveriable[]
+  projectOwners ProjectOwner[]
+}
+
+model ProjectOwner {
+  id        Int     @id @default(autoincrement())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, projectId])
 }
 
 enum ProjectStatus {
@@ -93,7 +108,7 @@ enum ProjectStage {
 model deliveriable {
   id                  Int               @id @default(autoincrement())
   deliverable         String
-  tac                 String
+  tac                 DateTime
   completedPercentage Float             @default(0)
   projectId           Int
   project             Project           @relation(fields: [projectId], references: [id])

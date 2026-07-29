@@ -1,14 +1,28 @@
 import prisma from "../../../../prisma/client";
-import { DeliverableStatus, Prisma, ProjectStatus } from "@prisma/client";
-import {
-  NotFoundException,
-  ValidationException,
-} from "../../../helpers/exceptions";
-import {
-  CreateProjectInput,
-  UpdateProjectInput,
-} from "../../../schemas/admin/v1/project.schema";
-import { generateProjectCode } from "../../../helpers/project-code";
+import { Prisma } from "@prisma/client";
+import { NotFoundException } from "../../../helpers/exceptions";
+import { formatDateDMY } from "../../../helpers/helper";
+
+const projectOwnerSelect = {
+  id: true,
+  userId: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      employeeId: true,
+      status: true,
+      role: {
+        select: {
+          id: true,
+          name: true,
+          permission: true,
+        },
+      },
+    },
+  },
+} satisfies Prisma.ProjectOwnerSelect;
 
 const projectSelect = {
   id: true,
@@ -31,6 +45,10 @@ const projectSelect = {
   totalPercentage: true,
   createdAt: true,
   updatedAt: true,
+  projectOwners: {
+    select: projectOwnerSelect,
+    orderBy: { id: "asc" as const },
+  },
 } satisfies Prisma.ProjectSelect;
 
 const projectDetailSelect = {
@@ -50,59 +68,6 @@ const projectDetailSelect = {
 } satisfies Prisma.ProjectSelect;
 
 class ProjectService {
-  private async assertCanComplete(projectId: number) {
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: {
-        totalPercentage: true,
-        deliveriables: {
-          select: {
-            id: true,
-            status: true,
-          },
-        },
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException("Project not found");
-    }
-
-    if (project.deliveriables.length === 0) {
-      throw new ValidationException("Failed to update project", [
-        {
-          field: "status",
-          issue:
-            "Project cannot be COMPLETED without deliverables that are all COMPLETED and total 100%",
-        },
-      ]);
-    }
-
-    const allCompleted = project.deliveriables.every(
-      (item) => item.status === DeliverableStatus.COMPLETED,
-    );
-
-    if (!allCompleted) {
-      throw new ValidationException("Failed to update project", [
-        {
-          field: "status",
-          issue:
-            "All deliverables must be COMPLETED before project can be COMPLETED",
-        },
-      ]);
-    }
-
-    if (Math.round(project.totalPercentage) !== 100) {
-      throw new ValidationException("Failed to update project", [
-        {
-          field: "status",
-          issue:
-            "Project totalPercentage must be 100% before it can be COMPLETED",
-        },
-      ]);
-    }
-  }
-
   async findAll(where?: Prisma.ProjectWhereInput) {
     return prisma.project.findMany({
       where,
@@ -151,32 +116,14 @@ class ProjectService {
       throw new NotFoundException("Project not found");
     }
 
-    return project;
+    return {
+      ...project,
+      deliveriables: project.deliveriables.map((item) => ({
+        ...item,
+        tac: formatDateDMY(item.tac),
+      })),
+    };
   }
-
-  async create(createProjectInput: CreateProjectInput) {
-    if (createProjectInput.status === ProjectStatus.COMPLETED) {
-      throw new ValidationException("Failed to create project", [
-        {
-          field: "status",
-          issue:
-            "Project cannot be created as COMPLETED. Complete all deliverables first.",
-        },
-      ]);
-    }
-
-    const project = await prisma.project.create({
-      data: {
-        ...createProjectInput,
-        code: await generateProjectCode(),
-        status: createProjectInput.status ?? ProjectStatus.OPEN,
-        totalPercentage: 0,
-      },
-    });
-
-    return this.findOne(project.id);
-  }
-
 }
 
 export default ProjectService;

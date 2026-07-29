@@ -8,6 +8,7 @@ import {
 import { ValidationException } from "../../../helpers/exceptions";
 import { userScope } from "../../../scopes/admin/v1/user.scope";
 import UserService from "../../../services/admin/v1/user.service";
+import { UserWithRole } from "../../../helpers/permission";
 
 class UserController {
   private userService: UserService;
@@ -56,7 +57,10 @@ class UserController {
       throw new ValidationException("User created failed", error);
     }
 
-    const user = await this.userService.create(data);
+    const user = await this.userService.create(
+      data,
+      req.user as UserWithRole,
+    );
 
     return successResponse(res, "User created successfully", user);
   }
@@ -71,13 +75,20 @@ class UserController {
       throw new ValidationException("User updated failed", error);
     }
 
-    const user = await this.userService.update(+req.params.id, data);
+    const user = await this.userService.update(
+      +req.params.id,
+      data,
+      req.user as UserWithRole,
+    );
 
     return successResponse(res, "User updated successfully", user);
   }
 
   async destroy(req: Request, res: Response) {
-    await this.userService.destory(+req.params.id);
+    await this.userService.destory(
+      +req.params.id,
+      req.user as UserWithRole,
+    );
     return successResponse(res, "User deleted successfully");
   }
 }

@@ -63,7 +63,11 @@ class RoleController {
       throw new ValidationException("Role updated failed", error);
     }
 
-    const role = await this.roleService.update(+req.params.id, data);
+    const role = await this.roleService.update(
+      +req.params.id,
+      data,
+      req.user as UserWithRole,
+    );
     return successResponse(res, "Role updated successfully", role);
   }
 

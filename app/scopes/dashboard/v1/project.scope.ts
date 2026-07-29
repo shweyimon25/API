@@ -11,6 +11,7 @@ interface ProjectScopeQuery {
   currentStatus?: string;
   status?: string;
   stage?: string;
+  ownerId?: string;
 }
 
 export const projectScope = (
@@ -27,6 +28,7 @@ export const projectScope = (
     currentStatus,
     status,
     stage,
+    ownerId,
   } = query;
   const where: Prisma.ProjectWhereInput = {};
 
@@ -68,6 +70,14 @@ export const projectScope = (
 
   if (stage) {
     where.stage = stage as ProjectStage;
+  }
+
+  if (ownerId) {
+    where.projectOwners = {
+      some: {
+        userId: +ownerId,
+      },
+    };
   }
 
   return where;
