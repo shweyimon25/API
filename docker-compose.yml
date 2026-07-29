@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3030:3030"
+    env_file:
+      - .env
+    volumes:
+      - ./prisma/db:/app/prisma/db

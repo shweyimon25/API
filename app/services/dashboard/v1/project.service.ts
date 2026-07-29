@@ -177,60 +177,6 @@ class ProjectService {
     return this.findOne(project.id);
   }
 
-  async update(id: number, updateProjectInput: UpdateProjectInput) {
-    const existingProject = await prisma.project.findUnique({
-      where: { id },
-    });
-
-    if (!existingProject) {
-      throw new NotFoundException("Project not found");
-    }
-
-    const {
-      name,
-      achievements,
-      nextPlans,
-      remark,
-      department,
-      keyProjects,
-      projectPhase,
-      objectives,
-      keyResults,
-      rag,
-      risk,
-      strategicAlignment,
-      currentStatus,
-      status,
-      stage,
-    } = updateProjectInput;
-
-    if (status === ProjectStatus.COMPLETED) {
-      await this.assertCanComplete(id);
-    }
-
-    await prisma.project.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(achievements !== undefined && { achievements }),
-        ...(nextPlans !== undefined && { nextPlans }),
-        ...(remark !== undefined && { remark }),
-        ...(department !== undefined && { department }),
-        ...(keyProjects !== undefined && { keyProjects }),
-        ...(projectPhase !== undefined && { projectPhase }),
-        ...(objectives !== undefined && { objectives }),
-        ...(keyResults !== undefined && { keyResults }),
-        ...(rag !== undefined && { rag }),
-        ...(risk !== undefined && { risk }),
-        ...(strategicAlignment !== undefined && { strategicAlignment }),
-        ...(currentStatus !== undefined && { currentStatus }),
-        ...(status !== undefined && { status }),
-        ...(stage !== undefined && { stage }),
-      },
-    });
-
-    return this.findOne(id);
-  }
 }
 
 export default ProjectService;

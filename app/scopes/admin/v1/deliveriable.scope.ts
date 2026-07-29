@@ -4,13 +4,14 @@ interface DeliveriableScopeQuery {
   deliverable?: string;
   tac?: string;
   projectId?: string;
+  projectCode?: string;
   status?: string;
 }
 
 export const deliveriableScope = (
   query: DeliveriableScopeQuery,
 ): Prisma.deliveriableWhereInput => {
-  const { deliverable, tac, projectId, status } = query;
+  const { deliverable, tac, projectCode, projectId, status } = query;
   const where: Prisma.deliveriableWhereInput = {};
 
   if (deliverable) {
@@ -23,6 +24,12 @@ export const deliveriableScope = (
 
   if (projectId) {
     where.projectId = +projectId;
+  }
+
+  if (projectCode) {
+    where.project = {
+      code: { contains: projectCode },
+    };
   }
 
   if (status) {

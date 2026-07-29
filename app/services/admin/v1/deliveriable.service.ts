@@ -21,6 +21,7 @@ const deliveriableSelect = {
       id: true,
       name: true,
       totalPercentage: true,
+      code: true,
     },
   },
   createdAt: true,
@@ -31,7 +32,7 @@ class DeliveriableService {
   async findAll(where?: Prisma.deliveriableWhereInput) {
     return prisma.deliveriable.findMany({
       where,
-      orderBy: { id: "desc" },
+      orderBy: { id: "asc" },
       select: deliveriableSelect,
     });
   }
@@ -43,7 +44,7 @@ class DeliveriableService {
   ) {
     const deliveriables = await prisma.deliveriable.findMany({
       where,
-      orderBy: { id: "desc" },
+      orderBy: { id: "asc" },
       skip: (page - 1) * perPage,
       take: perPage,
       select: deliveriableSelect,
@@ -167,6 +168,22 @@ class DeliveriableService {
     }
 
     return this.findOne(id);
+  }
+
+  async destroy(id: number) {
+    const existing = await prisma.deliveriable.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException("Deliveriable not found");
+    }
+
+    await prisma.deliveriable.delete({
+      where: { id },
+    });
+
+    await this.recalculateTotalPercentage(existing.projectId);
   }
 }
 

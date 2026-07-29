@@ -88,6 +88,11 @@ class DeliveriableController {
       deliveriable,
     );
   }
+
+  async destroy(req: Request, res: Response) {
+    await this.deliveriableService.destroy(+req.params.id);
+    return successResponse(res, "Deliveriable deleted successfully");
+  }
 }
 
 export default DeliveriableController;

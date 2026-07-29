@@ -38,6 +38,13 @@ router
       async (req: Request, res: Response) =>
         await deliveriableController.update(req, res),
     ),
+  ])
+  .delete([
+    passport.authenticate("jwt", { session: false }),
+    asyncHandler(
+      async (req: Request, res: Response) =>
+        await deliveriableController.destroy(req, res),
+    ),
   ]);
 
 export default router;

@@ -49,6 +49,7 @@ enum Permission {
 
 model Project {
   id                 Int           @id @default(autoincrement())
+  code               String        @unique
   name               String
   achievements       String?
   nextPlans          String?
