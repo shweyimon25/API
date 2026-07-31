@@ -1,13 +1,963 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YC Fitness</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PMO API — User Manual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f3f1ec;
+      --surface: #fffcf7;
+      --ink: #1c1917;
+      --muted: #57534e;
+      --line: #d6d3d1;
+      --brand: #0f4c5c;
+      --brand-soft: #e6f2f4;
+      --get: #0f766e;
+      --post: #1d4ed8;
+      --delete: #b91c1c;
+      --warn: #b45309;
+      --ok: #15803d;
+      --code-bg: #1c1917;
+      --code-ink: #f5f5f4;
+      --shadow: 0 10px 30px rgba(28, 25, 23, 0.06);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(15, 76, 92, 0.08), transparent 28%),
+        linear-gradient(180deg, #f7f4ef 0%, var(--bg) 100%);
+      line-height: 1.55;
+    }
+
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 28px 20px;
+      background: #0f4c5c;
+      color: #ecfeff;
+    }
+
+    .brand {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+    }
+
+    .brand-sub {
+      color: #a5f3fc;
+      font-size: 0.85rem;
+      margin-bottom: 28px;
+    }
+
+    .nav-group {
+      margin-bottom: 22px;
+    }
+
+    .nav-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #67e8f9;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .sidebar a {
+      display: block;
+      color: #e0f2fe;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      text-decoration: none;
+    }
+
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+    }
+
+    .content {
+      padding: 36px 40px 80px;
+      max-width: 980px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      margin: 0 0 10px;
+      letter-spacing: -0.03em;
+    }
+
+    h2 {
+      margin: 42px 0 14px;
+      font-size: 1.45rem;
+      letter-spacing: -0.02em;
+      padding-top: 8px;
+      border-top: 1px solid var(--line);
+    }
+
+    h2:first-of-type { border-top: 0; padding-top: 0; }
+
+    h3 {
+      margin: 28px 0 10px;
+      font-size: 1.1rem;
+    }
+
+    p, li { color: var(--muted); }
+    strong { color: var(--ink); }
+
+    .lead {
+      font-size: 1.05rem;
+      max-width: 62ch;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      margin: 14px 0 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 999px;
+      color: white;
+      vertical-align: middle;
+    }
+
+    .badge.get { background: var(--get); }
+    .badge.post { background: var(--post); }
+    .badge.delete { background: var(--delete); }
+    .badge.auth { background: var(--warn); }
+    .badge.public { background: var(--ok); }
+
+    .endpoint {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0 12px;
+    }
+
+    .path {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.92rem;
+      background: var(--brand-soft);
+      color: var(--brand);
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 12px 0 20px;
+      box-shadow: var(--shadow);
+    }
+
+    th, td {
+      text-align: left;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      font-size: 0.94rem;
+    }
+
+    th {
+      background: #efeae2;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    code, .mono {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.86em;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .note {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-soft);
+      padding: 12px 14px;
+      border-radius: 0 10px 10px 0;
+      color: var(--ink);
+      margin: 14px 0;
+    }
+
+    .warn-box {
+      border-left: 4px solid var(--warn);
+      background: #fff7ed;
+      padding: 12px 14px;
+      border-radius: 0 10px 10px 0;
+      color: var(--ink);
+      margin: 14px 0;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: stretch;
+      margin: 14px 0 22px;
+    }
+
+    .flow-step {
+      flex: 1 1 140px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .flow-step .n {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: var(--brand);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .flow-step strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .flow-step p {
+      margin: 0;
+      font-size: 0.86rem;
+    }
+
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--brand);
+      font-weight: 700;
+      font-size: 1.2rem;
+      flex: 0 0 auto;
+    }
+
+    .flow-branch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 14px 0 22px;
+    }
+
+    .flow-branch .card h4 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .flow-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .flow-list li {
+      margin: 4px 0;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 700px) {
+      .flow-arrow { display: none; }
+      .flow-branch { grid-template-columns: 1fr; }
+    }
+
+    .toc-mobile { display: none; }
+
+    footer {
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: relative;
+        height: auto;
+        max-height: none;
+      }
+      .content { padding: 24px 18px 60px; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .toc-mobile { display: block; }
+    }
+  </style>
 </head>
 <body>
-  <div>
-    Server is running at port 3030
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">PMO API</div>
+      <div class="brand-sub">User Manual · v1</div>
+
+      <div class="nav-group">
+        <div class="nav-label">Start</div>
+        <a href="#introduction">Introduction</a>
+        <a href="#base-url">Base URL</a>
+        <a href="#auth">Authentication</a>
+        <a href="#permissions">Permissions</a>
+        <a href="#flows">Flows</a>
+        <a href="#conventions">Conventions</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Admin API</div>
+        <a href="#auth-api">Auth</a>
+        <a href="#profile-api">Profile</a>
+        <a href="#overview-api">Overview</a>
+        <a href="#users-api">Users</a>
+        <a href="#roles-api">Roles</a>
+        <a href="#projects-api">Projects</a>
+        <a href="#deliveriables-api">Deliverables</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Public API</div>
+        <a href="#dashboard-api">Dashboard Projects</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Reference</div>
+        <a href="#enums">Enums</a>
+        <a href="#errors">Errors</a>
+        <a href="#quick-start">Quick Start</a>
+      </div>
+    </aside>
+
+    <main class="content">
+      <h1>User Manual</h1>
+      <p class="lead">
+        This guide explains how to authenticate, what each role can do, and how to
+        call every Admin and Dashboard API endpoint.
+      </p>
+
+      <div class="grid-2">
+        <div class="card">
+          <strong>Admin API</strong>
+          <p>Protected with JWT. Manage users, roles, projects, deliverables, and overview stats.</p>
+        </div>
+        <div class="card">
+          <strong>Dashboard API</strong>
+          <p>Public read-only project listing and detail for dashboard consumers.</p>
+        </div>
+      </div>
+
+      <h2 id="introduction">1. Introduction</h2>
+      <p>
+        The API uses JSON over HTTP. Most admin endpoints require a Bearer token
+        obtained from sign-in. Updates use <code>POST</code> on resource paths
+        (not <code>PUT</code>/<code>PATCH</code>).
+      </p>
+
+      <h2 id="base-url">2. Base URL</h2>
+      <div class="card">
+        <div class="mono">http://&lt;host&gt;:&lt;port&gt;/api</div>
+        <p style="margin:10px 0 0">Example: <code>http://localhost:3030/api</code></p>
+      </div>
+
+      <h2 id="auth">3. Authentication</h2>
+      <ol>
+        <li>Call <code>POST /admin/v1/auth/sign-in</code> with email and password.</li>
+        <li>Receive a JWT <code>token</code>.</li>
+        <li>Send it on protected requests:</li>
+      </ol>
+      <pre>Authorization: Bearer &lt;token&gt;
+Content-Type: application/json</pre>
+      <div class="note">
+        Tokens are valid for <strong>30 days</strong>. Sign in again if you receive <code>401 Unauthorized</code>.
+      </div>
+
+      <h2 id="permissions">4. Permissions</h2>
+      <p>Access depends on the signed-in user’s role permission.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>FULL_CONTROL</th>
+            <th>PROJECT_MANAGEMENT</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Sign in / view profile / update own profile</td>
+            <td>Yes</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>View overview, users, roles, projects, deliverables</td>
+            <td>Yes</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td>Create / update / delete users</td>
+            <td>Yes</td>
+            <td>No (403)</td>
+          </tr>
+          <tr>
+            <td>Create / update / delete roles</td>
+            <td>Yes</td>
+            <td>No (403)</td>
+          </tr>
+          <tr>
+            <td>Create projects</td>
+            <td>Yes</td>
+            <td>No (403)</td>
+          </tr>
+          <tr>
+            <td>Update projects &amp; deliverables</td>
+            <td>Any project</td>
+            <td>Only owned projects</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="warn-box">
+        Project owners must be <strong>ACTIVE</strong> users whose role permission is
+        <code>PROJECT_MANAGEMENT</code>.
+      </div>
+
+      <h2 id="flows">5. Flows</h2>
+      <p>Typical end-to-end usage of the Admin API.</p>
+
+      <h3>5.1 Sign-in flow</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="n">1</div>
+          <strong>Sign in</strong>
+          <p><code>POST /admin/v1/auth/sign-in</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">2</div>
+          <strong>Get token</strong>
+          <p>Save JWT from response <code>data.token</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">3</div>
+          <strong>Call APIs</strong>
+          <p>Send <code>Authorization: Bearer …</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">4</div>
+          <strong>Profile / Overview</strong>
+          <p><code>GET /me</code> or <code>GET /overview</code></p>
+        </div>
+      </div>
+
+      <h3>5.2 Admin setup flow (FULL_CONTROL)</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="n">1</div>
+          <strong>Create roles</strong>
+          <p><code>POST /admin/v1/roles</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">2</div>
+          <strong>Create users</strong>
+          <p>Assign roleId to PM users</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">3</div>
+          <strong>Create project</strong>
+          <p>Set <code>ownerIds</code> (PM users)</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">4</div>
+          <strong>Add deliverables</strong>
+          <p>TAC as <code>DD-MM-YYYY</code></p>
+        </div>
+      </div>
+      <div class="note">
+        Only <code>FULL_CONTROL</code> users can create roles, users, and projects.
+        Project owners must have <code>PROJECT_MANAGEMENT</code> permission.
+      </div>
+
+      <h3>5.3 Project delivery flow</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="n">1</div>
+          <strong>Open project</strong>
+          <p>Status <code>OPEN</code> / stage <code>INITIATION</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">2</div>
+          <strong>Track work</strong>
+          <p>Update deliverable % and status</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">3</div>
+          <strong>Auto average</strong>
+          <p>Project <code>totalPercentage</code> recalculates</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">4</div>
+          <strong>Complete</strong>
+          <p>All deliverables COMPLETED + 100%</p>
+        </div>
+      </div>
+      <div class="warn-box">
+        A project can be set to <code>COMPLETED</code> only when every deliverable is
+        <code>COMPLETED</code> and project <code>totalPercentage</code> is <strong>100%</strong>.
+      </div>
+
+      <h3>5.4 Permission decision flow</h3>
+      <div class="flow-branch">
+        <div class="card">
+          <h4>FULL_CONTROL</h4>
+          <ul class="flow-list">
+            <li>Manage users &amp; roles</li>
+            <li>Create any project</li>
+            <li>Edit any project / deliverable</li>
+            <li>View overview and lists</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h4>PROJECT_MANAGEMENT</h4>
+          <ul class="flow-list">
+            <li>Cannot manage users or roles</li>
+            <li>Cannot create projects</li>
+            <li>Can edit only owned projects</li>
+            <li>Can manage deliverables on owned projects</li>
+          </ul>
+        </div>
+      </div>
+      <pre>Request
+  └─ Authenticated?
+       ├─ No  → 401 Unauthorized
+       └─ Yes → Has FULL_CONTROL?
+            ├─ Yes → Allow action
+            └─ No  → Is action user/role/project-create?
+                 ├─ Yes → 403 Forbidden
+                 └─ No  → Editing project/deliverable?
+                      ├─ Yes → Is project owner? → Allow / 403
+                      └─ No  → Allow read / profile</pre>
+
+      <h3>5.5 Public dashboard flow</h3>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="n">1</div>
+          <strong>List projects</strong>
+          <p><code>GET /dashboard/v1/projects</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">2</div>
+          <strong>Optional filters</strong>
+          <p><code>code</code>, <code>status</code>, <code>ownerId</code>…</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">3</div>
+          <strong>Open detail</strong>
+          <p><code>GET /dashboard/v1/projects/:id</code></p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="n">4</div>
+          <strong>Show UI</strong>
+          <p>Owners + deliverables + TAC</p>
+        </div>
+      </div>
+
+      <h2 id="conventions">6. Conventions</h2>
+      <ul>
+        <li><strong>Pagination:</strong> add <code>page</code> and <code>perPage</code> query params.</li>
+        <li><strong>Filters:</strong> pass matching field names as query params (e.g. <code>?status=OPEN</code>).</li>
+        <li><strong>Project codes:</strong> auto-generated as <code>PMO0001</code>, <code>PMO0002</code>, …</li>
+        <li><strong>TAC date format:</strong> <code>DD-MM-YYYY</code> (example: <code>15-08-2026</code>).</li>
+        <li><strong>Password rule:</strong> min 8 chars, with uppercase, lowercase, number, and special character.</li>
+      </ul>
+
+      <h2 id="auth-api">7. Auth</h2>
+      <div class="endpoint">
+        <span class="badge post">POST</span>
+        <span class="badge public">Public</span>
+        <span class="path">/admin/v1/auth/sign-in</span>
+      </div>
+      <pre>{
+  "email": "admin@example.com",
+  "password": "YourPassword1!"
+}</pre>
+      <p><strong>Response</strong></p>
+      <pre>{
+  "status": true,
+  "message": "User sign in successfully",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}</pre>
+
+      <h2 id="profile-api">8. Profile</h2>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="badge auth">JWT</span>
+        <span class="path">/admin/v1/me</span>
+      </div>
+      <p>Returns the signed-in user’s profile (no password).</p>
+
+      <div class="endpoint">
+        <span class="badge post">POST</span>
+        <span class="badge auth">JWT</span>
+        <span class="path">/admin/v1/me</span>
+      </div>
+      <pre>{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "employeeId": "EMP001",
+  "password": "NewPass1!",
+  "passwordConfirm": "NewPass1!"
+}</pre>
+      <p>All fields optional. Role and status cannot be changed here.</p>
+
+      <h2 id="overview-api">9. Overview</h2>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="badge auth">JWT</span>
+        <span class="path">/admin/v1/overview</span>
+      </div>
+      <p>Dashboard counters for users, roles, projects, and deliverables.</p>
+      <pre>{
+  "status": true,
+  "message": "Overview stats retrieved successfully",
+  "data": {
+    "users": { "total": 10, "active": 8, "inactive": 2 },
+    "roles": { "total": 2 },
+    "projects": {
+      "total": 6,
+      "averagePercentage": 42.5,
+      "byStatus": { "OPEN": 2, "ON_TRACK": 1, "COMPLETED": 1 },
+      "byStage": { "INITIATION": 1, "PLANNING": 2 }
+    },
+    "deliveriables": {
+      "total": 12,
+      "byStatus": { "OPEN": 4, "COMPLETED": 3 }
+    }
+  }
+}</pre>
+
+      <h2 id="users-api">10. Users</h2>
+      <p><span class="badge auth">JWT</span> · Create/update/delete require <code>FULL_CONTROL</code>.</p>
+
+      <h3>List users</h3>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="path">/admin/v1/users</span>
+      </div>
+      <p>Filters: <code>name</code>, <code>email</code>, <code>employeeId</code>, <code>status</code>, <code>roleId</code>, plus <code>page</code>, <code>perPage</code>.</p>
+
+      <h3>Get user</h3>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="path">/admin/v1/users/:id</span>
+      </div>
+
+      <h3>Create user</h3>
+      <div class="endpoint">
+        <span class="badge post">POST</span>
+        <span class="path">/admin/v1/users</span>
+      </div>
+      <pre>{
+  "name": "John Smith",
+  "employeeId": "EMP010",
+  "email": "john@example.com",
+  "roleId": 3,
+  "status": "ACTIVE",
+  "password": "Secure1!",
+  "passwordConfirm": "Secure1!"
+}</pre>
+
+      <h3>Update user</h3>
+      <div class="endpoint">
+        <span class="badge post">POST</span>
+        <span class="path">/admin/v1/users/:id</span>
+      </div>
+      <p>All fields optional.</p>
+
+      <h3>Delete user</h3>
+      <div class="endpoint">
+        <span class="badge delete">DELETE</span>
+        <span class="path">/admin/v1/users/:id</span>
+      </div>
+
+      <h2 id="roles-api">11. Roles</h2>
+      <p><span class="badge auth">JWT</span> · Create/update/delete require <code>FULL_CONTROL</code>.</p>
+
+      <h3>List roles</h3>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="path">/admin/v1/roles</span>
+      </div>
+      <p>Filters: <code>name</code>, <code>permission</code>.</p>
+      <div class="note">The hidden <code>Developer</code> role is never returned in list/detail.</div>
+
+      <h3>Get / create / update / delete</h3>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/roles/:id</td></tr>
+          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/roles</td></tr>
+          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/roles/:id</td></tr>
+          <tr><td><span class="badge delete">DELETE</span></td><td class="mono">/admin/v1/roles/:id</td></tr>
+        </tbody>
+      </table>
+      <pre>{
+  "name": "Project Manager",
+  "description": "Owns and updates projects",
+  "permission": "PROJECT_MANAGEMENT"
+}</pre>
+
+      <h2 id="projects-api">12. Projects</h2>
+      <p><span class="badge auth">JWT</span></p>
+
+      <h3>List projects</h3>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="path">/admin/v1/projects</span>
+      </div>
+      <p>
+        Filters: <code>code</code>, <code>name</code>, <code>department</code>, <code>status</code>,
+        <code>stage</code>, <code>ownerId</code>, and more project text fields.
+      </p>
+
+      <h3>Get project</h3>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="path">/admin/v1/projects/:id</span>
+      </div>
+      <p>Includes <code>projectOwners</code> and <code>deliveriables</code>. TAC dates are returned as <code>DD-MM-YYYY</code>.</p>
+
+      <h3>Create project</h3>
+      <div class="endpoint">
+        <span class="badge post">POST</span>
+        <span class="path">/admin/v1/projects</span>
+      </div>
+      <p>Requires <code>FULL_CONTROL</code>. <code>ownerIds</code> is required (one or more).</p>
+      <pre>{
+  "name": "Core Banking Upgrade",
+  "department": "IT",
+  "status": "OPEN",
+  "stage": "INITIATION",
+  "ownerIds": [3, 5]
+}</pre>
+      <p><code>code</code> is generated automatically (e.g. <code>PMO0007</code>).</p>
+
+      <h3>Update project</h3>
+      <div class="endpoint">
+        <span class="badge post">POST</span>
+        <span class="path">/admin/v1/projects/:id</span>
+      </div>
+      <ul>
+        <li><code>FULL_CONTROL</code>: can update any project</li>
+        <li><code>PROJECT_MANAGEMENT</code>: only if user is an owner</li>
+        <li>To set <code>COMPLETED</code>, all deliverables must be <code>COMPLETED</code> and total percentage must be 100%</li>
+      </ul>
+
+      <h2 id="deliveriables-api">13. Deliverables</h2>
+      <p><span class="badge auth">JWT</span> · Create/update/delete allowed for full-control users, or owners of the related project.</p>
+
+      <h3>List deliverables</h3>
+      <div class="endpoint">
+        <span class="badge get">GET</span>
+        <span class="path">/admin/v1/deliveriables</span>
+      </div>
+      <p>Filters: <code>deliverable</code>, <code>tac</code> (<code>DD-MM-YYYY</code>), <code>projectId</code>, <code>projectCode</code>, <code>status</code>.</p>
+
+      <h3>Create deliverable</h3>
+      <div class="endpoint">
+        <span class="badge post">POST</span>
+        <span class="path">/admin/v1/deliveriables</span>
+      </div>
+      <pre>{
+  "deliverable": "UAT sign-off",
+  "tac": "15-08-2026",
+  "completedPercentage": 0,
+  "projectId": 1,
+  "status": "OPEN"
+}</pre>
+      <p>Project <code>totalPercentage</code> is recalculated as the average of deliverable percentages.</p>
+
+      <h3>Other actions</h3>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/deliveriables/:id</td></tr>
+          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/deliveriables/:id</td></tr>
+          <tr><td><span class="badge delete">DELETE</span></td><td class="mono">/admin/v1/deliveriables/:id</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="dashboard-api">14. Dashboard Projects (Public)</h2>
+      <p>No authentication required. Read-only.</p>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge get">GET</span></td>
+            <td class="mono">/dashboard/v1/projects</td>
+            <td>List projects (same filters as admin, including <code>ownerId</code>)</td>
+          </tr>
+          <tr>
+            <td><span class="badge get">GET</span></td>
+            <td class="mono">/dashboard/v1/projects/:id</td>
+            <td>Project detail with owners and deliverables</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 id="enums">15. Enums</h2>
+      <div class="grid-2">
+        <div class="card">
+          <strong>User status</strong>
+          <p class="mono">ACTIVE · INACTIVE</p>
+        </div>
+        <div class="card">
+          <strong>Role permission</strong>
+          <p class="mono">FULL_CONTROL · PROJECT_MANAGEMENT</p>
+        </div>
+        <div class="card">
+          <strong>Project status</strong>
+          <p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED · CLOSE</p>
+        </div>
+        <div class="card">
+          <strong>Project stage</strong>
+          <p class="mono">INITIATION · PLANNING · EXECUTION_AND_IMPLEMENTATION · CLOSING_AND_DONE · POST_IMPLEMENTATION</p>
+        </div>
+        <div class="card">
+          <strong>Deliverable status</strong>
+          <p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED</p>
+        </div>
+        <div class="card">
+          <strong>TAC date</strong>
+          <p class="mono">DD-MM-YYYY</p>
+        </div>
+      </div>
+
+      <h2 id="errors">16. Errors</h2>
+      <table>
+        <thead>
+          <tr><th>HTTP</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>400</td><td>Validation error (check <code>details</code>)</td></tr>
+          <tr><td>401</td><td>Missing/invalid token or bad credentials</td></tr>
+          <tr><td>403</td><td>Permission denied</td></tr>
+          <tr><td>404</td><td>Resource not found</td></tr>
+        </tbody>
+      </table>
+      <pre>{
+  "status": false,
+  "message": "Failed to save project",
+  "error": "Validation Error",
+  "details": [
+    { "field": "ownerIds", "issue": "At least one project owner is required" }
+  ]
+}</pre>
+
+      <h2 id="quick-start">17. Quick Start</h2>
+      <pre># 1) Sign in
+curl -X POST http://localhost:3030/api/admin/v1/auth/sign-in \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"YourPassword1!"}'
+
+# 2) Get overview
+curl http://localhost:3030/api/admin/v1/overview \
+  -H "Authorization: Bearer &lt;token&gt;"
+
+# 3) Create a project (FULL_CONTROL only)
+curl -X POST http://localhost:3030/api/admin/v1/projects \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"New Initiative","ownerIds":[3]}'
+
+# 4) Add a deliverable
+curl -X POST http://localhost:3030/api/admin/v1/deliveriables \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"deliverable":"Kickoff","tac":"30-07-2026","projectId":1}'</pre>
+
+      <footer>
+        PMO API User Manual · Open this page at the API root (<code>/</code>) while the server is running.
+      </footer>
+    </main>
   </div>
 </body>
 </html>
