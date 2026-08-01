@@ -393,26 +393,25 @@
     <main class="content">
       <h1>User Manual</h1>
       <p class="lead">
-        This guide explains how to authenticate, what each role can do, and how to
-        call every Admin and Dashboard API endpoint.
+        Guide to authenticate, permissions, and every Admin / Dashboard API endpoint
+        in the current codebase.
       </p>
 
       <div class="grid-2">
         <div class="card">
           <strong>Admin API</strong>
-          <p>Protected with JWT. Manage users, roles, projects, tasks, and overview stats.</p>
+          <p>JWT-protected. Manage users, roles, projects, tasks, profile, and overview stats.</p>
         </div>
         <div class="card">
           <strong>Dashboard API</strong>
-          <p>Public read-only project listing and detail for dashboard consumers.</p>
+          <p>Public read-only projects. Closed projects (<code>CLOSE</code>) are hidden.</p>
         </div>
       </div>
 
       <h2 id="introduction">1. Introduction</h2>
       <p>
-        The API uses JSON over HTTP. Most admin endpoints require a Bearer token
-        obtained from sign-in. Updates use <code>POST</code> on resource paths
-        (not <code>PUT</code>/<code>PATCH</code>).
+        JSON over HTTP. Admin endpoints require a Bearer token from sign-in.
+        Updates use <code>POST</code> on resource paths (not <code>PUT</code>/<code>PATCH</code>).
       </p>
 
       <h2 id="base-url">2. Base URL</h2>
@@ -424,17 +423,14 @@
       <h2 id="auth">3. Authentication</h2>
       <ol>
         <li>Call <code>POST /admin/v1/auth/sign-in</code> with email and password.</li>
-        <li>Receive a JWT <code>token</code>.</li>
-        <li>Send it on protected requests:</li>
+        <li>Receive JWT <code>token</code> (valid <strong>30 days</strong>).</li>
+        <li>Send on protected requests:</li>
       </ol>
-      <pre>Authorization: Bearer &lt;token&gt;
+<pre>Authorization: Bearer &lt;token&gt;
 Content-Type: application/json</pre>
-      <div class="note">
-        Tokens are valid for <strong>30 days</strong>. Sign in again if you receive <code>401 Unauthorized</code>.
-      </div>
 
       <h2 id="permissions">4. Permissions</h2>
-      <p>Access depends on the signed-in user’s role permission.</p>
+      <p>Based on the signed-in user’s role <code>permission</code>.</p>
       <table>
         <thead>
           <tr>
@@ -445,12 +441,7 @@ Content-Type: application/json</pre>
         </thead>
         <tbody>
           <tr>
-            <td>Sign in / view profile / update own profile</td>
-            <td>Yes</td>
-            <td>Yes</td>
-          </tr>
-          <tr>
-            <td>View overview, users, roles, projects, tasks</td>
+            <td>Sign in / profile (<code>/me</code>) / overview / list &amp; detail</td>
             <td>Yes</td>
             <td>Yes</td>
           </tr>
@@ -477,168 +468,64 @@ Content-Type: application/json</pre>
         </tbody>
       </table>
       <div class="warn-box">
-        Project owners must be <strong>ACTIVE</strong> users whose role permission is
+        Project owners must be <strong>ACTIVE</strong> users with role permission
         <code>PROJECT_MANAGEMENT</code>.
       </div>
 
       <h2 id="flows">5. Flows</h2>
-      <p>Typical end-to-end usage of the Admin API.</p>
 
-      <h3>5.1 Sign-in flow</h3>
+      <h3>5.1 Sign-in</h3>
       <div class="flow">
-        <div class="flow-step">
-          <div class="n">1</div>
-          <strong>Sign in</strong>
-          <p><code>POST /admin/v1/auth/sign-in</code></p>
-        </div>
+        <div class="flow-step"><div class="n">1</div><strong>Sign in</strong><p><code>POST /admin/v1/auth/sign-in</code></p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">2</div>
-          <strong>Get token</strong>
-          <p>Save JWT from response <code>data.token</code></p>
-        </div>
+        <div class="flow-step"><div class="n">2</div><strong>Get token</strong><p><code>data.token</code></p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">3</div>
-          <strong>Call APIs</strong>
-          <p>Send <code>Authorization: Bearer …</code></p>
-        </div>
+        <div class="flow-step"><div class="n">3</div><strong>Call APIs</strong><p>Bearer header</p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">4</div>
-          <strong>Profile / Overview</strong>
-          <p><code>GET /me</code> or <code>GET /overview</code></p>
-        </div>
+        <div class="flow-step"><div class="n">4</div><strong>Overview / Me</strong><p><code>GET /overview</code> or <code>/me</code></p></div>
       </div>
 
-      <h3>5.2 Admin setup flow (FULL_CONTROL)</h3>
+      <h3>5.2 Admin setup (FULL_CONTROL)</h3>
       <div class="flow">
-        <div class="flow-step">
-          <div class="n">1</div>
-          <strong>Create roles</strong>
-          <p><code>POST /admin/v1/roles</code></p>
-        </div>
+        <div class="flow-step"><div class="n">1</div><strong>Create roles</strong><p><code>POST /roles</code></p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">2</div>
-          <strong>Create users</strong>
-          <p>Assign roleId to PM users</p>
-        </div>
+        <div class="flow-step"><div class="n">2</div><strong>Create users</strong><p>Assign PM roles</p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">3</div>
-          <strong>Create project</strong>
-          <p>Set <code>ownerIds</code> (PM users)</p>
-        </div>
+        <div class="flow-step"><div class="n">3</div><strong>Create project</strong><p>Required <code>ownerIds</code></p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">4</div>
-          <strong>Add tasks</strong>
-          <p>TAC as <code>DD-MM-YYYY</code></p>
-        </div>
-      </div>
-      <div class="note">
-        Only <code>FULL_CONTROL</code> users can create roles, users, and projects.
-        Project owners must have <code>PROJECT_MANAGEMENT</code> permission.
+        <div class="flow-step"><div class="n">4</div><strong>Add tasks</strong><p>TAC <code>DD-MM-YYYY</code></p></div>
       </div>
 
-      <h3>5.3 Project delivery flow</h3>
+      <h3>5.3 Task → project sync</h3>
+      <p>On task <strong>create / update / delete</strong>:</p>
+      <ol>
+        <li><code>project.totalPercentage</code> = average of all task <code>completedPercentage</code> values.</li>
+        <li>Tasks are grouped by <code>status</code>; each group sums <code>completedPercentage</code>.</li>
+        <li>The group with the <strong>highest sum</strong> wins (tie-break: higher count).</li>
+        <li>That status is written to <code>project.status</code>.</li>
+        <li>If the project is already <code>CLOSE</code>, status is not changed.</li>
+        <li>If there are no tasks left, project status becomes <code>OPEN</code>.</li>
+      </ol>
+
+      <h3>5.4 Public dashboard</h3>
       <div class="flow">
-        <div class="flow-step">
-          <div class="n">1</div>
-          <strong>Open project</strong>
-          <p>Status <code>OPEN</code> / stage <code>INITIATION</code></p>
-        </div>
+        <div class="flow-step"><div class="n">1</div><strong>List</strong><p><code>GET /dashboard/v1/projects</code></p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">2</div>
-          <strong>Track work</strong>
-          <p>Update task % and status</p>
-        </div>
+        <div class="flow-step"><div class="n">2</div><strong>Filter</strong><p><code>code</code>, <code>status</code>, <code>ownerId</code>…</p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">3</div>
-          <strong>Auto average</strong>
-          <p>Project <code>totalPercentage</code> recalculates</p>
-        </div>
+        <div class="flow-step"><div class="n">3</div><strong>Detail</strong><p><code>GET …/projects/:id</code></p></div>
         <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">4</div>
-          <strong>Complete</strong>
-          <p>All tasks COMPLETED + 100%</p>
-        </div>
-      </div>
-      <div class="warn-box">
-        A project can be set to <code>COMPLETED</code> only when every task is
-        <code>COMPLETED</code> and project <code>totalPercentage</code> is <strong>100%</strong>.
-      </div>
-
-      <h3>5.4 Permission decision flow</h3>
-      <div class="flow-branch">
-        <div class="card">
-          <h4>FULL_CONTROL</h4>
-          <ul class="flow-list">
-            <li>Manage users &amp; roles</li>
-            <li>Create any project</li>
-            <li>Edit any project / task</li>
-            <li>View overview and lists</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>PROJECT_MANAGEMENT</h4>
-          <ul class="flow-list">
-            <li>Cannot manage users or roles</li>
-            <li>Cannot create projects</li>
-            <li>Can edit only owned projects</li>
-            <li>Can manage tasks on owned projects</li>
-          </ul>
-        </div>
-      </div>
-      <pre>Request
-  └─ Authenticated?
-       ├─ No  → 401 Unauthorized
-       └─ Yes → Has FULL_CONTROL?
-            ├─ Yes → Allow action
-            └─ No  → Is action user/role/project-create?
-                 ├─ Yes → 403 Forbidden
-                 └─ No  → Editing project/task?
-                      ├─ Yes → Is project owner? → Allow / 403
-                      └─ No  → Allow read / profile</pre>
-
-      <h3>5.5 Public dashboard flow</h3>
-      <div class="flow">
-        <div class="flow-step">
-          <div class="n">1</div>
-          <strong>List projects</strong>
-          <p><code>GET /dashboard/v1/projects</code></p>
-        </div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">2</div>
-          <strong>Optional filters</strong>
-          <p><code>code</code>, <code>status</code>, <code>ownerId</code>…</p>
-        </div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">3</div>
-          <strong>Open detail</strong>
-          <p><code>GET /dashboard/v1/projects/:id</code></p>
-        </div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-step">
-          <div class="n">4</div>
-          <strong>Show UI</strong>
-          <p>Owners + tasks + TAC</p>
-        </div>
+        <div class="flow-step"><div class="n">4</div><strong>Hidden</strong><p><code>CLOSE</code> never shown</p></div>
       </div>
 
       <h2 id="conventions">6. Conventions</h2>
       <ul>
-        <li><strong>Pagination:</strong> add <code>page</code> and <code>perPage</code> query params.</li>
-        <li><strong>Filters:</strong> pass matching field names as query params (e.g. <code>?status=OPEN</code>).</li>
-        <li><strong>Project codes:</strong> auto-generated as <code>PMO0001</code>, <code>PMO0002</code>, …</li>
-        <li><strong>TAC date format:</strong> <code>DD-MM-YYYY</code> (example: <code>15-08-2026</code>).</li>
-        <li><strong>Password rule:</strong> min 8 chars, with uppercase, lowercase, number, and special character.</li>
+        <li><strong>Pagination:</strong> <code>page</code> + <code>perPage</code></li>
+        <li><strong>Filters:</strong> query params matching field names</li>
+        <li><strong>Project codes:</strong> auto <code>PMO0001</code>, <code>PMO0002</code>, …</li>
+        <li><strong>TAC:</strong> <code>DD-MM-YYYY</code> (e.g. <code>15-08-2026</code>)</li>
+        <li><strong>Password:</strong> min 8 chars with upper, lower, number, special</li>
+        <li><strong>Hidden role:</strong> <code>Developer</code> is never returned in role list/detail</li>
       </ul>
 
       <h2 id="auth-api">7. Auth</h2>
@@ -647,49 +534,41 @@ Content-Type: application/json</pre>
         <span class="badge public">Public</span>
         <span class="path">/admin/v1/auth/sign-in</span>
       </div>
-      <pre>{
+<pre>{
   "email": "admin@example.com",
   "password": "YourPassword1!"
 }</pre>
-      <p><strong>Response</strong></p>
-      <pre>{
+      <p><strong>Success</strong></p>
+<pre>{
   "status": true,
   "message": "User sign in successfully",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  }
+  "data": { "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
 }</pre>
+      <table>
+        <thead><tr><th>Case</th><th>HTTP</th><th>Message</th></tr></thead>
+        <tbody>
+          <tr><td>Invalid email / password / user not found</td><td>401</td><td>Invalid email or password</td></tr>
+          <tr><td>User status <code>INACTIVE</code></td><td>403</td><td>User is suspended</td></tr>
+          <tr><td>Validation (missing fields)</td><td>400</td><td>Sign in failed (+ details)</td></tr>
+        </tbody>
+      </table>
 
       <h2 id="profile-api">8. Profile</h2>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="badge auth">JWT</span>
-        <span class="path">/admin/v1/me</span>
-      </div>
-      <p>Returns the signed-in user’s profile (no password).</p>
-
-      <div class="endpoint">
-        <span class="badge post">POST</span>
-        <span class="badge auth">JWT</span>
-        <span class="path">/admin/v1/me</span>
-      </div>
-      <pre>{
+      <div class="endpoint"><span class="badge get">GET</span><span class="badge auth">JWT</span><span class="path">/admin/v1/me</span></div>
+      <p>Current user profile (no password).</p>
+      <div class="endpoint"><span class="badge post">POST</span><span class="badge auth">JWT</span><span class="path">/admin/v1/me</span></div>
+<pre>{
   "name": "Jane Doe",
   "email": "jane@example.com",
   "employeeId": "EMP001",
   "password": "NewPass1!",
   "passwordConfirm": "NewPass1!"
 }</pre>
-      <p>All fields optional. Role and status cannot be changed here.</p>
+      <p>All fields optional. Cannot change role or status here.</p>
 
       <h2 id="overview-api">9. Overview</h2>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="badge auth">JWT</span>
-        <span class="path">/admin/v1/overview</span>
-      </div>
-      <p>Dashboard counters for users, roles, projects, and tasks.</p>
-      <pre>{
+      <div class="endpoint"><span class="badge get">GET</span><span class="badge auth">JWT</span><span class="path">/admin/v1/overview</span></div>
+<pre>{
   "status": true,
   "message": "Overview stats retrieved successfully",
   "data": {
@@ -709,27 +588,19 @@ Content-Type: application/json</pre>
 }</pre>
 
       <h2 id="users-api">10. Users</h2>
-      <p><span class="badge auth">JWT</span> · Create/update/delete require <code>FULL_CONTROL</code>.</p>
-
-      <h3>List users</h3>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="path">/admin/v1/users</span>
-      </div>
-      <p>Filters: <code>name</code>, <code>email</code>, <code>employeeId</code>, <code>status</code>, <code>roleId</code>, plus <code>page</code>, <code>perPage</code>.</p>
-
-      <h3>Get user</h3>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="path">/admin/v1/users/:id</span>
-      </div>
-
-      <h3>Create user</h3>
-      <div class="endpoint">
-        <span class="badge post">POST</span>
-        <span class="path">/admin/v1/users</span>
-      </div>
-      <pre>{
+      <p><span class="badge auth">JWT</span> · Mutating actions need <code>FULL_CONTROL</code>.</p>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/users</td></tr>
+          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/users/:id</td></tr>
+          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/users</td></tr>
+          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/users/:id</td></tr>
+          <tr><td><span class="badge delete">DELETE</span></td><td class="mono">/admin/v1/users/:id</td></tr>
+        </tbody>
+      </table>
+      <p>List filters: <code>name</code>, <code>email</code>, <code>employeeId</code>, <code>status</code>, <code>roleId</code>, <code>page</code>, <code>perPage</code>.</p>
+<pre>{
   "name": "John Smith",
   "employeeId": "EMP010",
   "email": "john@example.com",
@@ -739,43 +610,20 @@ Content-Type: application/json</pre>
   "passwordConfirm": "Secure1!"
 }</pre>
 
-      <h3>Update user</h3>
-      <div class="endpoint">
-        <span class="badge post">POST</span>
-        <span class="path">/admin/v1/users/:id</span>
-      </div>
-      <p>All fields optional.</p>
-
-      <h3>Delete user</h3>
-      <div class="endpoint">
-        <span class="badge delete">DELETE</span>
-        <span class="path">/admin/v1/users/:id</span>
-      </div>
-
       <h2 id="roles-api">11. Roles</h2>
-      <p><span class="badge auth">JWT</span> · Create/update/delete require <code>FULL_CONTROL</code>.</p>
-
-      <h3>List roles</h3>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="path">/admin/v1/roles</span>
-      </div>
-      <p>Filters: <code>name</code>, <code>permission</code>.</p>
-      <div class="note">The hidden <code>Developer</code> role is never returned in list/detail.</div>
-
-      <h3>Get / create / update / delete</h3>
+      <p><span class="badge auth">JWT</span> · Mutating actions need <code>FULL_CONTROL</code>.</p>
       <table>
-        <thead>
-          <tr><th>Method</th><th>Path</th></tr>
-        </thead>
+        <thead><tr><th>Method</th><th>Path</th></tr></thead>
         <tbody>
+          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/roles</td></tr>
           <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/roles/:id</td></tr>
           <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/roles</td></tr>
           <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/roles/:id</td></tr>
           <tr><td><span class="badge delete">DELETE</span></td><td class="mono">/admin/v1/roles/:id</td></tr>
         </tbody>
       </table>
-      <pre>{
+      <p>List filters: <code>name</code>, <code>permission</code>.</p>
+<pre>{
   "name": "Project Manager",
   "description": "Owns and updates projects",
   "permission": "PROJECT_MANAGEMENT"
@@ -783,147 +631,91 @@ Content-Type: application/json</pre>
 
       <h2 id="projects-api">12. Projects</h2>
       <p><span class="badge auth">JWT</span></p>
-
-      <h3>List projects</h3>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="path">/admin/v1/projects</span>
-      </div>
-      <p>
-        Filters: <code>code</code>, <code>name</code>, <code>department</code>, <code>status</code>,
-        <code>stage</code>, <code>ownerId</code>, and more project text fields.
-      </p>
-
-      <h3>Get project</h3>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="path">/admin/v1/projects/:id</span>
-      </div>
-      <p>Includes <code>projectOwners</code> and <code>tasks</code>. TAC dates are returned as <code>DD-MM-YYYY</code>.</p>
-
-      <h3>Create project</h3>
-      <div class="endpoint">
-        <span class="badge post">POST</span>
-        <span class="path">/admin/v1/projects</span>
-      </div>
-      <p>Requires <code>FULL_CONTROL</code>. <code>ownerIds</code> is required (one or more).</p>
-      <pre>{
+      <div class="endpoint"><span class="badge get">GET</span><span class="path">/admin/v1/projects</span></div>
+      <p>Filters: <code>code</code>, <code>name</code>, <code>department</code>, <code>status</code>, <code>stage</code>, <code>ownerId</code>, and other project text fields.</p>
+      <div class="endpoint"><span class="badge get">GET</span><span class="path">/admin/v1/projects/:id</span></div>
+      <p>Includes <code>projectOwners</code> and <code>tasks</code>. Task TAC is <code>DD-MM-YYYY</code>.</p>
+      <div class="endpoint"><span class="badge post">POST</span><span class="path">/admin/v1/projects</span></div>
+      <p>Requires <code>FULL_CONTROL</code>. <code>ownerIds</code> required (1+). <code>code</code> auto-generated.</p>
+<pre>{
   "name": "Core Banking Upgrade",
   "department": "IT",
   "status": "OPEN",
   "stage": "INITIATION",
   "ownerIds": [3, 5]
 }</pre>
-      <p><code>code</code> is generated automatically (e.g. <code>PMO0007</code>).</p>
-
-      <h3>Update project</h3>
-      <div class="endpoint">
-        <span class="badge post">POST</span>
-        <span class="path">/admin/v1/projects/:id</span>
-      </div>
+      <div class="endpoint"><span class="badge post">POST</span><span class="path">/admin/v1/projects/:id</span></div>
       <ul>
-        <li><code>FULL_CONTROL</code>: can update any project</li>
-        <li><code>PROJECT_MANAGEMENT</code>: only if user is an owner</li>
-        <li>To set <code>COMPLETED</code>, all tasks must be <code>COMPLETED</code> and total percentage must be 100%</li>
+        <li><code>FULL_CONTROL</code>: any project</li>
+        <li><code>PROJECT_MANAGEMENT</code>: only if owner</li>
+        <li>Manual <code>COMPLETED</code> requires all tasks <code>COMPLETED</code> and total 100%</li>
       </ul>
 
       <h2 id="tasks-api">13. Tasks</h2>
       <p><span class="badge auth">JWT</span> · Create/update/delete allowed for full-control users, or owners of the related project.</p>
-
-      <h3>List tasks</h3>
-      <div class="endpoint">
-        <span class="badge get">GET</span>
-        <span class="path">/admin/v1/tasks</span>
-      </div>
-      <p>Filters: <code>name</code>, <code>tac</code> (<code>DD-MM-YYYY</code>), <code>projectId</code>, <code>projectCode</code>, <code>status</code>.</p>
-
-      <h3>Create task</h3>
-      <div class="endpoint">
-        <span class="badge post">POST</span>
-        <span class="path">/admin/v1/tasks</span>
-      </div>
-      <pre>{
-  "name": "UAT sign-off",
-  "tac": "15-08-2026",
-  "completedPercentage": 0,
-  "projectId": 1,
-  "status": "OPEN"
-}</pre>
-      <p>Project <code>totalPercentage</code> is recalculated as the average of task percentages.</p>
-
-      <h3>Other actions</h3>
       <table>
-        <thead>
-          <tr><th>Method</th><th>Path</th></tr>
-        </thead>
+        <thead><tr><th>Method</th><th>Path</th></tr></thead>
         <tbody>
+          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/tasks</td></tr>
           <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/tasks/:id</td></tr>
+          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/tasks</td></tr>
           <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/tasks/:id</td></tr>
           <tr><td><span class="badge delete">DELETE</span></td><td class="mono">/admin/v1/tasks/:id</td></tr>
         </tbody>
       </table>
+      <p>List filters: <code>name</code>, <code>tac</code> (<code>DD-MM-YYYY</code>), <code>projectId</code>, <code>projectCode</code>, <code>status</code>.</p>
+<pre>{
+  "name": "UAT sign-off",
+  "tac": "15-08-2026",
+  "completedPercentage": 50,
+  "projectId": 1,
+  "status": "ON_TRACK"
+}</pre>
+      <div class="note">
+        After create/update/delete, the API recalculates project <code>totalPercentage</code>
+        and sets project <code>status</code> to the task-status group with the highest
+        summed <code>completedPercentage</code>.
+      </div>
 
       <h2 id="dashboard-api">14. Dashboard Projects (Public)</h2>
-      <p>No authentication required. Read-only.</p>
+      <p>No auth. Read-only. <strong>Projects with status <code>CLOSE</code> are excluded</strong> from list and detail (detail returns 404).</p>
       <table>
-        <thead>
-          <tr><th>Method</th><th>Path</th><th>Description</th></tr>
-        </thead>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
         <tbody>
           <tr>
             <td><span class="badge get">GET</span></td>
             <td class="mono">/dashboard/v1/projects</td>
-            <td>List projects (same filters as admin, including <code>ownerId</code>)</td>
+            <td>List (filters include <code>code</code>, <code>status</code>, <code>ownerId</code>, …)</td>
           </tr>
           <tr>
             <td><span class="badge get">GET</span></td>
             <td class="mono">/dashboard/v1/projects/:id</td>
-            <td>Project detail with owners and tasks</td>
+            <td>Detail with owners and tasks</td>
           </tr>
         </tbody>
       </table>
 
       <h2 id="enums">15. Enums</h2>
       <div class="grid-2">
-        <div class="card">
-          <strong>User status</strong>
-          <p class="mono">ACTIVE · INACTIVE</p>
-        </div>
-        <div class="card">
-          <strong>Role permission</strong>
-          <p class="mono">FULL_CONTROL · PROJECT_MANAGEMENT</p>
-        </div>
-        <div class="card">
-          <strong>Project status</strong>
-          <p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED · CLOSE</p>
-        </div>
-        <div class="card">
-          <strong>Project stage</strong>
-          <p class="mono">INITIATION · PLANNING · EXECUTION_AND_IMPLEMENTATION · CLOSING_AND_DONE · POST_IMPLEMENTATION</p>
-        </div>
-        <div class="card">
-          <strong>Task status</strong>
-          <p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED</p>
-        </div>
-        <div class="card">
-          <strong>TAC date</strong>
-          <p class="mono">DD-MM-YYYY</p>
-        </div>
+        <div class="card"><strong>User status</strong><p class="mono">ACTIVE · INACTIVE</p></div>
+        <div class="card"><strong>Role permission</strong><p class="mono">FULL_CONTROL · PROJECT_MANAGEMENT</p></div>
+        <div class="card"><strong>Project status</strong><p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED · CLOSE</p></div>
+        <div class="card"><strong>Project stage</strong><p class="mono">INITIATION · PLANNING · EXECUTION_AND_IMPLEMENTATION · CLOSING_AND_DONE · POST_IMPLEMENTATION</p></div>
+        <div class="card"><strong>Task status</strong><p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED</p></div>
+        <div class="card"><strong>TAC date</strong><p class="mono">DD-MM-YYYY</p></div>
       </div>
 
       <h2 id="errors">16. Errors</h2>
       <table>
-        <thead>
-          <tr><th>HTTP</th><th>Meaning</th></tr>
-        </thead>
+        <thead><tr><th>HTTP</th><th>Meaning</th></tr></thead>
         <tbody>
-          <tr><td>400</td><td>Validation error (check <code>details</code>)</td></tr>
-          <tr><td>401</td><td>Missing/invalid token or bad credentials</td></tr>
-          <tr><td>403</td><td>Permission denied</td></tr>
-          <tr><td>404</td><td>Resource not found</td></tr>
+          <tr><td>400</td><td>Validation error (<code>details</code>)</td></tr>
+          <tr><td>401</td><td>Unauthorized (token / credentials)</td></tr>
+          <tr><td>403</td><td>Forbidden (permission / suspended)</td></tr>
+          <tr><td>404</td><td>Not found</td></tr>
         </tbody>
       </table>
-      <pre>{
+<pre>{
   "status": false,
   "message": "Failed to save project",
   "error": "Validation Error",
@@ -933,29 +725,32 @@ Content-Type: application/json</pre>
 }</pre>
 
       <h2 id="quick-start">17. Quick Start</h2>
-      <pre># 1) Sign in
+<pre># 1) Sign in
 curl -X POST http://localhost:3030/api/admin/v1/auth/sign-in \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"YourPassword1!"}'
+  -d '{"email":"developer@ayabank.com","password":"YourPassword1!"}'
 
-# 2) Get overview
+# 2) Overview
 curl http://localhost:3030/api/admin/v1/overview \
   -H "Authorization: Bearer &lt;token&gt;"
 
-# 3) Create a project (FULL_CONTROL only)
+# 3) Create project (FULL_CONTROL)
 curl -X POST http://localhost:3030/api/admin/v1/projects \
   -H "Authorization: Bearer &lt;token&gt;" \
   -H "Content-Type: application/json" \
   -d '{"name":"New Initiative","ownerIds":[3]}'
 
-# 4) Add a task
+# 4) Create task (syncs project % + status)
 curl -X POST http://localhost:3030/api/admin/v1/tasks \
   -H "Authorization: Bearer &lt;token&gt;" \
   -H "Content-Type: application/json" \
-  -d '{"name":"Kickoff","tac":"30-07-2026","projectId":1}'</pre>
+  -d '{"name":"Kickoff","tac":"30-07-2026","completedPercentage":25,"projectId":1,"status":"ON_TRACK"}'
+
+# 5) Public dashboard list (no CLOSE projects)
+curl http://localhost:3030/api/dashboard/v1/projects</pre>
 
       <footer>
-        PMO API User Manual · Open this page at the API root (<code>/</code>) while the server is running.
+        PMO API User Manual · Open at API root (<code>/</code>) while the server is running.
       </footer>
     </main>
   </div>

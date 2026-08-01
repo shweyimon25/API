@@ -1,5 +1,5 @@
 import prisma from "../../../../prisma/client";
-import { Prisma, TaskStatus } from "@prisma/client";
+import { Prisma, ProjectStatus, TaskStatus } from "@prisma/client";
 import {
   NotFoundException,
   ValidationException,
@@ -37,6 +37,12 @@ const formatTask = <T extends { tac: Date }>(task: T) => ({
   ...task,
   tac: formatDateDMY(task.tac),
 });
+
+type TaskStatusGroup = {
+  status: TaskStatus;
+  count: number;
+  completedPercentage: number;
+};
 
 class TaskService {
   async findAll(where?: Prisma.TaskWhereInput) {
@@ -126,6 +132,76 @@ class TaskService {
     return totalPercentage;
   }
 
+  /**
+   * Group tasks by status, pick the group with the highest completedPercentage sum,
+   * and set that status on the parent project (skips CLOSE projects).
+   */
+  async syncProjectStatusFromTopTaskPercentage(projectId: number) {
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, status: true },
+    });
+
+    if (!project || project.status === ProjectStatus.CLOSE) {
+      return null;
+    }
+
+    const tasks = await prisma.task.findMany({
+      where: { projectId },
+      select: { status: true, completedPercentage: true },
+    });
+
+    if (tasks.length === 0) {
+      await prisma.project.update({
+        where: { id: projectId },
+        data: { status: ProjectStatus.OPEN },
+      });
+      return ProjectStatus.OPEN;
+    }
+
+    const grouped = tasks.reduce(
+      (acc, task) => {
+        if (!acc[task.status]) {
+          acc[task.status] = {
+            status: task.status,
+            count: 0,
+            completedPercentage: 0,
+          };
+        }
+
+        acc[task.status].count++;
+        acc[task.status].completedPercentage += task.completedPercentage;
+
+        return acc;
+      },
+      {} as Record<string, TaskStatusGroup>,
+    );
+
+    const topStatusGroup = Object.values(grouped).reduce((top, current) => {
+      if (current.completedPercentage > top.completedPercentage) {
+        return current;
+      }
+
+      if (
+        current.completedPercentage === top.completedPercentage &&
+        current.count > top.count
+      ) {
+        return current;
+      }
+
+      return top;
+    });
+
+    const nextStatus = topStatusGroup.status as unknown as ProjectStatus;
+
+    await prisma.project.update({
+      where: { id: projectId },
+      data: { status: nextStatus },
+    });
+
+    return nextStatus;
+  }
+
   async create(createInput: CreateTaskInput, currentUser: UserWithRole) {
     await this.assertProjectExists(createInput.projectId);
     await assertCanEditProject(currentUser, createInput.projectId);
@@ -141,6 +217,7 @@ class TaskService {
     });
 
     await this.recalculateTotalPercentage(createInput.projectId);
+    await this.syncProjectStatusFromTopTaskPercentage(createInput.projectId);
 
     return this.findOne(task.id);
   }
@@ -181,9 +258,11 @@ class TaskService {
     const nextProjectId = projectId ?? existing.projectId;
 
     await this.recalculateTotalPercentage(nextProjectId);
+    await this.syncProjectStatusFromTopTaskPercentage(nextProjectId);
 
     if (projectId !== undefined && projectId !== existing.projectId) {
       await this.recalculateTotalPercentage(existing.projectId);
+      await this.syncProjectStatusFromTopTaskPercentage(existing.projectId);
     }
 
     return this.findOne(id);
@@ -205,6 +284,7 @@ class TaskService {
     });
 
     await this.recalculateTotalPercentage(existing.projectId);
+    await this.syncProjectStatusFromTopTaskPercentage(existing.projectId);
   }
 }
 
