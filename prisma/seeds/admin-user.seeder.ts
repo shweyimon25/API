@@ -15,9 +15,9 @@ const adminUserSeeder = async () => {
 
   const adminUsers = [
     {
-      name: "Aung Paing Soe 1",
-      email: "aungpaingsoe1@ayabank.com",
-      employeeId: "016481",
+      name: "SystemAdmin",
+      email: "systemadmin@ayabank.com",
+      employeeId: "00000",
       password: bcrypt.hashSync("@dminP@55", 10),
       status: Status.ACTIVE,
       roleId: developerRole.id,
