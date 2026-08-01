@@ -64,8 +64,10 @@ export const projectScope = (
     where.currentStatus = { contains: currentStatus };
   }
 
-  if (status) {
+  if (status && status !== ProjectStatus.CLOSE) {
     where.status = status as ProjectStatus;
+  } else {
+    where.status = { not: ProjectStatus.CLOSE };
   }
 
   if (stage) {

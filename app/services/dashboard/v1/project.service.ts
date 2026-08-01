@@ -1,5 +1,5 @@
 import prisma from "../../../../prisma/client";
-import { Prisma } from "@prisma/client";
+import { Prisma, ProjectStatus } from "@prisma/client";
 import { NotFoundException } from "../../../helpers/exceptions";
 import { formatDateDMY } from "../../../helpers/helper";
 
@@ -107,8 +107,11 @@ class ProjectService {
   }
 
   async findOne(id: number) {
-    const project = await prisma.project.findUnique({
-      where: { id },
+    const project = await prisma.project.findFirst({
+      where: {
+        id,
+        status: { not: ProjectStatus.CLOSE },
+      },
       select: projectDetailSelect,
     });
 
