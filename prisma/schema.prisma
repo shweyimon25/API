@@ -71,7 +71,7 @@ model Project {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @default(now()) @updatedAt
 
-  deliveriables deliveriable[]
+  tasks         Task[]
   projectOwners ProjectOwner[]
 }
 
@@ -105,19 +105,19 @@ enum ProjectStage {
   POST_IMPLEMENTATION
 }
 
-model deliveriable {
-  id                  Int               @id @default(autoincrement())
-  deliverable         String
+model Task {
+  id                  Int        @id @default(autoincrement())
+  name                String
   tac                 DateTime
-  completedPercentage Float             @default(0)
+  completedPercentage Float      @default(0)
   projectId           Int
-  project             Project           @relation(fields: [projectId], references: [id])
-  status              DeliverableStatus @default(OPEN)
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @default(now()) @updatedAt
+  project             Project    @relation(fields: [projectId], references: [id])
+  status              TaskStatus @default(OPEN)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @default(now()) @updatedAt
 }
 
-enum DeliverableStatus {
+enum TaskStatus {
   OPEN
   ON_TRACK
   INDICATION_OF_DELAY

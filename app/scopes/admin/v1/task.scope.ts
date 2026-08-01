@@ -1,22 +1,20 @@
-import { DeliverableStatus, Prisma } from "@prisma/client";
+import { Prisma, TaskStatus } from "@prisma/client";
 import { parseDateDMY } from "../../../helpers/helper";
 
-interface DeliveriableScopeQuery {
-  deliverable?: string;
+interface TaskScopeQuery {
+  name?: string;
   tac?: string;
   projectId?: string;
   projectCode?: string;
   status?: string;
 }
 
-export const deliveriableScope = (
-  query: DeliveriableScopeQuery,
-): Prisma.deliveriableWhereInput => {
-  const { deliverable, tac, projectCode, projectId, status } = query;
-  const where: Prisma.deliveriableWhereInput = {};
+export const taskScope = (query: TaskScopeQuery): Prisma.TaskWhereInput => {
+  const { name, tac, projectCode, projectId, status } = query;
+  const where: Prisma.TaskWhereInput = {};
 
-  if (deliverable) {
-    where.deliverable = { contains: deliverable };
+  if (name) {
+    where.name = { contains: name };
   }
 
   if (tac) {
@@ -47,7 +45,7 @@ export const deliveriableScope = (
   }
 
   if (status) {
-    where.status = status as DeliverableStatus;
+    where.status = status as TaskStatus;
   }
 
   return where;

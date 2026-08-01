@@ -13,26 +13,30 @@ const adminUserSeeder = async () => {
     throw new Error("Developer role not found. Seed roles first.");
   }
 
-  const adminData = {
-    name: "Developer",
-    email: "developer@ayabank.com",
-    employeeId: "0000",
-    password: bcrypt.hashSync("Developer@123", 10),
-    status: Status.ACTIVE,
-    roleId: developerRole.id,
-  };
-
-  await prisma.user.upsert({
-    where: { email: adminData.email },
-    update: {
-      name: adminData.name,
-      employeeId: adminData.employeeId,
-      password: adminData.password,
-      status: adminData.status,
-      roleId: adminData.roleId,
+  const adminUsers = [
+    {
+      name: "Aung Paing Soe 1",
+      email: "aungpaingsoe1@ayabank.com",
+      employeeId: "016481",
+      password: bcrypt.hashSync("@dminP@55", 10),
+      status: Status.ACTIVE,
+      roleId: developerRole.id,
     },
-    create: adminData,
-  });
+  ];
+
+  for (const adminUser of adminUsers) {
+    await prisma.user.upsert({
+      where: { email: adminUser.email },
+      update: {
+        name: adminUser.name,
+        employeeId: adminUser.employeeId,
+        password: adminUser.password,
+        status: adminUser.status,
+        roleId: adminUser.roleId,
+      },
+      create: adminUser,
+    });
+  }
 
   console.log("Admin User seeded successfully");
 };

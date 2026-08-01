@@ -1,22 +1,22 @@
 import prisma from "../../../../prisma/client";
-import { DeliverableStatus, Prisma } from "@prisma/client";
+import { Prisma, TaskStatus } from "@prisma/client";
 import {
   NotFoundException,
   ValidationException,
 } from "../../../helpers/exceptions";
 import {
-  CreateDeliveriableInput,
-  UpdateDeliveriableInput,
-} from "../../../schemas/admin/v1/deliveriable.schema";
+  CreateTaskInput,
+  UpdateTaskInput,
+} from "../../../schemas/admin/v1/task.schema";
 import { formatDateDMY } from "../../../helpers/helper";
 import {
   assertCanEditProject,
   UserWithRole,
 } from "../../../helpers/permission";
 
-const deliveriableSelect = {
+const taskSelect = {
   id: true,
-  deliverable: true,
+  name: true,
   tac: true,
   completedPercentage: true,
   status: true,
@@ -31,41 +31,41 @@ const deliveriableSelect = {
   },
   createdAt: true,
   updatedAt: true,
-} satisfies Prisma.deliveriableSelect;
+} satisfies Prisma.TaskSelect;
 
-const formatDeliveriable = <T extends { tac: Date }>(deliveriable: T) => ({
-  ...deliveriable,
-  tac: formatDateDMY(deliveriable.tac),
+const formatTask = <T extends { tac: Date }>(task: T) => ({
+  ...task,
+  tac: formatDateDMY(task.tac),
 });
 
-class DeliveriableService {
-  async findAll(where?: Prisma.deliveriableWhereInput) {
-    const deliveriables = await prisma.deliveriable.findMany({
+class TaskService {
+  async findAll(where?: Prisma.TaskWhereInput) {
+    const tasks = await prisma.task.findMany({
       where,
       orderBy: { id: "asc" },
-      select: deliveriableSelect,
+      select: taskSelect,
     });
 
-    return deliveriables.map(formatDeliveriable);
+    return tasks.map(formatTask);
   }
 
   async findByPaginate(
     page: number,
     perPage: number,
-    where?: Prisma.deliveriableWhereInput,
+    where?: Prisma.TaskWhereInput,
   ) {
-    const deliveriables = await prisma.deliveriable.findMany({
+    const tasks = await prisma.task.findMany({
       where,
       orderBy: { id: "asc" },
       skip: (page - 1) * perPage,
       take: perPage,
-      select: deliveriableSelect,
+      select: taskSelect,
     });
 
-    const total = await prisma.deliveriable.count({ where });
+    const total = await prisma.task.count({ where });
 
     return {
-      data: deliveriables.map(formatDeliveriable),
+      data: tasks.map(formatTask),
       meta: {
         totalCount: total,
         totalPages: Math.ceil(total / perPage),
@@ -80,16 +80,16 @@ class DeliveriableService {
   }
 
   async findOne(id: number) {
-    const deliveriable = await prisma.deliveriable.findUnique({
+    const task = await prisma.task.findUnique({
       where: { id },
-      select: deliveriableSelect,
+      select: taskSelect,
     });
 
-    if (!deliveriable) {
-      throw new NotFoundException("Deliveriable not found");
+    if (!task) {
+      throw new NotFoundException("Task not found");
     }
 
-    return formatDeliveriable(deliveriable);
+    return formatTask(task);
   }
 
   private async assertProjectExists(projectId: number) {
@@ -98,7 +98,7 @@ class DeliveriableService {
     });
 
     if (!project) {
-      throw new ValidationException("Failed to save deliveriable", [
+      throw new ValidationException("Failed to save task", [
         {
           field: "projectId",
           issue: "Project does not exist",
@@ -108,10 +108,10 @@ class DeliveriableService {
   }
 
   /**
-   * Project.totalPercentage = average of deliverable.completedPercentage for that project
+   * Project.totalPercentage = average of task.completedPercentage for that project
    */
   async recalculateTotalPercentage(projectId: number) {
-    const aggregate = await prisma.deliveriable.aggregate({
+    const aggregate = await prisma.task.aggregate({
       where: { projectId },
       _avg: { completedPercentage: true },
     });
@@ -126,39 +126,36 @@ class DeliveriableService {
     return totalPercentage;
   }
 
-  async create(
-    createInput: CreateDeliveriableInput,
-    currentUser: UserWithRole,
-  ) {
+  async create(createInput: CreateTaskInput, currentUser: UserWithRole) {
     await this.assertProjectExists(createInput.projectId);
     await assertCanEditProject(currentUser, createInput.projectId);
 
-    const deliveriable = await prisma.deliveriable.create({
+    const task = await prisma.task.create({
       data: {
-        deliverable: createInput.deliverable,
+        name: createInput.name,
         tac: createInput.tac,
         completedPercentage: createInput.completedPercentage ?? 0,
         projectId: createInput.projectId,
-        status: createInput.status ?? DeliverableStatus.OPEN,
+        status: createInput.status ?? TaskStatus.OPEN,
       },
     });
 
     await this.recalculateTotalPercentage(createInput.projectId);
 
-    return this.findOne(deliveriable.id);
+    return this.findOne(task.id);
   }
 
   async update(
     id: number,
-    updateInput: UpdateDeliveriableInput,
+    updateInput: UpdateTaskInput,
     currentUser: UserWithRole,
   ) {
-    const existing = await prisma.deliveriable.findUnique({
+    const existing = await prisma.task.findUnique({
       where: { id },
     });
 
     if (!existing) {
-      throw new NotFoundException("Deliveriable not found");
+      throw new NotFoundException("Task not found");
     }
 
     await assertCanEditProject(currentUser, existing.projectId);
@@ -168,13 +165,12 @@ class DeliveriableService {
       await assertCanEditProject(currentUser, updateInput.projectId);
     }
 
-    const { deliverable, tac, completedPercentage, projectId, status } =
-      updateInput;
+    const { name, tac, completedPercentage, projectId, status } = updateInput;
 
-    await prisma.deliveriable.update({
+    await prisma.task.update({
       where: { id },
       data: {
-        ...(deliverable !== undefined && { deliverable }),
+        ...(name !== undefined && { name }),
         ...(tac !== undefined && { tac }),
         ...(completedPercentage !== undefined && { completedPercentage }),
         ...(projectId !== undefined && { projectId }),
@@ -194,17 +190,17 @@ class DeliveriableService {
   }
 
   async destroy(id: number, currentUser: UserWithRole) {
-    const existing = await prisma.deliveriable.findUnique({
+    const existing = await prisma.task.findUnique({
       where: { id },
     });
 
     if (!existing) {
-      throw new NotFoundException("Deliveriable not found");
+      throw new NotFoundException("Task not found");
     }
 
     await assertCanEditProject(currentUser, existing.projectId);
 
-    await prisma.deliveriable.delete({
+    await prisma.task.delete({
       where: { id },
     });
 
@@ -212,4 +208,4 @@ class DeliveriableService {
   }
 }
 
-export default DeliveriableService;
+export default TaskService;

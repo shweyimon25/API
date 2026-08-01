@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Role" ADD COLUMN "description" TEXT;
+ALTER TABLE "Role" ADD COLUMN "permission" TEXT NOT NULL DEFAULT 'PROJECT_MANAGEMENT';

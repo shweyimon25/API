@@ -1,10 +1,10 @@
 import prisma from "../../../../prisma/client";
 import {
-  DeliverableStatus,
   Permission,
   Prisma,
   ProjectStatus,
   Status,
+  TaskStatus,
 } from "@prisma/client";
 import {
   NotFoundException,
@@ -72,10 +72,10 @@ const projectSelect = {
 
 const projectDetailSelect = {
   ...projectSelect,
-  deliveriables: {
+  tasks: {
     select: {
       id: true,
-      deliverable: true,
+      name: true,
       tac: true,
       completedPercentage: true,
       status: true,
@@ -145,7 +145,7 @@ class ProjectService {
       where: { id: projectId },
       select: {
         totalPercentage: true,
-        deliveriables: {
+        tasks: {
           select: {
             id: true,
             status: true,
@@ -158,18 +158,18 @@ class ProjectService {
       throw new NotFoundException("Project not found");
     }
 
-    if (project.deliveriables.length === 0) {
+    if (project.tasks.length === 0) {
       throw new ValidationException("Failed to update project", [
         {
           field: "status",
           issue:
-            "Project cannot be COMPLETED without deliverables that are all COMPLETED and total 100%",
+            "Project cannot be COMPLETED without tasks that are all COMPLETED and total 100%",
         },
       ]);
     }
 
-    const allCompleted = project.deliveriables.every(
-      (item) => item.status === DeliverableStatus.COMPLETED,
+    const allCompleted = project.tasks.every(
+      (item) => item.status === TaskStatus.COMPLETED,
     );
 
     if (!allCompleted) {
@@ -177,7 +177,7 @@ class ProjectService {
         {
           field: "status",
           issue:
-            "All deliverables must be COMPLETED before project can be COMPLETED",
+            "All tasks must be COMPLETED before project can be COMPLETED",
         },
       ]);
     }
@@ -243,7 +243,7 @@ class ProjectService {
 
     return {
       ...project,
-      deliveriables: project.deliveriables.map((item) => ({
+      tasks: project.tasks.map((item) => ({
         ...item,
         tac: formatDateDMY(item.tac),
       })),
@@ -263,7 +263,7 @@ class ProjectService {
         {
           field: "status",
           issue:
-            "Project cannot be created as COMPLETED. Complete all deliverables first.",
+            "Project cannot be created as COMPLETED. Complete all tasks first.",
         },
       ]);
     }

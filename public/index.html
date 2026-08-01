@@ -374,7 +374,7 @@
         <a href="#users-api">Users</a>
         <a href="#roles-api">Roles</a>
         <a href="#projects-api">Projects</a>
-        <a href="#deliveriables-api">Deliverables</a>
+        <a href="#tasks-api">Tasks</a>
       </div>
 
       <div class="nav-group">
@@ -400,7 +400,7 @@
       <div class="grid-2">
         <div class="card">
           <strong>Admin API</strong>
-          <p>Protected with JWT. Manage users, roles, projects, deliverables, and overview stats.</p>
+          <p>Protected with JWT. Manage users, roles, projects, tasks, and overview stats.</p>
         </div>
         <div class="card">
           <strong>Dashboard API</strong>
@@ -450,7 +450,7 @@ Content-Type: application/json</pre>
             <td>Yes</td>
           </tr>
           <tr>
-            <td>View overview, users, roles, projects, deliverables</td>
+            <td>View overview, users, roles, projects, tasks</td>
             <td>Yes</td>
             <td>Yes</td>
           </tr>
@@ -470,7 +470,7 @@ Content-Type: application/json</pre>
             <td>No (403)</td>
           </tr>
           <tr>
-            <td>Update projects &amp; deliverables</td>
+            <td>Update projects &amp; tasks</td>
             <td>Any project</td>
             <td>Only owned projects</td>
           </tr>
@@ -533,7 +533,7 @@ Content-Type: application/json</pre>
         <div class="flow-arrow">→</div>
         <div class="flow-step">
           <div class="n">4</div>
-          <strong>Add deliverables</strong>
+          <strong>Add tasks</strong>
           <p>TAC as <code>DD-MM-YYYY</code></p>
         </div>
       </div>
@@ -553,7 +553,7 @@ Content-Type: application/json</pre>
         <div class="flow-step">
           <div class="n">2</div>
           <strong>Track work</strong>
-          <p>Update deliverable % and status</p>
+          <p>Update task % and status</p>
         </div>
         <div class="flow-arrow">→</div>
         <div class="flow-step">
@@ -565,11 +565,11 @@ Content-Type: application/json</pre>
         <div class="flow-step">
           <div class="n">4</div>
           <strong>Complete</strong>
-          <p>All deliverables COMPLETED + 100%</p>
+          <p>All tasks COMPLETED + 100%</p>
         </div>
       </div>
       <div class="warn-box">
-        A project can be set to <code>COMPLETED</code> only when every deliverable is
+        A project can be set to <code>COMPLETED</code> only when every task is
         <code>COMPLETED</code> and project <code>totalPercentage</code> is <strong>100%</strong>.
       </div>
 
@@ -580,7 +580,7 @@ Content-Type: application/json</pre>
           <ul class="flow-list">
             <li>Manage users &amp; roles</li>
             <li>Create any project</li>
-            <li>Edit any project / deliverable</li>
+            <li>Edit any project / task</li>
             <li>View overview and lists</li>
           </ul>
         </div>
@@ -590,7 +590,7 @@ Content-Type: application/json</pre>
             <li>Cannot manage users or roles</li>
             <li>Cannot create projects</li>
             <li>Can edit only owned projects</li>
-            <li>Can manage deliverables on owned projects</li>
+            <li>Can manage tasks on owned projects</li>
           </ul>
         </div>
       </div>
@@ -601,7 +601,7 @@ Content-Type: application/json</pre>
             ├─ Yes → Allow action
             └─ No  → Is action user/role/project-create?
                  ├─ Yes → 403 Forbidden
-                 └─ No  → Editing project/deliverable?
+                 └─ No  → Editing project/task?
                       ├─ Yes → Is project owner? → Allow / 403
                       └─ No  → Allow read / profile</pre>
 
@@ -628,7 +628,7 @@ Content-Type: application/json</pre>
         <div class="flow-step">
           <div class="n">4</div>
           <strong>Show UI</strong>
-          <p>Owners + deliverables + TAC</p>
+          <p>Owners + tasks + TAC</p>
         </div>
       </div>
 
@@ -688,7 +688,7 @@ Content-Type: application/json</pre>
         <span class="badge auth">JWT</span>
         <span class="path">/admin/v1/overview</span>
       </div>
-      <p>Dashboard counters for users, roles, projects, and deliverables.</p>
+      <p>Dashboard counters for users, roles, projects, and tasks.</p>
       <pre>{
   "status": true,
   "message": "Overview stats retrieved successfully",
@@ -701,7 +701,7 @@ Content-Type: application/json</pre>
       "byStatus": { "OPEN": 2, "ON_TRACK": 1, "COMPLETED": 1 },
       "byStage": { "INITIATION": 1, "PLANNING": 2 }
     },
-    "deliveriables": {
+    "tasks": {
       "total": 12,
       "byStatus": { "OPEN": 4, "COMPLETED": 3 }
     }
@@ -799,7 +799,7 @@ Content-Type: application/json</pre>
         <span class="badge get">GET</span>
         <span class="path">/admin/v1/projects/:id</span>
       </div>
-      <p>Includes <code>projectOwners</code> and <code>deliveriables</code>. TAC dates are returned as <code>DD-MM-YYYY</code>.</p>
+      <p>Includes <code>projectOwners</code> and <code>tasks</code>. TAC dates are returned as <code>DD-MM-YYYY</code>.</p>
 
       <h3>Create project</h3>
       <div class="endpoint">
@@ -824,32 +824,32 @@ Content-Type: application/json</pre>
       <ul>
         <li><code>FULL_CONTROL</code>: can update any project</li>
         <li><code>PROJECT_MANAGEMENT</code>: only if user is an owner</li>
-        <li>To set <code>COMPLETED</code>, all deliverables must be <code>COMPLETED</code> and total percentage must be 100%</li>
+        <li>To set <code>COMPLETED</code>, all tasks must be <code>COMPLETED</code> and total percentage must be 100%</li>
       </ul>
 
-      <h2 id="deliveriables-api">13. Deliverables</h2>
+      <h2 id="tasks-api">13. Tasks</h2>
       <p><span class="badge auth">JWT</span> · Create/update/delete allowed for full-control users, or owners of the related project.</p>
 
-      <h3>List deliverables</h3>
+      <h3>List tasks</h3>
       <div class="endpoint">
         <span class="badge get">GET</span>
-        <span class="path">/admin/v1/deliveriables</span>
+        <span class="path">/admin/v1/tasks</span>
       </div>
-      <p>Filters: <code>deliverable</code>, <code>tac</code> (<code>DD-MM-YYYY</code>), <code>projectId</code>, <code>projectCode</code>, <code>status</code>.</p>
+      <p>Filters: <code>name</code>, <code>tac</code> (<code>DD-MM-YYYY</code>), <code>projectId</code>, <code>projectCode</code>, <code>status</code>.</p>
 
-      <h3>Create deliverable</h3>
+      <h3>Create task</h3>
       <div class="endpoint">
         <span class="badge post">POST</span>
-        <span class="path">/admin/v1/deliveriables</span>
+        <span class="path">/admin/v1/tasks</span>
       </div>
       <pre>{
-  "deliverable": "UAT sign-off",
+  "name": "UAT sign-off",
   "tac": "15-08-2026",
   "completedPercentage": 0,
   "projectId": 1,
   "status": "OPEN"
 }</pre>
-      <p>Project <code>totalPercentage</code> is recalculated as the average of deliverable percentages.</p>
+      <p>Project <code>totalPercentage</code> is recalculated as the average of task percentages.</p>
 
       <h3>Other actions</h3>
       <table>
@@ -857,9 +857,9 @@ Content-Type: application/json</pre>
           <tr><th>Method</th><th>Path</th></tr>
         </thead>
         <tbody>
-          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/deliveriables/:id</td></tr>
-          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/deliveriables/:id</td></tr>
-          <tr><td><span class="badge delete">DELETE</span></td><td class="mono">/admin/v1/deliveriables/:id</td></tr>
+          <tr><td><span class="badge get">GET</span></td><td class="mono">/admin/v1/tasks/:id</td></tr>
+          <tr><td><span class="badge post">POST</span></td><td class="mono">/admin/v1/tasks/:id</td></tr>
+          <tr><td><span class="badge delete">DELETE</span></td><td class="mono">/admin/v1/tasks/:id</td></tr>
         </tbody>
       </table>
 
@@ -878,7 +878,7 @@ Content-Type: application/json</pre>
           <tr>
             <td><span class="badge get">GET</span></td>
             <td class="mono">/dashboard/v1/projects/:id</td>
-            <td>Project detail with owners and deliverables</td>
+            <td>Project detail with owners and tasks</td>
           </tr>
         </tbody>
       </table>
@@ -902,7 +902,7 @@ Content-Type: application/json</pre>
           <p class="mono">INITIATION · PLANNING · EXECUTION_AND_IMPLEMENTATION · CLOSING_AND_DONE · POST_IMPLEMENTATION</p>
         </div>
         <div class="card">
-          <strong>Deliverable status</strong>
+          <strong>Task status</strong>
           <p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED</p>
         </div>
         <div class="card">
@@ -948,11 +948,11 @@ curl -X POST http://localhost:3030/api/admin/v1/projects \
   -H "Content-Type: application/json" \
   -d '{"name":"New Initiative","ownerIds":[3]}'
 
-# 4) Add a deliverable
-curl -X POST http://localhost:3030/api/admin/v1/deliveriables \
+# 4) Add a task
+curl -X POST http://localhost:3030/api/admin/v1/tasks \
   -H "Authorization: Bearer &lt;token&gt;" \
   -H "Content-Type: application/json" \
-  -d '{"deliverable":"Kickoff","tac":"30-07-2026","projectId":1}'</pre>
+  -d '{"name":"Kickoff","tac":"30-07-2026","projectId":1}'</pre>
 
       <footer>
         PMO API User Manual · Open this page at the API root (<code>/</code>) while the server is running.

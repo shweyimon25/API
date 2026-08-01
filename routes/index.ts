@@ -7,7 +7,7 @@ import adminOverviewRoute from "./admin/v1/overview.route";
 import adminUserRoute from "./admin/v1/user.route";
 import adminRoleRoute from "./admin/v1/role.route";
 import adminProjectRoute from "./admin/v1/project.route";
-import adminDeliveriableRoute from "./admin/v1/deliveriable.route";
+import adminTaskRoute from "./admin/v1/task.route";
 
 // Dashbboard Routes
 import dashboardProjectRoute from "./dashboard/v1/project.route";
@@ -21,7 +21,7 @@ router.use("/admin/v1/overview", adminOverviewRoute);
 router.use("/admin/v1/users", adminUserRoute);
 router.use("/admin/v1/roles", adminRoleRoute);
 router.use("/admin/v1/projects", adminProjectRoute);
-router.use("/admin/v1/deliveriables", adminDeliveriableRoute);
+router.use("/admin/v1/tasks", adminTaskRoute);
 
 // Dashboard Routes
 router.use("/dashboard/v1/projects", dashboardProjectRoute);

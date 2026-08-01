@@ -1,9 +1,9 @@
 import prisma from "../../../../prisma/client";
 import {
-  DeliverableStatus,
   ProjectStage,
   ProjectStatus,
   Status,
+  TaskStatus,
 } from "@prisma/client";
 
 const emptyStatusCounts = () =>
@@ -24,13 +24,13 @@ const emptyStageCounts = () =>
     {} as Record<ProjectStage, number>,
   );
 
-const emptyDeliverableStatusCounts = () =>
-  Object.values(DeliverableStatus).reduce(
+const emptyTaskStatusCounts = () =>
+  Object.values(TaskStatus).reduce(
     (acc, status) => {
       acc[status] = 0;
       return acc;
     },
-    {} as Record<DeliverableStatus, number>,
+    {} as Record<TaskStatus, number>,
   );
 
 class OverviewService {
@@ -44,8 +44,8 @@ class OverviewService {
       projectsByStatus,
       projectsByStage,
       projectPercentage,
-      totalDeliveriables,
-      deliveriablesByStatus,
+      totalTasks,
+      tasksByStatus,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { status: Status.ACTIVE } }),
@@ -67,8 +67,8 @@ class OverviewService {
       prisma.project.aggregate({
         _avg: { totalPercentage: true },
       }),
-      prisma.deliveriable.count(),
-      prisma.deliveriable.groupBy({
+      prisma.task.count(),
+      prisma.task.groupBy({
         by: ["status"],
         _count: { _all: true },
       }),
@@ -84,9 +84,9 @@ class OverviewService {
       byStage[row.stage] = row._count._all;
     }
 
-    const deliveriableByStatus = emptyDeliverableStatusCounts();
-    for (const row of deliveriablesByStatus) {
-      deliveriableByStatus[row.status] = row._count._all;
+    const taskByStatus = emptyTaskStatusCounts();
+    for (const row of tasksByStatus) {
+      taskByStatus[row.status] = row._count._all;
     }
 
     return {
@@ -106,9 +106,9 @@ class OverviewService {
         byStatus,
         byStage,
       },
-      deliveriables: {
-        total: totalDeliveriables,
-        byStatus: deliveriableByStatus,
+      tasks: {
+        total: totalTasks,
+        byStatus: taskByStatus,
       },
     };
   }

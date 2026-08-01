@@ -53,10 +53,10 @@ const projectSelect = {
 
 const projectDetailSelect = {
   ...projectSelect,
-  deliveriables: {
+  tasks: {
     select: {
       id: true,
-      deliverable: true,
+      name: true,
       tac: true,
       completedPercentage: true,
       status: true,
@@ -118,7 +118,7 @@ class ProjectService {
 
     return {
       ...project,
-      deliveriables: project.deliveriables.map((item) => ({
+      tasks: project.tasks.map((item) => ({
         ...item,
         tac: formatDateDMY(item.tac),
       })),
