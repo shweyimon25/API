@@ -6,3 +6,9 @@ dist
 
 mysql_data
 phpmyadmin
+
+# Local SQLite databases
+prisma/db/*.db
+prisma/db/*.db-journal
+prisma/db/*.db-wal
+prisma/db/*.db-shm
