@@ -60,7 +60,7 @@ model Project {
   projectPhase       String?
   objectives         String?
   keyResults         String?
-  rag                String?
+  rag                Rag?
   risk               String?
   strategicAlignment String?
   currentStatus      String?
@@ -73,6 +73,12 @@ model Project {
 
   tasks         Task[]
   projectOwners ProjectOwner[]
+}
+
+enum Rag {
+  RED
+  AMBER
+  GREEN
 }
 
 model ProjectOwner {

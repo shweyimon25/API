@@ -641,7 +641,7 @@ Content-Type: application/json</pre>
       <h2 id="projects-api">12. Projects</h2>
       <p><span class="badge auth">JWT</span></p>
       <div class="endpoint"><span class="badge get">GET</span><span class="path">/admin/v1/projects</span></div>
-      <p>Filters: <code>code</code>, <code>name</code>, <code>department</code>, <code>status</code>, <code>stage</code>, <code>ownerId</code>, and other project text fields.</p>
+      <p>Filters: <code>code</code>, <code>name</code>, <code>department</code>, <code>status</code>, <code>stage</code>, <code>rag</code> (<code>RED</code>|<code>AMBER</code>|<code>GREEN</code>), <code>ownerId</code>, and other project text fields.</p>
       <div class="endpoint"><span class="badge get">GET</span><span class="path">/admin/v1/projects/:id</span></div>
       <p>Includes <code>projectOwners</code> and <code>tasks</code>. Task TAC is <code>DD-MM-YYYY</code>.</p>
       <div class="endpoint"><span class="badge post">POST</span><span class="path">/admin/v1/projects</span></div>
@@ -804,6 +804,7 @@ socket.emit("unsubscribe:project", 1);</pre>
         <div class="card"><strong>Role permission</strong><p class="mono">FULL_CONTROL · PROJECT_MANAGEMENT</p></div>
         <div class="card"><strong>Project status</strong><p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED · CLOSE</p></div>
         <div class="card"><strong>Project stage</strong><p class="mono">INITIATION · PLANNING · EXECUTION_AND_IMPLEMENTATION · CLOSING_AND_DONE · POST_IMPLEMENTATION</p></div>
+        <div class="card"><strong>Project RAG</strong><p class="mono">RED · AMBER · GREEN</p></div>
         <div class="card"><strong>Task status</strong><p class="mono">OPEN · ON_TRACK · INDICATION_OF_DELAY · DELAYED · COMPLETED</p></div>
         <div class="card"><strong>TAC date</strong><p class="mono">DD-MM-YYYY</p></div>
       </div>

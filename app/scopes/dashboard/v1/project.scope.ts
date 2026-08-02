@@ -1,4 +1,4 @@
-import { Prisma, ProjectStage, ProjectStatus } from "@prisma/client";
+import { Prisma, ProjectStage, ProjectStatus, Rag } from "@prisma/client";
 
 interface ProjectScopeQuery {
   code?: string;
@@ -49,7 +49,7 @@ export const projectScope = (
   }
 
   if (rag) {
-    where.rag = { contains: rag };
+    where.rag = rag as Rag;
   }
 
   if (risk) {

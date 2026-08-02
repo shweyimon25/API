@@ -1,5 +1,5 @@
 import z from "zod";
-import { ProjectStage, ProjectStatus } from "@prisma/client";
+import { ProjectStage, ProjectStatus, Rag } from "@prisma/client";
 
 const projectStatusEnum = z.enum(
   [
@@ -24,6 +24,10 @@ const projectStageEnum = z.enum(
   { message: "Invalid project stage" },
 );
 
+const ragEnum = z.enum([Rag.RED, Rag.AMBER, Rag.GREEN], {
+  message: "Invalid rag value. Allowed: RED, AMBER, GREEN",
+});
+
 const ownerIdsSchema = z
   .array(z.coerce.number().min(1, { message: "Invalid owner id" }))
   .min(1, { message: "At least one project owner is required" });
@@ -38,7 +42,7 @@ export const createProjectSchema = z.object({
   projectPhase: z.string().optional().nullable(),
   objectives: z.string().optional().nullable(),
   keyResults: z.string().optional().nullable(),
-  rag: z.string().optional().nullable(),
+  rag: ragEnum.optional().nullable(),
   risk: z.string().optional().nullable(),
   strategicAlignment: z.string().optional().nullable(),
   currentStatus: z.string().optional().nullable(),
@@ -57,7 +61,7 @@ export const updateProjectSchema = z.object({
   projectPhase: z.string().optional().nullable(),
   objectives: z.string().optional().nullable(),
   keyResults: z.string().optional().nullable(),
-  rag: z.string().optional().nullable(),
+  rag: ragEnum.optional().nullable(),
   risk: z.string().optional().nullable(),
   strategicAlignment: z.string().optional().nullable(),
   currentStatus: z.string().optional().nullable(),
