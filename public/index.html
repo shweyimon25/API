@@ -383,6 +383,11 @@
       </div>
 
       <div class="nav-group">
+        <div class="nav-label">Realtime</div>
+        <a href="#socket">Socket.IO</a>
+      </div>
+
+      <div class="nav-group">
         <div class="nav-label">Reference</div>
         <a href="#enums">Enums</a>
         <a href="#errors">Errors</a>
@@ -405,6 +410,10 @@
         <div class="card">
           <strong>Dashboard API</strong>
           <p>Public read-only projects. Closed projects (<code>CLOSE</code>) are hidden.</p>
+        </div>
+        <div class="card">
+          <strong>Realtime</strong>
+          <p>Socket.IO events for project and task create / update / delete.</p>
         </div>
       </div>
 
@@ -695,7 +704,101 @@ Content-Type: application/json</pre>
         </tbody>
       </table>
 
-      <h2 id="enums">15. Enums</h2>
+      <h2 id="socket">15. Realtime (Socket.IO)</h2>
+      <p>
+        Live updates when projects or tasks change. Path: <code>/socket.io</code>
+        (same host/port as the API, <strong>without</strong> the <code>/api</code> prefix).
+      </p>
+
+      <div class="card">
+        <div class="mono">http://&lt;host&gt;:&lt;port&gt;</div>
+        <p style="margin:10px 0 0">Example: <code>http://localhost:3030</code> · path <code>/socket.io</code></p>
+      </div>
+
+      <h3>Connection</h3>
+      <ul>
+        <li><strong>Anonymous</strong> — allowed (public dashboard).</li>
+        <li><strong>Admin JWT</strong> — optional via <code>auth.token</code> or <code>Authorization: Bearer &lt;token&gt;</code>. Must be <code>loginType: "admin"</code>.</li>
+      </ul>
+<pre>import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3030", {
+  path: "/socket.io",
+  auth: { token: "&lt;admin-jwt&gt;" }, // omit for anonymous
+});
+
+socket.on("connect", () => {
+  console.log("connected", socket.id);
+});</pre>
+
+      <h3>Optional rooms</h3>
+      <table>
+        <thead><tr><th>Client emit</th><th>Payload</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">subscribe:project</td>
+            <td class="mono">projectId (number)</td>
+            <td>Join room <code>project_&lt;id&gt;</code></td>
+          </tr>
+          <tr>
+            <td class="mono">unsubscribe:project</td>
+            <td class="mono">projectId (number)</td>
+            <td>Leave room <code>project_&lt;id&gt;</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">
+        All clients also join <code>realtime</code>. Events are broadcast to every connected client.
+        If authenticated, the socket also joins <code>user_&lt;id&gt;</code>.
+      </div>
+
+      <h3>Server events</h3>
+      <table>
+        <thead><tr><th>Event</th><th>When</th><th>Payload</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">project:created</td>
+            <td>Admin creates a project</td>
+            <td>Full project (owners + tasks)</td>
+          </tr>
+          <tr>
+            <td class="mono">project:updated</td>
+            <td>Project update, or task create/update/delete (recalculated % / status)</td>
+            <td>Full project (owners + tasks)</td>
+          </tr>
+          <tr>
+            <td class="mono">task:created</td>
+            <td>Task created</td>
+            <td>Task (TAC as <code>DD-MM-YYYY</code>)</td>
+          </tr>
+          <tr>
+            <td class="mono">task:updated</td>
+            <td>Task updated</td>
+            <td>Task</td>
+          </tr>
+          <tr>
+            <td class="mono">task:deleted</td>
+            <td>Task deleted</td>
+            <td class="mono">{ id, projectId }</td>
+          </tr>
+        </tbody>
+      </table>
+<pre>socket.on("project:created", (project) => { /* refresh list / detail */ });
+socket.on("project:updated", (project) => { /* refresh list / detail */ });
+socket.on("task:created", (task) => { /* ... */ });
+socket.on("task:updated", (task) => { /* ... */ });
+socket.on("task:deleted", ({ id, projectId }) => { /* ... */ });
+
+// Optional: focus on one project
+socket.emit("subscribe:project", 1);
+socket.emit("unsubscribe:project", 1);</pre>
+
+      <div class="warn-box">
+        Task mutations also emit <code>project:updated</code> after
+        <code>totalPercentage</code> and status sync, so UIs can refresh the parent project in one place.
+      </div>
+
+      <h2 id="enums">16. Enums</h2>
       <div class="grid-2">
         <div class="card"><strong>User status</strong><p class="mono">ACTIVE · INACTIVE</p></div>
         <div class="card"><strong>Role permission</strong><p class="mono">FULL_CONTROL · PROJECT_MANAGEMENT</p></div>
@@ -705,7 +808,7 @@ Content-Type: application/json</pre>
         <div class="card"><strong>TAC date</strong><p class="mono">DD-MM-YYYY</p></div>
       </div>
 
-      <h2 id="errors">16. Errors</h2>
+      <h2 id="errors">17. Errors</h2>
       <table>
         <thead><tr><th>HTTP</th><th>Meaning</th></tr></thead>
         <tbody>
@@ -724,7 +827,7 @@ Content-Type: application/json</pre>
   ]
 }</pre>
 
-      <h2 id="quick-start">17. Quick Start</h2>
+      <h2 id="quick-start">18. Quick Start</h2>
 <pre># 1) Sign in
 curl -X POST http://localhost:3030/api/admin/v1/auth/sign-in \
   -H "Content-Type: application/json" \
@@ -740,14 +843,18 @@ curl -X POST http://localhost:3030/api/admin/v1/projects \
   -H "Content-Type: application/json" \
   -d '{"name":"New Initiative","ownerIds":[3]}'
 
-# 4) Create task (syncs project % + status)
+# 4) Create task (syncs project % + status + socket events)
 curl -X POST http://localhost:3030/api/admin/v1/tasks \
   -H "Authorization: Bearer &lt;token&gt;" \
   -H "Content-Type: application/json" \
   -d '{"name":"Kickoff","tac":"30-07-2026","completedPercentage":25,"projectId":1,"status":"ON_TRACK"}'
 
 # 5) Public dashboard list (no CLOSE projects)
-curl http://localhost:3030/api/dashboard/v1/projects</pre>
+curl http://localhost:3030/api/dashboard/v1/projects
+
+# 6) Socket.IO (browser / Node client)
+# connect to http://localhost:3030 path /socket.io
+# listen: project:created | project:updated | task:created | task:updated | task:deleted</pre>
 
       <footer>
         PMO API User Manual · Open at API root (<code>/</code>) while the server is running.

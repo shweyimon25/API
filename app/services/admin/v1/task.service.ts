@@ -13,6 +13,8 @@ import {
   assertCanEditProject,
   UserWithRole,
 } from "../../../helpers/permission";
+import { emitSocket, SocketEvents } from "../../../socket";
+import ProjectService from "./project.service";
 
 const taskSelect = {
   id: true,
@@ -45,6 +47,13 @@ type TaskStatusGroup = {
 };
 
 class TaskService {
+  private projectService = new ProjectService();
+
+  private async emitProjectUpdated(projectId: number) {
+    const project = await this.projectService.findOne(projectId);
+    emitSocket(SocketEvents.PROJECT_UPDATED, project);
+  }
+
   async findAll(where?: Prisma.TaskWhereInput) {
     const tasks = await prisma.task.findMany({
       where,
@@ -219,7 +228,10 @@ class TaskService {
     await this.recalculateTotalPercentage(createInput.projectId);
     await this.syncProjectStatusFromTopTaskPercentage(createInput.projectId);
 
-    return this.findOne(task.id);
+    const created = await this.findOne(task.id);
+    emitSocket(SocketEvents.TASK_CREATED, created);
+    await this.emitProjectUpdated(createInput.projectId);
+    return created;
   }
 
   async update(
@@ -263,9 +275,13 @@ class TaskService {
     if (projectId !== undefined && projectId !== existing.projectId) {
       await this.recalculateTotalPercentage(existing.projectId);
       await this.syncProjectStatusFromTopTaskPercentage(existing.projectId);
+      await this.emitProjectUpdated(existing.projectId);
     }
 
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    emitSocket(SocketEvents.TASK_UPDATED, updated);
+    await this.emitProjectUpdated(nextProjectId);
+    return updated;
   }
 
   async destroy(id: number, currentUser: UserWithRole) {
@@ -285,6 +301,12 @@ class TaskService {
 
     await this.recalculateTotalPercentage(existing.projectId);
     await this.syncProjectStatusFromTopTaskPercentage(existing.projectId);
+
+    emitSocket(SocketEvents.TASK_DELETED, {
+      id: existing.id,
+      projectId: existing.projectId,
+    });
+    await this.emitProjectUpdated(existing.projectId);
   }
 }
 

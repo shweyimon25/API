@@ -21,6 +21,7 @@ import {
   assertFullControl,
   UserWithRole,
 } from "../../../helpers/permission";
+import { emitSocket, SocketEvents } from "../../../socket";
 
 const projectOwnerSelect = {
   id: true,
@@ -282,7 +283,9 @@ class ProjectService {
       },
     });
 
-    return this.findOne(project.id);
+    const created = await this.findOne(project.id);
+    emitSocket(SocketEvents.PROJECT_CREATED, created);
+    return created;
   }
 
   async update(
@@ -364,7 +367,9 @@ class ProjectService {
       }
     });
 
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    emitSocket(SocketEvents.PROJECT_UPDATED, updated);
+    return updated;
   }
 }
 
