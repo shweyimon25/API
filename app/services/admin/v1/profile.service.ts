@@ -5,6 +5,7 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 import { hashPassword } from "../../../helpers/helper";
+import { deleteUploadedFile, saveProfileCover } from "../../../helpers/upload";
 import { UpdateProfileInput } from "../../../schemas/admin/v1/profile.schema";
 
 const profileSelect = {
@@ -12,6 +13,7 @@ const profileSelect = {
   name: true,
   email: true,
   employeeId: true,
+  profileCover: true,
   status: true,
   role: {
     select: {
@@ -38,8 +40,12 @@ class ProfileService {
     return user;
   }
 
-  async updateMe(id: number, updateProfileInput: UpdateProfileInput) {
-    const { name, employeeId, email, password } = updateProfileInput;
+  async updateMe(
+    id: number,
+    updateProfileInput: UpdateProfileInput,
+    profileCoverFile?: Express.Multer.File,
+  ) {
+    const { name, employeeId, email, password, profileCover } = updateProfileInput;
 
     const existingUser = await prisma.user.findUnique({
       where: { id },
@@ -85,12 +91,21 @@ class ProfileService {
       }
     }
 
+    const nextProfileCover = profileCoverFile
+      ? saveProfileCover(profileCoverFile)
+      : profileCover;
+
+    if (nextProfileCover !== undefined) {
+      deleteUploadedFile(existingUser.profileCover);
+    }
+
     await prisma.user.update({
       where: { id },
       data: {
         ...(name !== undefined && { name }),
         ...(email !== undefined && { email }),
         ...(employeeId !== undefined && { employeeId }),
+        ...(nextProfileCover !== undefined && { profileCover: nextProfileCover }),
         ...(password !== undefined && { password: hashPassword(password) }),
       },
     });

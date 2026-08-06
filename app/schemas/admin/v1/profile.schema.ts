@@ -5,6 +5,7 @@ export const updateProfileSchema = z
     name: z.string().min(1, { message: "Name is required" }).optional(),
     email: z.string().email({ message: "Invalid email address" }).optional(),
     employeeId: z.string().min(1, { message: "Employee ID is required" }).optional(),
+    profileCover: z.string().url({ message: "Invalid avatar URL" }).optional(),
     password: z
       .string()
       .regex(

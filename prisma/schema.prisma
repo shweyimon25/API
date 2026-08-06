@@ -20,6 +20,7 @@ model User {
   email         String         @unique
   employeeId    String         @unique
   password      String
+  profileCover  String?
   status        Status         @default(ACTIVE)
   role          Role           @relation(fields: [roleId], references: [id])
   roleId        Int

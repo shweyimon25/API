@@ -6,6 +6,7 @@ import {
   updateUserSchema,
 } from "../../../schemas/admin/v1/user.schema";
 import { ValidationException } from "../../../helpers/exceptions";
+import { getUploadedFile } from "../../../helpers/upload";
 import { userScope } from "../../../scopes/admin/v1/user.scope";
 import UserService from "../../../services/admin/v1/user.service";
 import { UserWithRole } from "../../../helpers/permission";
@@ -57,9 +58,11 @@ class UserController {
       throw new ValidationException("User created failed", error);
     }
 
+    const profileCoverFile = getUploadedFile(req.files, "profileCover");
     const user = await this.userService.create(
       data,
       req.user as UserWithRole,
+      profileCoverFile,
     );
 
     return successResponse(res, "User created successfully", user);
@@ -75,10 +78,12 @@ class UserController {
       throw new ValidationException("User updated failed", error);
     }
 
+    const profileCoverFile = getUploadedFile(req.files, "profileCover");
     const user = await this.userService.update(
       +req.params.id,
       data,
       req.user as UserWithRole,
+      profileCoverFile,
     );
 
     return successResponse(res, "User updated successfully", user);

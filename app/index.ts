@@ -20,6 +20,7 @@ initializeSocket(server);
 app.use(loggerMiddleware);
 app.use(express.json());
 app.use("/public/uploads", express.static("public/uploads"));
+app.use("/public/avatars", express.static("public/avatars"));
 app.use(cors({ origin: "*" }));
 app.use(express.urlencoded({ extended: true }));
 

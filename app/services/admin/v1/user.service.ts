@@ -5,6 +5,8 @@ import {
   ValidationException,
 } from "../../../helpers/exceptions";
 import { hashPassword } from "../../../helpers/helper";
+import { deleteUploadedFile, saveProfileCover } from "../../../helpers/upload";
+import { getRandomAvatarPath } from "./avatar.service";
 import {
   CreateUserInput,
   UpdateUserInput,
@@ -21,6 +23,7 @@ const userSelect = {
   name: true,
   email: true,
   employeeId: true,
+  profileCover: true,
   status: true,
   role: {
     select: {
@@ -113,7 +116,11 @@ class UserService {
     return user;
   }
 
-  async create(createUserInput: CreateUserInput, currentUser: UserWithRole) {
+  async create(
+    createUserInput: CreateUserInput,
+    currentUser: UserWithRole,
+    profileCoverFile?: Express.Multer.File,
+  ) {
     assertFullControl(currentUser);
 
     const { name, employeeId, email, password, status, roleId } =
@@ -167,6 +174,10 @@ class UserService {
       ]);
     }
 
+    const profileCover = profileCoverFile
+      ? saveProfileCover(profileCoverFile)
+      : getRandomAvatarPath();
+
     const user = await prisma.user.create({
       data: {
         name,
@@ -175,6 +186,7 @@ class UserService {
         roleId,
         password: hashPassword(password),
         status: status ?? Status.ACTIVE,
+        ...(profileCover !== undefined && { profileCover }),
       },
     });
 
@@ -185,6 +197,7 @@ class UserService {
     id: number,
     updateUserInput: UpdateUserInput,
     currentUser: UserWithRole,
+    profileCoverFile?: Express.Multer.File,
   ) {
     assertFullControl(currentUser);
 
@@ -259,6 +272,12 @@ class UserService {
       }
     }
 
+    let profileCover: string | undefined;
+    if (profileCoverFile) {
+      profileCover = saveProfileCover(profileCoverFile);
+      deleteUploadedFile(existingUser.profileCover);
+    }
+
     await prisma.user.update({
       where: { id },
       data: {
@@ -268,6 +287,7 @@ class UserService {
         ...(password !== undefined && { password: hashPassword(password) }),
         ...(status !== undefined && { status }),
         ...(roleId !== undefined && { roleId }),
+        ...(profileCover !== undefined && { profileCover }),
       },
     });
 
@@ -277,11 +297,13 @@ class UserService {
   async destory(id: number, currentUser: UserWithRole) {
     assertFullControl(currentUser);
 
-    await this.findOne(id);
+    const user = await this.findOne(id);
 
     await prisma.user.delete({
       where: { id },
     });
+
+    deleteUploadedFile(user.profileCover);
   }
 }
 
